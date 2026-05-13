@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use App\Models\Pesanan;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Carbon\Carbon::setLocale('id');
+
+        View::composer('layouts.app', function ($view) {
+            $jumlahMenunggu = Pesanan::where('status', 'menunggu_konfirmasi')->count();
+            $view->with('jumlahMenunggu', $jumlahMenunggu);
+        });
     }
 }
