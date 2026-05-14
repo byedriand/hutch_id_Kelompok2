@@ -620,9 +620,9 @@
                     </button>
 
                     <div class="login-footer">
-                        <span class="footer-badge"><i class="fas fa-lock-open"></i> Aman</span>
-                        <span class="footer-badge"><i class="fas fa-cookie"></i> Cookies</span>
-                        <span class="footer-badge"><i class="fas fa-shield-alt"></i> HTTPS</span>
+                        <!-- <span class="footer-badge"><i class="fas fa-lock-open"></i> Aman</span> -->
+                        <!-- <span class="footer-badge"><i class="fas fa-cookie"></i> Cookies</span> -->
+                        <!-- <span class="footer-badge"><i class="fas fa-shield-alt"></i> HTTPS</span> -->
                     </div>
                 </form>
             </div>
