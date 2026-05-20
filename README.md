@@ -73,7 +73,7 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 
 - **HTML / CSS / JavaScript** — Standard web technologies
 - **Bootstrap** — CSS framework untuk responsive design
-- **Vite** — Build tool dan development server
+
 
 ### Libraries Tambahan
 
