@@ -42,7 +42,16 @@ class Pesanan extends Model
 
     public function getStokCukupAttribute()
     {
-        // Logic untuk cek stok, placeholder
+        foreach ($this->detailPesanan as $detail) {
+            if (! $detail->produk) {
+                return false;
+            }
+
+            if ($detail->jumlah > $detail->produk->stok) {
+                return false;
+            }
+        }
+
         return true;
     }
 }

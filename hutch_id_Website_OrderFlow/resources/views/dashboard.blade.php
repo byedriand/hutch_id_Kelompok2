@@ -12,11 +12,6 @@
                 <div id="dash-date" class="fw-bold" style="font-size: 0.95rem;"></div>
                 <small class="text-muted">Waktu real-time</small>
             </div>
-            @if(auth()->user()->role !== 'operator_gudang')
-                <a href="{{ route('pesanan.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Buat PO Baru
-                </a>
-            @endif
         </div>
     </div>
 
@@ -84,16 +79,9 @@
                                     </div>
                                 </div>
                             </div>
-                            @if(in_array(auth()->user()->role, ['pemilik_umkm', 'administrator']))
-                                <div class="mt-3 d-flex gap-2">
-                                    <button class="btn btn-success btn-sm"><i class="fas fa-check me-1"></i>Konfirmasi</button>
-                                    <button class="btn btn-secondary btn-sm"><i class="fas fa-eye me-1"></i>Lihat</button>
-                                </div>
-                            @else
-                                <div class="mt-3">
-                                    <button class="btn btn-secondary btn-sm w-100"><i class="fas fa-eye me-1"></i>Lihat Detail</button>
-                                </div>
-                            @endif
+                            <div class="mt-3">
+                                <a href="{{ route('pesanan.show', $po->id) }}" class="btn btn-secondary btn-sm w-100"><i class="fas fa-eye me-1"></i>Lihat Detail</a>
+                            </div>
                         </div>
                     @empty
                         <div class="p-5 text-center text-muted">

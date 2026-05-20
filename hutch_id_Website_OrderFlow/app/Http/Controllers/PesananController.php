@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Pesanan;
@@ -35,8 +36,14 @@ class PesananController extends Controller
         // Pemilik UMKM dan Administrator dapat lihat semua PO
 
         if ($request->cari) {
-            $query->whereHas('pelanggan', function ($q) use ($request) {
-                $q->where('nama', 'like', '%' . $request->cari . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('nomor_po', 'like', '%' . $request->cari . '%')
+                    ->orWhereHas('pelanggan', function ($q) use ($request) {
+                        $q->where('nama', 'like', '%' . $request->cari . '%');
+                    })
+                    ->orWhereHas('detailPesanan.produk', function ($q) use ($request) {
+                        $q->where('nama', 'like', '%' . $request->cari . '%');
+                    });
             });
         }
 
@@ -62,7 +69,7 @@ class PesananController extends Controller
      */
     public function create()
     {
-        $nomorPo = 'PO-' . now()->format('Ymmd') . '-001';
+        $nomorPo = $this->generateNomorPo();
         $produk = Produk::all();
 
         return view('pesanan.create', compact('nomorPo', 'produk'));
@@ -74,7 +81,6 @@ class PesananController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nomor_po' => 'required|string|max:255',
             'tanggal_pesanan' => 'required|date',
             'tanggal_pengiriman' => 'required|date|after_or_equal:tanggal_pesanan',
             'pelanggan_id' => 'required|exists:pelanggan,id',
@@ -98,10 +104,32 @@ class PesananController extends Controller
             return back()->withInput()->withErrors(['pelanggan_id' => 'Pelanggan tidak ditemukan.']);
         }
 
+        $requestedQuantities = [];
+        foreach ($items as $item) {
+            $productId = intval($item['produk_id']);
+            $requestedQuantities[$productId] = ($requestedQuantities[$productId] ?? 0) + intval($item['jumlah']);
+        }
+
+        $stockErrors = [];
+        foreach ($requestedQuantities as $productId => $qty) {
+            $produk = Produk::find($productId);
+            if (! $produk) {
+                return back()->withInput()->withErrors(['items' => 'Produk tidak ditemukan.']);
+            }
+            if ($qty > $produk->stok) {
+                $stockErrors[] = "Stok produk {$produk->nama} tidak mencukupi. Tersedia {$produk->stok}, dibutuhkan {$qty}.";
+            }
+        }
+
+        if (! empty($stockErrors)) {
+            return back()->withInput()->withErrors(['items' => $stockErrors]);
+        }
+
+        $nomorPo = $this->generateNomorPo($validated['tanggal_pesanan']);
         $pesanan = null;
-        DB::transaction(function () use ($validated, $items, $pelanggan, &$pesanan, $request) {
+        DB::transaction(function () use ($validated, $items, $pelanggan, &$pesanan, $request, $nomorPo) {
             $pesanan = Pesanan::create([
-                'nomor_po' => $validated['nomor_po'],
+                'nomor_po' => $nomorPo,
                 'tanggal_pesanan' => $validated['tanggal_pesanan'],
                 'tanggal_pengiriman' => $validated['tanggal_pengiriman'],
                 'pelanggan_id' => $pelanggan->id,
@@ -143,6 +171,26 @@ class PesananController extends Controller
         });
 
         return redirect()->route('pesanan.index')->with('success', 'PO berhasil disimpan.');
+    }
+
+    /**
+     * Generate a unique PO number using the provided tanggal_pesanan or current date.
+     */
+    private function generateNomorPo(string $tanggalPesanan = null): string
+    {
+        $date = $tanggalPesanan ? Carbon::parse($tanggalPesanan)->format('Ymmd') : now()->format('Ymmd');
+        $prefix = 'PO-' . $date . '-';
+
+        $lastPesanan = Pesanan::where('nomor_po', 'like', $prefix . '%')
+            ->orderBy('nomor_po', 'desc')
+            ->first();
+
+        if (! $lastPesanan) {
+            return $prefix . '001';
+        }
+
+        $lastSequence = intval(substr($lastPesanan->nomor_po, strrpos($lastPesanan->nomor_po, '-') + 1));
+        return $prefix . str_pad($lastSequence + 1, 3, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -237,8 +285,13 @@ class PesananController extends Controller
         $this->authorize('changeStatus', $pesanan);
 
         // Validate status
+        $allowedStatuses = ['dalam_produksi', 'siap_kirim', 'selesai', 'dibatalkan'];
+        if ($pesanan->status === 'menunggu_konfirmasi') {
+            $allowedStatuses[] = 'dikonfirmasi';
+        }
+
         $request->validate([
-            'status' => 'required|in:dalam_produksi,siap_kirim,selesai,dibatalkan',
+            'status' => 'required|in:' . implode(',', $allowedStatuses),
             'keterangan' => 'nullable|string|max:500',
         ]);
 
@@ -300,7 +353,10 @@ class PesananController extends Controller
         }
 
         if ($userRole === 'pemilik_umkm') {
-            // Can change to: dalam_produksi, siap_kirim, selesai, dibatalkan
+            // Can change to: dikonfirmasi, dalam_produksi, siap_kirim, selesai, dibatalkan
+            if ($pesanan->status === 'menunggu_konfirmasi' && $newStatus === 'dikonfirmasi') {
+                return true;
+            }
             return in_array($newStatus, ['dalam_produksi', 'siap_kirim', 'selesai', 'dibatalkan']);
         }
 

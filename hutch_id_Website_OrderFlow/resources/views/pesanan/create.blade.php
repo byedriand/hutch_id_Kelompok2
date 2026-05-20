@@ -90,13 +90,37 @@
             border-radius: 0 0 1rem 1rem;
             box-shadow: 0 18px 40px rgba(15, 64, 124, 0.12);
             margin-top: 0.15rem;
+            background: #ffffff;
+            border: 1px solid #d8e2ef;
         }
         #cust-dropdown .dropdown-item {
             border-bottom: 1px solid #e2e8f0;
-            transition: background 0.2s ease;
+            transition: background 0.2s ease, color 0.2s ease;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 0.9rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+        #cust-dropdown .dropdown-item:last-child {
+            border-bottom: none;
         }
         #cust-dropdown .dropdown-item:hover {
             background-color: #eff6ff;
+            color: #0f172a;
+        }
+        #cust-dropdown .customer-name {
+            font-weight: 700;
+            font-size: 0.97rem;
+        }
+        #cust-dropdown .customer-meta {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        #cust-dropdown .no-results {
+            color: #475569;
+            padding: 1rem;
         }
         .table-wrap {
             overflow-x: auto;
@@ -136,12 +160,44 @@
         .item-table .form-select-sm {
             border-radius: 0.9rem;
         }
+        .item-table tbody tr:hover td {
+            background: #f1f7ff;
+        }
+        .product-preview {
+            display: flex;
+            gap: 0.85rem;
+            align-items: center;
+        }
+        .product-thumbnail {
+            width: 56px;
+            height: 56px;
+            border-radius: 1.25rem;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #eff6ff, #ffffff);
+            border: 1px solid #dbeafe;
+        }
+        .product-preview-info {
+            width: 100%;
+        }
+        .product-preview-info .product-info {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-top: 0.35rem;
+        }
+        .product-preview-info .product-name {
+            display: block;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1rem;
             margin-bottom: 1rem;
         }
+
         .summary-widget {
             border-radius: 1.5rem;
             background: #ffffff;
@@ -179,6 +235,77 @@
         @media (max-width: 1199px) {
             .summary-card {
                 position: static;
+            }
+        }
+
+        @media (max-width: 991px) {
+            .page-title-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .page-actions {
+                justify-content: flex-start;
+                width: 100%;
+            }
+
+            .page-actions .btn {
+                min-width: 0;
+                width: 100%;
+            }
+
+            .summary-summary {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.85rem;
+            }
+
+            .summary-card {
+                position: static;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .page-title-bar {
+                gap: 0.75rem;
+            }
+
+            .summary-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .product-preview {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .product-thumbnail {
+                width: 48px;
+                height: 48px;
+            }
+
+            .product-preview-info {
+                width: 100%;
+            }
+
+            .item-table thead th,
+            .item-table td {
+                padding: 0.8rem 0.7rem;
+            }
+
+            .item-table th:nth-child(2),
+            .item-table th:nth-child(3),
+            .item-table td:nth-child(2),
+            .item-table td:nth-child(3) {
+                min-width: 130px;
+            }
+
+            .item-table td {
+                white-space: normal;
+            }
+
+            .stock-verification .table-wrap {
+                overflow-x: auto;
             }
         }
         .summary-label {
@@ -273,19 +400,18 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
             <!-- Card Item Pesanan -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div>
-                        <h5 class="mb-0">Item Pesanan</h5>
-                        <small class="text-muted">Tambah produk dan atur jumlah pesanan dengan mudah.</small>
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="mb-0">Item Pesanan</h5>
+                            <small class="text-muted">Tambah produk dan atur jumlah pesanan dengan mudah.</small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="tambahItem()">
+                            <i class="fas fa-plus me-1"></i>Tambah Item
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="tambahItem()">
-                        <i class="fas fa-plus me-1"></i>Tambah Item
-                    </button>
-                </div>
                 <div class="card-body">
                     <div class="table-wrap">
                         <table class="table table-sm item-table">
@@ -304,12 +430,20 @@
                                 <tr id="item-1">
                                     <td>1</td>
                                     <td>
-                                        <select name="items[1][produk_id]" class="form-select form-select-sm" onchange="updateHarga(this, 1)" required>
-                                            <option value="">-- Pilih Produk --</option>
-                                            @foreach($produk as $p)
-                                                <option value="{{ $p->id }}" data-harga="{{ $p->harga_jual }}">{{ $p->nama }}</option>
-                                            @endforeach
-                                        </select>
+                                        <div class="product-preview">
+                                            <img id="preview-1" src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='96' height='96' fill='%23eef2ff'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='12' font-family='Arial, sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E" alt="Preview Produk" class="product-thumbnail">
+                                            <div class="product-preview-info">
+                                                <select name="items[1][produk_id]" class="form-select form-select-sm" onchange="updateHarga(this, 1)" required>
+                                                    <option value="">-- Pilih Produk --</option>
+                                                    @forelse($produk as $p)
+                                                        <option value="{{ $p->id }}" data-harga="{{ $p->harga_jual }}" data-stok="{{ $p->stok }}">{{ $p->nama }}</option>
+                                                    @empty
+                                                        <option value="" disabled>Tidak ada produk tersedia. Tambahkan produk di menu Produk.</option>
+                                                    @endforelse
+                                                </select>
+                                                <div id="preview-info-1" class="product-info">Pilih produk untuk melihat detail dan gambar.</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
                                         <input type="text" name="items[1][spesifikasi]" class="form-control form-control-sm" placeholder="Optional">
@@ -333,6 +467,31 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="stock-verification mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                            <h6 class="mb-0">Verifikasi Stok</h6>
+                            <span id="stock-status-badge" class="badge rounded-pill bg-success text-white px-3">Semua stok cukup</span>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="table table-sm item-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Produk</th>
+                                        <th>Stok Tersedia</th>
+                                        <th>Kebutuhan</th>
+                                        <th>Selisih</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stock-verification-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Pilih produk untuk melihat verifikasi stok.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="stok-warning" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                    </div>
                     <div class="text-end mt-3 rounded-4 bg-light p-3">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <span class="fw-semibold">Total PO</span>
@@ -343,46 +502,45 @@
                 </div>
             </div>
 
-            <!-- Card Catatan -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Catatan Khusus (Opsional)</h5>
-                </div>
-                <div class="card-body">
-                    <textarea name="catatan" class="form-control" rows="4" placeholder="Catatan tambahan untuk pesanan ini..."></textarea>
-                </div>
             </div>
-        </div>
-
             <div class="col-12 col-xl-4">
-                <div class="card summary-card">
+                <div class="card summary-card mb-4">
                     <div class="card-body">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                            <span class="summary-label">Ringkasan Pesanan</span>
-                            <span class="badge bg-primary bg-opacity-10 text-primary">Draft</span>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                <span class="summary-label">Ringkasan Pesanan</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary">Draft</span>
+                            </div>
+                            <p class="mb-3 text-muted">Lihat total item dan nilai pesanan sebelum menyimpan.</p>
                         </div>
-                        <p class="mb-3 text-muted">Lihat total item dan nilai pesanan sebelum menyimpan.</p>
-                    </div>
-                    <div class="row gx-3 gy-3 align-items-center mb-4 summary-summary">
-                        <div class="col-sm-6">
-                            <div>
-                                <div class="text-muted small">Total Item</div>
-                                <div class="summary-value" id="total-item">1</div>
+                        <div class="row gx-3 gy-3 align-items-center mb-4 summary-summary">
+                            <div class="col-sm-6">
+                                <div>
+                                    <div class="text-muted small">Total Item</div>
+                                    <div class="summary-value" id="total-item">1</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div>
+                                    <div class="text-muted small">Total Nilai</div>
+                                    <div class="summary-value" id="summary-total">Rp 0</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-sm-6">
-                            <div>
-                                <div class="text-muted small">Total Nilai</div>
-                                <div class="summary-value" id="summary-total">Rp 0</div>
-                            </div>
+                        <button type="submit" form="form-po" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-save me-2"></i>Simpan PO Sekarang
+                        </button>
+                        <div class="mt-3 small text-muted">
+                            Pastikan semua item telah terisi dengan benar sebelum menyimpan pesanan.
                         </div>
                     </div>
-                    <button type="submit" form="form-po" class="btn btn-primary w-100 py-2">
-                        <i class="fas fa-save me-2"></i>Simpan PO Sekarang
-                    </button>
-                    <div class="mt-3 small text-muted">
-                        Pastikan semua item telah terisi dengan benar sebelum menyimpan pesanan.
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Catatan Khusus (Opsional)</h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea name="catatan" class="form-control" rows="4" placeholder="Catatan tambahan untuk pesanan ini..."></textarea>
                     </div>
                 </div>
             </div>
@@ -392,8 +550,25 @@
 </div>
 
 @push('scripts')
+@php
+    $dataProduk = $produk->map(function ($p) {
+        $gambar = $p->gambar ?? null;
+        if ($gambar && !filter_var($gambar, FILTER_VALIDATE_URL)) {
+            $gambar = asset('storage/' . ltrim($gambar, '/'));
+        }
+
+        return [
+            'id' => $p->id,
+            'nama' => $p->nama,
+            'harga' => $p->harga_jual,
+            'stok' => $p->stok,
+            'gambar' => $gambar,
+        ];
+    });
+@endphp
 <script>
-const dataProduk = @json($produk->map(fn($p) => ['id' => $p->id, 'nama' => $p->nama, 'harga' => $p->harga_jual]));
+const dataProduk = @json($dataProduk);
+const placeholderProductImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'96\' height=\'96\'%3E%3Crect width=\'96\' height=\'96\' fill=\'%23eef2ff\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%2364748b\' font-size=\'12\' font-family=\'Arial, sans-serif\'%3ENo Image%3C/text%3E%3C/svg%3E';
 let itemCount = 1;
 
 const custDropdown = document.getElementById('cust-dropdown');
@@ -427,9 +602,12 @@ document.getElementById('cust-input').addEventListener('input', function() {
 
                 data.forEach(p => {
                     const div = document.createElement('div');
-                    div.className = 'dropdown-item py-2';
+                    div.className = 'dropdown-item';
                     div.style.cursor = 'pointer';
-                    div.textContent = `${p.nama} — ${p.telepon || '-'} `;
+                    div.innerHTML = `
+                        <span class="customer-name">${p.nama}</span>
+                        <span class="customer-meta">${p.telepon || '-'} · ${p.email || 'Email tidak tersedia'}</span>
+                    `;
                     div.onclick = () => pilihPelanggan(p);
                     custDropdown.appendChild(div);
                 });
@@ -454,9 +632,12 @@ function pilihPelanggan(pelanggan) {
 function updateHarga(select, id) {
     const option = select.options[select.selectedIndex];
     const harga = parseInt(option.getAttribute('data-harga')) || 0;
+    const produk = dataProduk.find(p => p.id === parseInt(select.value));
 
     document.getElementById(`harga-${id}`).value = harga ? 'Rp ' + formatNumber(harga) : '';
     document.getElementById(`harga-hidden-${id}`).value = harga;
+    document.getElementById(`preview-${id}`).src = produk && produk.gambar ? produk.gambar : placeholderProductImage;
+    document.getElementById(`preview-info-${id}`).textContent = produk ? `${produk.nama} · Stok ${produk.stok ?? '-'}` : 'Pilih produk untuk melihat detail dan gambar.';
     hitungBaris(id);
 }
 
@@ -467,6 +648,73 @@ function hitungBaris(id) {
 
     document.getElementById(`sub-${id}`).value = sub ? 'Rp ' + formatNumber(sub) : '';
     hitungTotal();
+}
+
+function updateStockVerification() {
+    const stockBody = document.getElementById('stock-verification-body');
+    const warningBox = document.getElementById('stok-warning');
+    const statusBadge = document.getElementById('stock-status-badge');
+
+    const summary = {};
+    let hasWarning = false;
+
+    document.querySelectorAll('#items-tbody tr').forEach(row => {
+        const select = row.querySelector('select[name^="items["]');
+        const qtyInput = row.querySelector('input[type="number"]');
+        if (!select || !qtyInput) return;
+
+        const produkId = parseInt(select.value);
+        const qty = parseInt(qtyInput.value) || 0;
+        const produk = dataProduk.find(p => p.id === produkId);
+        if (!produk || !qty) return;
+
+        if (!summary[produkId]) {
+            summary[produkId] = {produk, kebutuhan: 0};
+        }
+        summary[produkId].kebutuhan += qty;
+    });
+
+    if (Object.keys(summary).length === 0) {
+        stockBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Pilih produk untuk melihat verifikasi stok.</td></tr>';
+        warningBox.classList.add('d-none');
+        statusBadge.className = 'badge rounded-pill bg-success text-white px-3';
+        statusBadge.textContent = 'Semua stok cukup';
+        document.getElementById('btn-simpan').disabled = false;
+        return;
+    }
+
+    const rows = Object.values(summary).map(entry => {
+        const tersedia = entry.produk.stok || 0;
+        const kebutuhan = entry.kebutuhan;
+        const selisih = tersedia - kebutuhan;
+        const status = selisih >= 0 ? 'Cukup' : 'Kurang';
+        if (selisih < 0) hasWarning = true;
+
+        return `
+            <tr class="${selisih < 0 ? 'table-danger' : ''}">
+                <td>${entry.produk.nama}</td>
+                <td>${tersedia}</td>
+                <td>${kebutuhan}</td>
+                <td>${selisih}</td>
+                <td>${status}</td>
+            </tr>
+        `;
+    });
+
+    stockBody.innerHTML = rows.join('');
+
+    if (hasWarning) {
+        warningBox.textContent = 'Beberapa item melebihi stok tersedia. Periksa kebutuhan dan ubah jumlah produk.';
+        warningBox.classList.remove('d-none');
+        statusBadge.className = 'badge rounded-pill bg-danger text-white px-3';
+        statusBadge.textContent = 'Stok tidak cukup';
+        document.getElementById('btn-simpan').disabled = true;
+    } else {
+        warningBox.classList.add('d-none');
+        statusBadge.className = 'badge rounded-pill bg-success text-white px-3';
+        statusBadge.textContent = 'Semua stok cukup';
+        document.getElementById('btn-simpan').disabled = false;
+    }
 }
 
 function hitungTotal() {
@@ -488,6 +736,7 @@ function hitungTotal() {
     document.getElementById('total-nilai').value = total;
     document.getElementById('summary-total').textContent = total ? 'Rp ' + formatNumber(total) : 'Rp 0';
     document.getElementById('total-item').textContent = totalItens;
+    updateStockVerification();
 }
 
 function tambahItem() {
@@ -498,10 +747,16 @@ function tambahItem() {
     newRow.innerHTML = `
         <td>${itemCount}</td>
         <td>
-            <select name="items[${itemCount}][produk_id]" class="form-select form-select-sm" onchange="updateHarga(this, ${itemCount})" required>
-                <option value="">-- Pilih Produk --</option>
-                ${dataProduk.map(p => `<option value="${p.id}" data-harga="${p.harga}">${p.nama}</option>`).join('')}
-            </select>
+            <div class="product-preview">
+                <img id="preview-${itemCount}" src="${placeholderProductImage}" alt="Preview Produk" class="product-thumbnail">
+                <div class="product-preview-info">
+                    <select name="items[${itemCount}][produk_id]" class="form-select form-select-sm" onchange="updateHarga(this, ${itemCount})" required>
+                        <option value="">-- Pilih Produk --</option>
+                        ${dataProduk.map(p => `<option value="${p.id}" data-harga="${p.harga}" data-stok="${p.stok}">${p.nama}</option>`).join('')}
+                    </select>
+                    <div id="preview-info-${itemCount}" class="product-info">Pilih produk untuk melihat detail dan gambar.</div>
+                </div>
+            </div>
         </td>
         <td>
             <input type="text" name="items[${itemCount}][spesifikasi]" class="form-control form-control-sm" placeholder="Optional">

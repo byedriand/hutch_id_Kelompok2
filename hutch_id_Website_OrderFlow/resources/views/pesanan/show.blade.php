@@ -93,6 +93,23 @@
         .history-item strong {
             color: #0f172a;
         }
+        .product-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 1rem;
+            object-fit: cover;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .product-name {
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.15rem;
+        }
+        .product-meta {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
         .summary-card .list-group-item {
             border: none;
             padding: 0.9rem 1.1rem;
@@ -176,7 +193,6 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Produk</th>
-                                        <th>Spesifikasi</th>
                                         <th>Qty</th>
                                         <th>Harga</th>
                                         <th>Subtotal</th>
@@ -184,10 +200,21 @@
                                 </thead>
                                 <tbody>
                                     @foreach($pesanan->detailPesanan as $index => $item)
-                                        <tr>
+                                                <tr>
                                             <td>{{ $index + 1 }}</td>
-                                            <td>{{ $item->produk->nama }}</td>
-                                            <td>{{ $item->spesifikasi ?? '-' }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    @if(optional($item->produk)->gambar)
+                                                        <img src="{{ filter_var($item->produk->gambar, FILTER_VALIDATE_URL) ? $item->produk->gambar : asset('storage/' . ltrim($item->produk->gambar, '/')) }}" alt="{{ $item->produk->nama }}" class="product-thumb">
+                                                    @else
+                                                        <div class="product-thumb d-flex align-items-center justify-content-center text-muted small">No</div>
+                                                    @endif
+                                                    <div>
+                                                        <div class="product-name">{{ $item->produk->nama ?? 'Produk tidak tersedia' }}</div>
+                                                        <div class="product-meta">{{ $item->spesifikasi ?? 'Tanpa spesifikasi' }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td>{{ $item->jumlah }}</td>
                                             <td>Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
                                             <td>Rp {{ number_format($item->jumlah * $item->harga_satuan, 0, ',', '.') }}</td>
@@ -280,26 +307,54 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body">
                     <h5 class="mb-3">Ubah Status</h5>
-                    <form action="{{ route('pesanan.updateStatus', $pesanan) }}" method="POST">
-                        @csrf
-                        @method('PATCH')
-                        <div class="mb-3">
-                            <label class="form-label">Status Baru</label>
-                            <select class="form-select" name="status">
-                                <option value="menunggu_konfirmasi" {{ $pesanan->status === 'menunggu_konfirmasi' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
-                                <option value="dikonfirmasi" {{ $pesanan->status === 'dikonfirmasi' ? 'selected' : '' }}>Dikonfirmasi</option>
-                                <option value="dalam_produksi" {{ $pesanan->status === 'dalam_produksi' ? 'selected' : '' }}>Dalam Produksi</option>
-                                <option value="siap_kirim" {{ $pesanan->status === 'siap_kirim' ? 'selected' : '' }}>Siap Kirim</option>
-                                <option value="selesai" {{ $pesanan->status === 'selesai' ? 'selected' : '' }}>Selesai</option>
-                                <option value="dibatalkan" {{ $pesanan->status === 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
-                            </select>
+                    @php
+                        $statusOptions = [];
+                        if ($pesanan->status === 'menunggu_konfirmasi') {
+                            $statusOptions = [
+                                'dikonfirmasi' => 'Dikonfirmasi',
+                                'dibatalkan' => 'Dibatalkan',
+                            ];
+                        } elseif ($pesanan->status === 'dikonfirmasi') {
+                            $statusOptions = [
+                                'dalam_produksi' => 'Dalam Produksi',
+                                'dibatalkan' => 'Dibatalkan',
+                            ];
+                        } elseif ($pesanan->status === 'dalam_produksi') {
+                            $statusOptions = [
+                                'siap_kirim' => 'Siap Kirim',
+                                'dibatalkan' => 'Dibatalkan',
+                            ];
+                        } elseif ($pesanan->status === 'siap_kirim') {
+                            $statusOptions = [
+                                'selesai' => 'Selesai',
+                                'dibatalkan' => 'Dibatalkan',
+                            ];
+                        }
+                    @endphp
+
+                    @if(count($statusOptions) > 0)
+                        <form action="{{ route('pesanan.updateStatus', $pesanan) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <div class="mb-3">
+                                <label class="form-label">Status Baru</label>
+                                <select class="form-select" name="status">
+                                    @foreach($statusOptions as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Keterangan</label>
+                                <textarea class="form-control" name="keterangan" rows="3" placeholder="Keterangan singkat..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill">Simpan Status</button>
+                        </form>
+                    @else
+                        <div class="alert alert-secondary mb-0">
+                            Status pesanan tidak dapat diubah lagi karena sudah selesai atau dibatalkan.
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Keterangan</label>
-                            <textarea class="form-control" name="keterangan" rows="3" placeholder="Keterangan singkat..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 rounded-pill">Simpan Status</button>
-                    </form>
+                    @endif
                 </div>
             </div>
         </div>

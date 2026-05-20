@@ -34,6 +34,8 @@
         body {
             min-height: 100%;
             height: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         .container-fluid {
@@ -87,9 +89,15 @@
             align-items: center;
             justify-content: center;
             background: rgba(255,255,255,0.18);
-            color: #fff;
-            font-size: 1.1rem;
             box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+            overflow: hidden;
+        }
+
+        .sidebar-brand .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         .sidebar-brand .logo-text {
@@ -247,6 +255,28 @@
             padding: 0.5rem 0.85rem 1rem;
             min-height: auto;
             background-color: transparent;
+        }
+
+        .container-fluid {
+            min-height: 100vh;
+        }
+
+        .row.g-0 {
+            min-height: 100vh;
+            align-items: stretch;
+        }
+
+        #sidebar {
+            min-height: 100vh;
+            height: auto;
+        }
+
+        #sidebar .sidebar-inner {
+            min-height: 100vh;
+        }
+
+        .sidebar-content {
+            min-height: 0;
         }
 
         .main-content > .d-flex:first-child,
@@ -683,16 +713,16 @@
 </head>
 <body>
     @auth
-    <div class="container-fluid">
+    <div class="container-fluid px-0">
         <div class="row g-0">
             <div class="col-md-3 col-lg-2 px-0 bg-navy text-white" id="sidebar">
                 <div class="sidebar-inner">
                     <div class="sidebar-brand">
                         <div class="logo-icon">
-                            <i class="fas fa-cubes"></i>
+                            <img src="{{ asset('images/hutch-logo.png') }}" alt="Hutch Prestige Logo">
                         </div>
                         <div class="logo-text">
-                            <span class="brand-name">hutch.id</span>
+                            <span class="brand-name">HUTCH PRESTIGE</span>
                             <span class="brand-subtitle">Modul Manajemen</span>
                         </div>
                     </div>

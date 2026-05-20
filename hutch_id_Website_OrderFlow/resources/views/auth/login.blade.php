@@ -112,25 +112,44 @@
         }
 
         .logo-icon {
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            color: white;
             margin: 0 auto 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-icon svg,
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .logo-icon img {
+            object-fit: contain;
+            border-radius: 18px;
         }
 
         .logo-text {
             font-size: 2.2rem;
-            font-weight: 700;
+            font-weight: 800;
             color: white;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.2rem;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.15em;
+        }
+
+        .logo-subtext {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0.3em;
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
         }
 
         .subtitle {
@@ -541,9 +560,9 @@
             <div class="login-left">
                 <div class="login-header">
                     <div class="logo-icon">
-                        <i class="fas fa-box"></i>
+                        <img src="{{ asset('images/hutch-logo.png') }}" alt="Hutch Prestige Logo">
                     </div>
-                    <div class="logo-text">hutch.id</div>
+                    <div class="logo-text">HUTCH PRESTIGE</div>
                     <div class="subtitle">Bag Manufacturing & In-House Brand</div>
                     <div class="divider-text">Sistem Manajemen Pesanan</div>
                 </div>
