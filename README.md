@@ -79,7 +79,6 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 ### Libraries Tambahan
 
 - **DOMPDF** — Library untuk generate PDF dokumen PO
-- **Carbon** — Library untuk manipulasi tanggal dan waktu
 
 ### DevOps & Hosting
 
