@@ -92,7 +92,7 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 | --------------- | -------------------------------------- | ---------------------------------------------------- |
 | Staf Penjualan  | Menerima dan mencatat pesanan          | Buat PO, lihat daftar PO, cetak PO PDF               |
 | Pemilik UMKM    | Memantau dan mengelola seluruh pesanan | Full access: konfirmasi, ubah status, laporan, cetak |
-| Operator Gudang | Memproses bahan baku untuk produksi    | Lihat PO aktif, perbarui status produksi             |
+| Operator Gudang | Memproses bahan baku untuk produksi    | Lihat PO aktif, perbarui status produksi, menambahkan stok barang             |
 | Administrator   | Konfigurasi sistem dan data master     | Full access + konfigurasi sistem, akses arsip        |
 
 ---
@@ -323,9 +323,9 @@ Setiap dokumen PO yang di-generate memuat 8 elemen wajib:
 | Adrian Ronald Daga     | 20241320011 | Frontend/Backend Developer . (Website) |
 | Muhamad Alvin Ramadhan | 20241320035 | Frontend Developer · (Mobile)          |
 | Sopyan Rinaldhi        | 20241320028 | Backend Developer · (Mobile)           |
-| Eka Febryanto          | 20241320014 | Qa Tester                              |
+| Eka Febryanto          | 20241320014 | Qa Tester (Website)                    |
 | Julia Habibah          | 20241320020 | Sistem Analyst                         |
-| Akbar                  | 20241320017 | Dokumentasi                            |
+| Akbar                  | 20241320017 | Qa Tester (Mobile)                     |
 
 ---
 
