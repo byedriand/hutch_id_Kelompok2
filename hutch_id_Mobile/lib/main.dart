@@ -1,36 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'theme/app_theme.dart';
-import 'screens/login_screen.dart';
+import 'screens/auth/login_screen.dart';
 
-void main() {
+import 'services/api_service.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Status bar style
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-  ));
-
-  // Lock to portrait
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  runApp(const HutchPoApp());
+  await ApiService.init();
+  runApp(const MyApp());
 }
 
-class HutchPoApp extends StatelessWidget {
-  const HutchPoApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'hutch.id — Modul PO',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
+      title: 'HUTCHID',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
       home: const LoginScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
