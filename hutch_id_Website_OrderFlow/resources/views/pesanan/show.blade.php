@@ -138,6 +138,29 @@
             @if(auth()->user()->role !== 'operator_gudang')
                 <a href="{{ route('pesanan.edit', $pesanan) }}" class="btn btn-warning text-white">
                     <i class="fas fa-edit me-1"></i>Edit
+
+            @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const statusSelect = document.querySelector('form[action*="updateStatus"] select[name="status"]');
+                    const siapKirimFields = document.getElementById('siap-kirim-fields');
+
+                    if (!statusSelect) return;
+
+                    function toggleSiapKirim() {
+                        if (statusSelect.value === 'siap_kirim') {
+                            siapKirimFields.style.display = '';
+                        } else {
+                            siapKirimFields.style.display = 'none';
+                        }
+                    }
+
+                    statusSelect.addEventListener('change', toggleSiapKirim);
+                    // initial
+                    toggleSiapKirim();
+                });
+            </script>
+            @endpush
                 </a>
             @endif
         </div>
@@ -285,6 +308,18 @@
                             <span>PO dibuat</span>
                             <strong>{{ $formatDate($pesanan->created_at) }}</strong>
                         </div>
+                        @if($pesanan->tanggal_dikirim)
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Tanggal Dikirim</span>
+                            <strong>{{ $formatDate($pesanan->tanggal_dikirim) }}</strong>
+                        </div>
+                        @endif
+                        @if($pesanan->nomor_resi)
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Nomor Resi</span>
+                            <strong>{{ $pesanan->nomor_resi }}</strong>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -307,30 +342,6 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body">
                     <h5 class="mb-3">Ubah Status</h5>
-                    @php
-                        $statusOptions = [];
-                        if ($pesanan->status === 'menunggu_konfirmasi') {
-                            $statusOptions = [
-                                'dikonfirmasi' => 'Dikonfirmasi',
-                                'dibatalkan' => 'Dibatalkan',
-                            ];
-                        } elseif ($pesanan->status === 'dikonfirmasi') {
-                            $statusOptions = [
-                                'dalam_produksi' => 'Dalam Produksi',
-                                'dibatalkan' => 'Dibatalkan',
-                            ];
-                        } elseif ($pesanan->status === 'dalam_produksi') {
-                            $statusOptions = [
-                                'siap_kirim' => 'Siap Kirim',
-                                'dibatalkan' => 'Dibatalkan',
-                            ];
-                        } elseif ($pesanan->status === 'siap_kirim') {
-                            $statusOptions = [
-                                'selesai' => 'Selesai',
-                                'dibatalkan' => 'Dibatalkan',
-                            ];
-                        }
-                    @endphp
 
                     @if(count($statusOptions) > 0)
                         <form action="{{ route('pesanan.updateStatus', $pesanan) }}" method="POST">
@@ -348,11 +359,20 @@
                                 <label class="form-label">Keterangan</label>
                                 <textarea class="form-control" name="keterangan" rows="3" placeholder="Keterangan singkat..."></textarea>
                             </div>
+                            <div id="siap-kirim-fields" class="mb-3" style="display: none;">
+                                <label class="form-label">Detail Pengiriman</label>
+                                <div class="mb-2">
+                                    <input type="date" class="form-control" name="tanggal_dikirim" placeholder="Tanggal pengiriman">
+                                </div>
+                                <div>
+                                    <input type="text" class="form-control" name="nomor_resi" placeholder="Nomor resi / tracking (opsional)">
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-primary w-100 rounded-pill">Simpan Status</button>
                         </form>
                     @else
                         <div class="alert alert-secondary mb-0">
-                            Status pesanan tidak dapat diubah lagi karena sudah selesai atau dibatalkan.
+                            Status pesanan tidak dapat diubah lagi karena sudah selesai, dibatalkan, atau Anda tidak memiliki izin untuk mengubah status di tahapan ini.
                         </div>
                     @endif
                 </div>

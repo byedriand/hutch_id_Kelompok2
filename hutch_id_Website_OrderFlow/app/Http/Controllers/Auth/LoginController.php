@@ -73,17 +73,12 @@ class LoginController extends Controller
                 ]);
         }
 
-        // Verify role matches
-        if ($user->role !== $request->role) {
-            return back()
-                ->withInput($request->only('email', 'role'))
-                ->withErrors([
-                    'role' => 'Role tidak sesuai dengan akun ' . $request->email . '. Akun ini adalah: ' . $this->getRoleLabel($user->role),
-                ]);
-        }
-
         // Attempt to authenticate
         if ($this->attemptLogin($request)) {
+            if ($user->role !== $request->role) {
+                $request->session()->flash('warning', 'Role yang dipilih tidak sesuai dengan akun ' . $request->email . '. Anda masuk sebagai: ' . $this->getRoleLabel($user->role) . '.');
+            }
+
             return $this->sendLoginResponse($request);
         }
 

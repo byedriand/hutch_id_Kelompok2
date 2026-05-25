@@ -77,6 +77,11 @@ class PesananPolicy
             return in_array($pesanan->status, ['dikonfirmasi', 'dalam_produksi', 'siap_kirim']);
         }
 
+        if ($user->role === 'staf_penjualan') {
+            // Staf Penjualan dapat membatalkan PO yang mereka buat sebelum dikonfirmasi
+            return $pesanan->created_by === $user->id && $pesanan->status === 'menunggu_konfirmasi';
+        }
+
         return false;
     }
 

@@ -491,6 +491,11 @@
                             </table>
                         </div>
                         <div id="stok-warning" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                        <div class="mt-3">
+                            <button type="button" id="btn-notify-stok-kurang" class="btn btn-warning d-none" onclick="notifyStockShortage()">
+                                <i class="fas fa-bell me-1"></i>Kirim Notifikasi Stok Kurang ke Operator Gudang
+                            </button>
+                        </div>
                     </div>
                     <div class="text-end mt-3 rounded-4 bg-light p-3">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -498,6 +503,7 @@
                             <span id="total-po" class="mono text-primary fs-5">Rp 0</span>
                         </div>
                         <input type="hidden" name="total_nilai" id="total-nilai" value="0">
+                        <input type="hidden" name="send_shortage_notification" id="send-shortage-notification" value="0">
                     </div>
                 </div>
             </div>
@@ -703,17 +709,23 @@ function updateStockVerification() {
 
     stockBody.innerHTML = rows.join('');
 
+    const notifyButton = document.getElementById('btn-notify-stok-kurang');
+
     if (hasWarning) {
-        warningBox.textContent = 'Beberapa item melebihi stok tersedia. Periksa kebutuhan dan ubah jumlah produk.';
+        warningBox.textContent = 'Beberapa item melebihi stok tersedia. PO masih bisa disimpan. Tekan tombol notifikasi untuk memberi tahu operator gudang.';
         warningBox.classList.remove('d-none');
         statusBadge.className = 'badge rounded-pill bg-danger text-white px-3';
         statusBadge.textContent = 'Stok tidak cukup';
-        document.getElementById('btn-simpan').disabled = true;
+        if (notifyButton) {
+            notifyButton.classList.remove('d-none');
+        }
     } else {
         warningBox.classList.add('d-none');
         statusBadge.className = 'badge rounded-pill bg-success text-white px-3';
         statusBadge.textContent = 'Semua stok cukup';
-        document.getElementById('btn-simpan').disabled = false;
+        if (notifyButton) {
+            notifyButton.classList.add('d-none');
+        }
     }
 }
 
@@ -798,6 +810,76 @@ function formatNumber(num) {
 }
 
 const formPo = document.getElementById('form-po');
+const sendShortageNotificationInput = document.getElementById('send-shortage-notification');
+const btnSimpan = document.getElementById('btn-simpan');
+
+if (btnSimpan) {
+    btnSimpan.addEventListener('click', function() {
+        if (sendShortageNotificationInput) {
+            sendShortageNotificationInput.value = '0';
+        }
+    });
+}
+
+function getShortageDetails() {
+    const details = [];
+    document.querySelectorAll('#stock-verification-body tr').forEach(row => {
+        const cols = row.querySelectorAll('td');
+        if (cols.length < 5) return;
+        const nama = cols[0].textContent.trim();
+        const tersedia = parseInt(cols[1].textContent.trim()) || 0;
+        const kebutuhan = parseInt(cols[2].textContent.trim()) || 0;
+        const selisih = parseInt(cols[3].textContent.trim()) || 0;
+        if (kebutuhan > tersedia) {
+            details.push({
+                nama_produk: nama,
+                stok_tersedia: tersedia,
+                kebutuhan: kebutuhan,
+                kurang: Math.abs(selisih),
+            });
+        }
+    });
+    return details;
+}
+
+async function notifyStockShortage() {
+    const details = getShortageDetails();
+    if (!details.length) {
+        alert('Tidak ada kekurangan stok yang terdeteksi.');
+        return;
+    }
+
+    const nomorPo = document.getElementById('nomor_po') ? document.getElementById('nomor_po').value : null;
+    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrf = tokenMeta ? tokenMeta.getAttribute('content') : '';
+
+    try {
+        const res = await fetch('{{ route('notifikasi.stokKurangDraft') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ nomor_po: nomorPo, detail_kurang: details })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.success) {
+            alert('Notifikasi stok kurang berhasil dikirim ke operator gudang.');
+            // hide the notify button to prevent duplicates
+            const btn = document.getElementById('btn-notify-stok-kurang');
+            if (btn) btn.classList.add('d-none');
+        } else {
+            console.error(json);
+            alert('Gagal mengirim notifikasi. Cek konsol untuk detail.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Terjadi kesalahan saat mengirim notifikasi.');
+    }
+}
+
 formPo.addEventListener('submit', function(e) {
     const pelangganId = document.getElementById('pelanggan_id').value;
     if (!pelangganId) {

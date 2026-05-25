@@ -617,6 +617,12 @@
                         <span>{{ $errors->first() }}</span>
                     </div>
                 @endif
+                @if(session('warning'))
+                    <div class="error-message warning-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>{{ session('warning') }}</span>
+                    </div>
+                @endif
 
                 <form method="POST" action="{{ route('login') }}" id="loginForm">
                     @csrf

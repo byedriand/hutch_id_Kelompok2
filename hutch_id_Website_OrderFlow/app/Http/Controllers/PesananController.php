@@ -14,6 +14,7 @@ use App\Models\Produk;
 use App\Models\Pelanggan;
 use App\Models\DetailPesanan;
 use App\Models\HistoriStatus;
+use App\Models\Notifikasi;
 
 class PesananController extends Controller
 {
@@ -110,19 +111,21 @@ class PesananController extends Controller
             $requestedQuantities[$productId] = ($requestedQuantities[$productId] ?? 0) + intval($item['jumlah']);
         }
 
-        $stockErrors = [];
+        $detail_kurang = [];
         foreach ($requestedQuantities as $productId => $qty) {
             $produk = Produk::find($productId);
             if (! $produk) {
                 return back()->withInput()->withErrors(['items' => 'Produk tidak ditemukan.']);
             }
             if ($qty > $produk->stok) {
-                $stockErrors[] = "Stok produk {$produk->nama} tidak mencukupi. Tersedia {$produk->stok}, dibutuhkan {$qty}.";
+                $detail_kurang[] = [
+                    'produk_id' => $produk->id,
+                    'nama_produk' => $produk->nama,
+                    'jumlah_dipesan' => $qty,
+                    'stok_tersedia' => $produk->stok,
+                    'kurang' => $qty - $produk->stok,
+                ];
             }
-        }
-
-        if (! empty($stockErrors)) {
-            return back()->withInput()->withErrors(['items' => $stockErrors]);
         }
 
         $nomorPo = $this->generateNomorPo($validated['tanggal_pesanan']);
@@ -168,9 +171,20 @@ class PesananController extends Controller
                 'status' => 'menunggu_konfirmasi',
                 'keterangan' => 'Pesanan dibuat dan menunggu persetujuan.',
             ]);
+
+            if ($request->boolean('send_shortage_notification') && ! empty($detail_kurang)) {
+                NotifikasiController::createStokKurangNotifikasi($pesanan, $detail_kurang);
+            }
         });
 
-        return redirect()->route('pesanan.index')->with('success', 'PO berhasil disimpan.');
+        $message = 'PO berhasil disimpan.';
+        if ($request->boolean('send_shortage_notification')) {
+            $message = ! empty($detail_kurang)
+                ? 'PO berhasil disimpan dan notifikasi kekurangan stok telah dikirim.'
+                : 'PO berhasil disimpan. Tidak ada kekurangan stok.';
+        }
+
+        return redirect()->route('pesanan.index')->with('success', $message);
     }
 
     /**
@@ -203,7 +217,43 @@ class PesananController extends Controller
 
         $pesanan->load('pelanggan', 'detailPesanan.produk', 'historiStatus.user', 'creator');
 
-        return view('pesanan.show', compact('pesanan'));
+        $statusOptions = $this->getAllowedStatusOptions($pesanan, auth()->user());
+
+        return view('pesanan.show', compact('pesanan', 'statusOptions'));
+    }
+
+    /**
+     * Determine which status options are allowed for the current user and order.
+     */
+    private function getAllowedStatusOptions(Pesanan $pesanan, $user): array
+    {
+        $statusOptions = [];
+
+        if ($pesanan->status === 'menunggu_konfirmasi') {
+            $statusOptions = [
+                'dikonfirmasi' => 'Dikonfirmasi',
+                'dibatalkan' => 'Dibatalkan',
+            ];
+        } elseif ($pesanan->status === 'dikonfirmasi') {
+            $statusOptions = [
+                'dalam_produksi' => 'Dalam Produksi',
+                'dibatalkan' => 'Dibatalkan',
+            ];
+        } elseif ($pesanan->status === 'dalam_produksi') {
+            $statusOptions = [
+                'siap_kirim' => 'Siap Kirim',
+                'dibatalkan' => 'Dibatalkan',
+            ];
+        } elseif ($pesanan->status === 'siap_kirim') {
+            $statusOptions = [
+                'selesai' => 'Selesai',
+                'dibatalkan' => 'Dibatalkan',
+            ];
+        }
+
+        return array_filter($statusOptions, function ($label, $status) use ($user, $pesanan) {
+            return $this->canChangeStatusTo($user->role, $status, $pesanan);
+        }, ARRAY_FILTER_USE_BOTH);
     }
 
     /**
@@ -273,6 +323,25 @@ class PesananController extends Controller
             'keterangan' => 'Pesanan dikonfirmasi oleh ' . auth()->user()->name,
         ]);
 
+        // Check stock for each product in order
+        $pesanan->load('detailPesanan.produk');
+        $detail_kurang = [];
+        foreach ($pesanan->detailPesanan as $detail) {
+            if ($detail->produk->stok < $detail->jumlah) {
+                $detail_kurang[] = [
+                    'nama_produk' => $detail->produk->nama,
+                    'jumlah_dipesan' => $detail->jumlah,
+                    'stok_tersedia' => $detail->produk->stok,
+                    'kurang' => $detail->jumlah - $detail->produk->stok,
+                ];
+            }
+        }
+
+        // Create notification if stock is insufficient
+        if (!empty($detail_kurang)) {
+            NotifikasiController::createStokKurangNotifikasi($pesanan, $detail_kurang);
+        }
+
         return redirect()->route('pesanan.show', $pesanan)->with('success', 'PO berhasil dikonfirmasi.');
     }
 
@@ -293,6 +362,8 @@ class PesananController extends Controller
         $request->validate([
             'status' => 'required|in:' . implode(',', $allowedStatuses),
             'keterangan' => 'nullable|string|max:500',
+            'tanggal_dikirim' => 'nullable|date',
+            'nomor_resi' => 'nullable|string|max:255',
         ]);
 
         $newStatus = $request->status;
@@ -312,11 +383,39 @@ class PesananController extends Controller
             return back()->with('error', 'Pesanan harus dalam status "Dalam Produksi" sebelum dapat ditandai "Siap Kirim".');
         }
 
-        $pesanan->update(['status' => $newStatus]);
+        $updateData = ['status' => $newStatus];
+        if ($newStatus === 'siap_kirim') {
+            // save shipping details if provided
+            $updateData['tanggal_dikirim'] = $request->input('tanggal_dikirim');
+            $updateData['nomor_resi'] = $request->input('nomor_resi');
+        } else {
+            // clear shipping info if status moved away from siap_kirim
+            if (in_array($pesanan->status, ['siap_kirim']) && $newStatus !== 'siap_kirim') {
+                $updateData['tanggal_dikirim'] = null;
+                $updateData['nomor_resi'] = null;
+            }
+        }
+
+        $pesanan->update($updateData);
+
+        $historiKeterangan = $request->keterangan ?? 'Perubahan status oleh ' . auth()->user()->name;
+        if ($newStatus === 'siap_kirim') {
+            $extra = [];
+            if ($pesanan->tanggal_dikirim) {
+                $extra[] = 'Tgl kirim: ' . $pesanan->tanggal_dikirim->format('d M Y');
+            }
+            if ($pesanan->nomor_resi) {
+                $extra[] = 'Resi: ' . $pesanan->nomor_resi;
+            }
+            if (!empty($extra)) {
+                $historiKeterangan .= ' (' . implode(' | ', $extra) . ')';
+            }
+        }
+
         $pesanan->historiStatus()->create([
             'user_id' => auth()->id(),
             'status' => $newStatus,
-            'keterangan' => $request->keterangan ?? 'Perubahan status oleh ' . auth()->user()->name,
+            'keterangan' => $historiKeterangan,
         ]);
 
         return back()->with('success', 'Status pesanan berhasil diperbarui.');
@@ -363,6 +462,14 @@ class PesananController extends Controller
         if ($userRole === 'operator_gudang') {
             // Can only change to: dalam_produksi
             return $newStatus === 'dalam_produksi';
+        }
+
+        if ($userRole === 'staf_penjualan') {
+            // Staf Penjualan dapat membatalkan PO yang mereka buat sebelum dikonfirmasi
+            if ($pesanan->status === 'menunggu_konfirmasi' && $newStatus === 'dibatalkan') {
+                return true;
+            }
+            return false;
         }
 
         return false;

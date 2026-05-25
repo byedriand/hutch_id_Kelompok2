@@ -6,6 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\ArsipController;
+use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\ProdukController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +78,26 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:staf_penjualan,pemilik_umkm,administrator'])->group(function () {
         Route::get('/api/pelanggan/search', [PelangganController::class, 'search'])->name('api.pelanggan.search');
         Route::get('/api/pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('api.pelanggan.show');
+    });
+
+    // Notifications - All authenticated users
+    Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+    Route::get('/api/notifikasi/count-unread', [NotifikasiController::class, 'countUnread'])->name('api.notifikasi.countUnread');
+    Route::get('/api/notifikasi/recent', [NotifikasiController::class, 'recent'])->name('api.notifikasi.recent');
+    Route::post('/notifikasi/{notifikasi}/mark-read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.markAsRead');
+    Route::post('/notifikasi/mark-all-read', [NotifikasiController::class, 'markAllAsRead'])->name('notifikasi.markAllAsRead');
+    // Notify operator gudang for stock shortage from draft (no PO saved)
+    Route::post('/notifikasi/stok-kurang-draft', [NotifikasiController::class, 'storeStokKurangDraft'])->name('notifikasi.stokKurangDraft');
+    Route::delete('/notifikasi/{notifikasi}', [NotifikasiController::class, 'destroy'])->name('notifikasi.destroy');
+
+    // Stock Management - Operator Gudang Only
+    Route::middleware(['role:operator_gudang'])->group(function () {
+        Route::get('/produk', [ProdukController::class, 'index'])->name('produk.index');
+        Route::get('/produk/{produk}/edit', [ProdukController::class, 'edit'])->name('produk.edit');
+        Route::put('/produk/{produk}', [ProdukController::class, 'update'])->name('produk.update');
+        Route::post('/produk/{produk}/quick-update', [ProdukController::class, 'quickUpdate'])->name('produk.quickUpdate');
+        // Quick update by product name (fallback for notifications without produk_id)
+        Route::post('/produk/quick-update-by-name', [ProdukController::class, 'quickUpdateByName'])->name('produk.quickUpdateByName');
     });
 });
 

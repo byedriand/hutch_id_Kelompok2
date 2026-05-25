@@ -734,6 +734,10 @@
                                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                                     <i class="fas fa-tachometer-alt"></i>Dashboard
                                 </a>
+                                <a class="nav-link {{ request()->routeIs('notifikasi.index') ? 'active' : '' }}" href="{{ route('notifikasi.index') }}">
+                                    <i class="fas fa-bell"></i>Notifikasi
+                                    <span id="notif-badge" class="badge bg-danger ms-auto" style="font-size: 0.7rem; padding: 0.25rem 0.6rem; display: none;">0</span>
+                                </a>
                         <a class="nav-link {{ request()->routeIs('pesanan.index') ? 'active' : '' }}" href="{{ route('pesanan.index') }}">
                             <i class="fas fa-list"></i>Daftar Pesanan
                             @if($jumlahMenunggu > 0)
@@ -748,6 +752,11 @@
                         <a class="nav-link {{ request()->routeIs('pelanggan.index') ? 'active' : '' }}" href="{{ route('pelanggan.index') }}">
                             <i class="fas fa-users"></i>Pelanggan
                         </a>
+                        @if(auth()->user()->role === 'operator_gudang')
+                            <a class="nav-link {{ request()->routeIs('produk.index') ? 'active' : '' }}" href="{{ route('produk.index') }}">
+                                <i class="fas fa-boxes"></i>Manajemen Stok
+                            </a>
+                        @endif
                     </nav>
 
                             <div class="px-3 mt-2 mb-1 text-uppercase text-white-50 fw-semibold small sidebar-section">Lain</div>
@@ -826,6 +835,29 @@
     @endif
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Update notification count on page load and every 30 seconds
+        function updateNotificationCount() {
+            fetch('{{ route("api.notifikasi.countUnread") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notif-badge');
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.log('Error fetching notifications:', error));
+        }
+
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', updateNotificationCount);
+
+        // Update every 30 seconds
+        setInterval(updateNotificationCount, 30000);
+    </script>
     @stack('scripts')
 </body>
 </html>
