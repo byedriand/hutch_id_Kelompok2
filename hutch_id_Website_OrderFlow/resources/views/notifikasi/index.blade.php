@@ -94,21 +94,61 @@
                                                 <strong>Catatan:</strong> {{ $notif->data['keterangan'] }}<br>
                                             @endif
                                         @endif
-                                        @if(isset($notif->data['detail_kurang']))
-                                            @if(auth()->user()->role === 'operator_gudang')
-                                                <div class="alert alert-warning small mb-2">
-                                                    <strong>Untuk Operator Gudang:</strong> Mohon tambahkan stok sesuai kebutuhan di bawah.
+                                        @if(isset($notif->data['detail_kurang']) && !empty($notif->data['detail_kurang']))
+                                            <div class="border-top mt-3 pt-3">
+                                                <div class="row g-2 small mb-3">
+                                                    <div class="col-6">
+                                                        <strong>Nomor PO:</strong> {{ $notif->data['nomor_po'] ?? 'Pesanan (Draft)' }}
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <strong>Dibuat:</strong> {{ $notif->created_at->format('d M Y H:i') }}
+                                                    </div>
                                                 </div>
-                                            @endif
-                                            <strong>Detail Kekurangan:</strong>
-                                            <ul class="mb-0 mt-1 ps-3">
-                                                @foreach($notif->data['detail_kurang'] as $detail)
-                                                    <li class="d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            {{ $detail['nama_produk'] }}: {{ $detail['kurang'] }} unit (Stok: {{ $detail['stok_tersedia'] }})
+                                                @if($notif->pesanan)
+                                                    <div class="row g-2 small mb-3">
+                                                        <div class="col-6">
+                                                            <strong>Pelanggan:</strong> {{ $notif->pesanan->pelanggan->nama ?? 'N/A' }}
                                                         </div>
-                                                        @if(auth()->user()->role === 'operator_gudang')
-                                                            <div>
+                                                        <div class="col-6">
+                                                            <strong>Target Pengiriman:</strong> {{ $notif->pesanan->tanggal_pengiriman?->format('d M Y') ?? 'Belum ditentukan' }}
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                <div class="table-responsive mt-3">
+                                                    <table class="table table-sm table-bordered mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th class="text-center" style="width: 5%">#</th>
+                                                                <th>Produk</th>
+                                                                <th class="text-center" style="width: 15%">Dipesan</th>
+                                                                <th class="text-center" style="width: 15%">Stok Ada</th>
+                                                                <th class="text-center" style="width: 15%">Kurang</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($notif->data['detail_kurang'] as $idx => $detail)
+                                                                <tr>
+                                                                    <td class="text-center">{{ $idx + 1 }}</td>
+                                                                    <td>
+                                                                        <strong>{{ $detail['nama_produk'] }}</strong>
+                                                                    </td>
+                                                                    <td class="text-center fw-semibold">{{ $detail['jumlah_dipesan'] ?? $detail['kebutuhan'] ?? '-' }} unit</td>
+                                                                    <td class="text-center">{{ $detail['stok_tersedia'] }} unit</td>
+                                                                    <td class="text-center">
+                                                                        <span class="badge bg-danger">{{ $detail['kurang'] }} unit</span>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                @if(auth()->user()->role === 'operator_gudang')
+                                                    <div class="mt-3 pt-2 border-top">
+                                                        <strong class="text-muted small d-block mb-2">Aksi Cepat:</strong>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach($notif->data['detail_kurang'] as $detail)
                                                                 @php
                                                                     $resolvedId = $detail['produk_id'] ?? null;
                                                                     if (!$resolvedId) {
@@ -117,18 +157,18 @@
                                                                             ->value('id');
                                                                     }
                                                                 @endphp
-                                                                <button type="button" class="btn btn-sm btn-outline-success btn-add-stock"
+                                                                <button type="button" class="btn btn-sm btn-success btn-add-stock"
                                                                     data-produk-id="{{ $resolvedId ?? '' }}"
                                                                     data-nama="{{ $detail['nama_produk'] }}"
                                                                     data-stok="{{ $detail['stok_tersedia'] }}"
                                                                     data-kurang="{{ $detail['kurang'] }}">
-                                                                    <i class="fas fa-plus me-1"></i>Tambah Stok
+                                                                    <i class="fas fa-plus me-1"></i>{{ substr($detail['nama_produk'], 0, 20) }}
                                                                 </button>
-                                                            </div>
-                                                        @endif
-                                                    </li>
-                                                @endforeach
-                                            </ul>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         @endif
                                     </div>
                                 @endif
@@ -163,143 +203,167 @@
     }
 </style>
 <!-- Modal for quick add stock -->
-<div class="modal fade" id="addStockModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
+<div class="modal fade" id="addStockModal" tabindex="-1" style="z-index: 9999;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" style="z-index: 10000;">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Tambah Stok</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Tambah Stok Barang</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="form-add-stock">
-                    <input type="hidden" id="modal-produk-id">
-                    <div class="mb-2">
-                        <label class="form-label">Produk</label>
-                        <div id="modal-produk-nama" class="fw-semibold"></div>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">Stok Saat Ini</label>
-                        <div id="modal-stok-lama"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="modal-jumlah-tambah" class="form-label">Jumlah yang ditambahkan</label>
-                        <input type="number" id="modal-jumlah-tambah" class="form-control" min="1" value="1" required>
-                    </div>
-                    <div id="modal-candidates" class="mb-3 d-none">
-                        <label class="form-label">Pilih Produk (cocok)</label>
-                        <div id="modal-candidates-list" class="list-group"></div>
-                    </div>
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary">Tambah</button>
-                    </div>
-                </form>
+                <p><strong>Produk:</strong></p>
+                <p id="modalProduk" class="mb-3 p-2 bg-light rounded">-</p>
+                
+                <p><strong>Stok Saat Ini:</strong></p>
+                <p id="modalStok" class="mb-3 p-2 bg-light rounded">0</p>
+                
+                <label for="jumlahTambah" class="form-label"><strong>Jumlah Tambah:</strong></label>
+                <input type="number" class="form-control form-control-lg mb-3" id="jumlahTambah" value="1" min="1">
+                
+                <div id="candidateContainer" class="d-none mt-3 pt-3 border-top">
+                    <p class="text-danger mb-2"><strong>Produk tidak ditemukan. Pilih dari daftar:</strong></p>
+                    <div id="candidateList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-success btn-lg" id="btnTambahStok">✓ Tambah Stok</button>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    .modal-backdrop {
+        z-index: 9998 !important;
+    }
+    #addStockModal {
+        z-index: 9999 !important;
+    }
+    .modal-backdrop.show {
+        opacity: 0.5;
+    }
+</style>
+
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-        const addStockButtons = document.querySelectorAll('.btn-add-stock');
-        const modal = new bootstrap.Modal(document.getElementById('addStockModal'));
-
-        addStockButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                        const produkId = this.dataset.produkId;
-                        const nama = this.dataset.nama;
-                        const stok = parseInt(this.dataset.stok) || 0;
-                        const kurang = parseInt(this.dataset.kurang) || 1;
-
-                        document.getElementById('modal-produk-id').value = produkId;
-                        document.getElementById('modal-produk-nama').textContent = nama;
-                        document.getElementById('modal-stok-lama').textContent = stok;
-                        document.getElementById('modal-jumlah-tambah').value = kurang;
-
-                        modal.show();
-                });
-        });
-
-        const form = document.getElementById('form-add-stock');
-        form.addEventListener('submit', async function(e) {
+    // Initialize after small delay to ensure DOM is ready
+    setTimeout(function() {
+        console.log('✅ Starting initialization');
+        
+        const modalEl = document.getElementById('addStockModal');
+        console.log('Modal element:', modalEl ? 'FOUND' : 'NOT FOUND');
+        
+        if (!modalEl) {
+            console.error('❌ Modal element not found');
+            return;
+        }
+        
+        let bsModal = new bootstrap.Modal(modalEl);
+        console.log('✅ Bootstrap modal created');
+        
+        // Setup event delegation for quick add buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-add-stock')) {
+                console.log('✅ Quick add button clicked');
                 e.preventDefault();
-                const produkId = document.getElementById('modal-produk-id').value;
-                const jumlahTambah = parseInt(document.getElementById('modal-jumlah-tambah').value) || 0;
-                const stokLama = parseInt(document.getElementById('modal-stok-lama').textContent) || 0;
-                const newStok = stokLama + jumlahTambah;
-                const tokenMeta = document.querySelector('meta[name="csrf-token"]');
-                const csrf = tokenMeta ? tokenMeta.getAttribute('content') : '';
-
-                if (!produkId) {
-                        alert('Produk tidak ditemukan');
-                        return;
-                }
-
-                try {
-                    let res, json;
-                    if (produkId) {
-                        res = await fetch(`/produk/${produkId}/quick-update`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrf,
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({ stok: newStok })
-                        });
-                    } else {
-                        // Fallback: try update by product name
-                        const nama = document.getElementById('modal-produk-nama').textContent || '';
-                        res = await fetch(`/produk/quick-update-by-name`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrf,
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({ nama: nama.trim(), stok: newStok })
-                        });
-                    }
-
-                    json = await res.json();
-                    if (res.ok && json.success) {
-                        alert(json.message || 'Stok berhasil diperbarui');
-                        modal.hide();
-                        location.reload();
-                    } else {
-                        // If server returned candidate list, show them
-                        if (json && Array.isArray(json.candidates) && json.candidates.length > 0) {
-                            const cWrap = document.getElementById('modal-candidates');
-                            const cList = document.getElementById('modal-candidates-list');
-                            cList.innerHTML = '';
-                            json.candidates.forEach(c => {
-                                const item = document.createElement('button');
-                                item.type = 'button';
-                                item.className = 'list-group-item list-group-item-action';
-                                item.textContent = `${c.nama} (Stok: ${c.stok})`;
-                                item.dataset.id = c.id;
-                                item.addEventListener('click', function() {
-                                    document.getElementById('modal-produk-id').value = this.dataset.id;
-                                    document.getElementById('modal-produk-nama').textContent = c.nama;
-                                    document.getElementById('modal-stok-lama').textContent = c.stok;
-                                    cWrap.classList.add('d-none');
-                                    // After selecting candidate, re-submit form programmatically
-                                    form.dispatchEvent(new Event('submit'));
-                                });
-                                cList.appendChild(item);
-                            });
-                            cWrap.classList.remove('d-none');
-                        } else {
-                            console.error(json);
-                            alert(json.error || 'Gagal memperbarui stok. Lihat konsol untuk detail.');
-                        }
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('Terjadi kesalahan saat mengirim permintaan.');
-                }
+                
+                const btn = e.target.closest('.btn-add-stock');
+                const produkId = btn.getAttribute('data-produk-id') || '';
+                const nama = btn.getAttribute('data-nama') || 'Unknown';
+                const stok = parseInt(btn.getAttribute('data-stok')) || 0;
+                const kurang = parseInt(btn.getAttribute('data-kurang')) || 1;
+                
+                console.log(`Data: ID='${produkId}', Nama='${nama}', Stok=${stok}, Kurang=${kurang}`);
+                
+                // Set modal content
+                document.getElementById('modalProduk').textContent = nama;
+                document.getElementById('modalStok').textContent = stok;
+                document.getElementById('jumlahTambah').value = kurang;
+                modalEl.dataset.produkId = produkId;
+                document.getElementById('candidateContainer').classList.add('d-none');
+                
+                // Show modal
+                console.log('Showing modal...');
+                bsModal.show();
+            }
         });
-});
+        
+        // Handle Tambah Stok button
+        document.getElementById('btnTambahStok').addEventListener('click', async function() {
+            const produkId = modalEl.dataset.produkId || '';
+            const stokLama = parseInt(document.getElementById('modalStok').textContent) || 0;
+            const jumlahTambah = parseInt(document.getElementById('jumlahTambah').value) || 1;
+            const newStok = stokLama + jumlahTambah;
+            
+            console.log(`Submitting: ID='${produkId}', NewStok=${newStok}`);
+            
+            if (!produkId) {
+                alert('❌ Pilih produk terlebih dahulu');
+                return;
+            }
+            
+            this.disabled = true;
+            this.innerHTML = '⏳ Processing...';
+            
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                
+                const response = await fetch(`/produk/${produkId}/quick-update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ stok: newStok })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (response.ok && data.success) {
+                    alert('✅ ' + (data.message || 'Stok berhasil diperbarui!'));
+                    bsModal.hide();
+                    setTimeout(() => location.reload(), 300);
+                } else if (data.candidates && data.candidates.length > 0) {
+                    const candidateList = document.getElementById('candidateList');
+                    candidateList.innerHTML = '';
+                    
+                    data.candidates.forEach(candidate => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn btn-outline-primary btn-sm d-block w-100 text-start mb-2';
+                        btn.innerHTML = `<strong>${candidate.nama}</strong> <small class="text-muted">(Stok: ${candidate.stok})</small>`;
+                        
+                        btn.addEventListener('click', function() {
+                            document.getElementById('addStockModal').dataset.produkId = candidate.id;
+                            document.getElementById('modalProduk').textContent = candidate.nama;
+                            document.getElementById('modalStok').textContent = candidate.stok;
+                            document.getElementById('candidateContainer').classList.add('d-none');
+                        });
+                        
+                        candidateList.appendChild(btn);
+                    });
+                    
+                    document.getElementById('candidateContainer').classList.remove('d-none');
+                    this.disabled = false;
+                    this.innerHTML = '✓ Tambah Stok';
+                } else {
+                    alert('❌ ' + (data.error || 'Gagal memperbarui stok'));
+                    this.disabled = false;
+                    this.innerHTML = '✓ Tambah Stok';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error: ' + error.message);
+                this.disabled = false;
+                this.innerHTML = '✓ Tambah Stok';
+            }
+        });
+        
+        console.log('✅ Initialization complete');
+    }, 500);
 </script>
 @endpush
 @endsection

@@ -36,17 +36,51 @@
         }
         .page-actions .btn-primary {
             box-shadow: 0 14px 26px rgba(13, 110, 253, 0.18);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .page-actions .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 32px rgba(13, 110, 253, 0.22);
         }
         .page-actions .btn-outline-secondary {
             background: #ffffff;
             border-color: rgba(108, 117, 125, 0.18);
             color: #3b4a67;
+            transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+        }
+        .page-actions .btn-outline-secondary:hover {
+            transform: translateY(-1px);
+            background-color: #f8fbff;
+        }
+        .page-title-bar {
+            animation: fadeInScale 0.55s ease-out both;
         }
         .card {
             border: 1px solid rgba(226, 232, 240, 0.8);
             border-radius: 1.8rem;
             box-shadow: 0 18px 40px rgba(15, 64, 124, 0.07);
             background: #ffffff;
+            animation: fadeInUp 0.4s ease-out both;
+        }
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+            padding: 1rem 1.25rem;
+        }
+        .summary-card {
+            animation-delay: 0.15s;
+        }
+        .item-table tbody tr {
+            transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease;
+        }
+        .item-table tbody tr.added {
+            animation: slideInUp 0.35s ease both;
+        }
+        .product-preview {
+            transition: transform 0.25s ease;
+        }
+        .product-preview:hover {
+            transform: translateX(3px);
         }
         .card-header {
             background: transparent;
@@ -127,6 +161,7 @@
         }
         .item-table {
             min-width: 100%;
+            table-layout: auto;
             border-collapse: separate;
             border-spacing: 0;
             background: #f8fbff;
@@ -139,6 +174,7 @@
         .item-table th,
         .item-table td {
             padding: 1rem 0.95rem;
+            vertical-align: middle;
         }
         .item-table th {
             color: #455a64;
@@ -153,20 +189,50 @@
             color: #334155;
             border-bottom: 1px solid rgba(226, 232, 240, 0.9);
         }
+        .item-table tbody tr {
+            animation: fadeInUp 0.32s ease both;
+        }
+        .item-table tbody tr:nth-child(odd) {
+            animation-delay: 0.04s;
+        }
+        .item-table tbody tr:nth-child(even) {
+            animation-delay: 0.08s;
+        }
         .item-table tbody tr:last-child td {
             border-bottom: none;
         }
         .item-table .form-control-sm,
         .item-table .form-select-sm {
             border-radius: 0.9rem;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+        .item-table td input.form-control-sm {
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .item-table td .mono {
+            width: 100%;
+            display: inline-block;
+            text-overflow: clip;
+            overflow: visible;
+            white-space: normal;
+            word-break: break-word;
         }
         .item-table tbody tr:hover td {
             background: #f1f7ff;
         }
+        .item-table tbody tr.added {
+            box-shadow: inset 0 0 0 rgba(59, 130, 246, 0.12);
+        }
         .product-preview {
             display: flex;
             gap: 0.85rem;
-            align-items: center;
+            align-items: flex-start;
+            width: 100%;
+            min-width: 0;
         }
         .product-thumbnail {
             width: 56px;
@@ -178,6 +244,11 @@
             border: 1px solid #dbeafe;
         }
         .product-preview-info {
+            width: 100%;
+            flex: 1;
+            min-width: 0;
+        }
+        .product-preview-info .form-select {
             width: 100%;
         }
         .product-preview-info .product-info {
@@ -228,9 +299,46 @@
             border: 1px solid #dbeafe;
             padding: 1.25rem;
         }
+        .container-fluid {
+            animation: fadeInUp 0.55s ease-out both;
+        }
+        .animated-block {
+            animation: fadeInScale 0.45s ease-out both;
+        }
+        .animated-block.delay-2 {
+            animation-delay: 0.1s;
+        }
+        .btn {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        .card {
+            animation: fadeInUp 0.45s ease-out both;
+        }
+        .card:nth-of-type(1) {
+            animation-delay: 0.08s;
+        }
+        .card:nth-of-type(2) {
+            animation-delay: 0.15s;
+        }
         .summary-card {
             position: sticky;
             top: 1.5rem;
+            border-color: rgba(59, 130, 246, 0.2);
+            background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+            animation-delay: 0.25s;
+        }
+        .table-responsive {
+            animation: fadeInUp 0.45s ease-out both;
+            animation-delay: 0.12s;
+        }
+        .table-responsive .item-table tbody tr {
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .table-responsive .item-table tbody tr:hover {
+            transform: translateX(2px);
         }
         @media (max-width: 1199px) {
             .summary-card {
@@ -318,9 +426,39 @@
             font-weight: 800;
             color: #111827;
         }
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 
-    <div class="page-title-bar">
+    <div class="page-title-bar animated-block">
         <div class="page-heading">
             <h1>Buat Pesanan Baru</h1>
             <p>Isi data pelanggan, pilih produk, dan kelola pesanan dengan cepat dalam satu laman.</p>
@@ -417,12 +555,12 @@
                         <table class="table table-sm item-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 5%;">#</th>
-                                    <th style="width: 30%;">Nama Produk</th>
-                                    <th style="width: 25%;">Spesifikasi</th>
+                                    <th style="width: 4%;">#</th>
+                                    <th style="width: 28%;">Nama Produk</th>
+                                    <th style="width: 18%;">Spesifikasi</th>
                                     <th style="width: 10%;">Qty</th>
-                                    <th style="width: 15%;">Harga Satuan</th>
-                                    <th style="width: 10%;">Subtotal</th>
+                                    <th style="width: 17%;">Harga Satuan</th>
+                                    <th style="width: 18%;">Subtotal</th>
                                     <th style="width: 5%;">Aksi</th>
                                 </tr>
                             </thead>
@@ -789,6 +927,7 @@ function tambahItem() {
             </button>
         </td>
     `;
+    newRow.classList.add('added');
     tbody.appendChild(newRow);
     hitungTotal();
 }

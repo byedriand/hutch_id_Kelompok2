@@ -17,6 +17,8 @@ _Program Studi Sistem Informasi — Universitas Kebangsaan Republik Indonesia (U
 
 ---
 
+> Docker support included — see [docker-compose.yml](docker-compose.yml) and the "Menjalankan dengan Docker" section below.
+
 ## 📌 Tentang Proyek
 
 **OrderFlow** adalah sistem manajemen pesanan berbasis web yang dirancang khusus untuk mendukung operasional **hutch.id** — produsen tas konveksi dan brand lokal yang melayani custom production untuk bisnis maupun ready bags untuk umum.

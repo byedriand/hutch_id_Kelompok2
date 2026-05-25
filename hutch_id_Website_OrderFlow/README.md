@@ -3,8 +3,8 @@
 <img src="https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" />
 <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
 <img src="https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white" />
-<img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
-<img src="https://img.shields.io/badge/DOMPDF-000000?style=for-the-badge&logo=php&logoColor=white" />
+<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+<img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" />
 
 # 👜 Hutch.id — Website OrderFlow
 
@@ -74,12 +74,11 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 
 - **HTML / CSS / JavaScript** — Standard web technologies
 - **Bootstrap** — CSS framework untuk responsive design
-- **Vite** — Build tool dan development server
+
 
 ### Libraries Tambahan
 
 - **DOMPDF** — Library untuk generate PDF dokumen PO
-- **Carbon** — Library untuk manipulasi tanggal dan waktu
 
 ### DevOps & Hosting
 
@@ -94,7 +93,7 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 | --------------- | -------------------------------------- | ---------------------------------------------------- |
 | Staf Penjualan  | Menerima dan mencatat pesanan          | Buat PO, lihat daftar PO, cetak PO PDF               |
 | Pemilik UMKM    | Memantau dan mengelola seluruh pesanan | Full access: konfirmasi, ubah status, laporan, cetak |
-| Operator Gudang | Memproses bahan baku untuk produksi    | Lihat PO aktif, perbarui status produksi             |
+| Operator Gudang | Memproses bahan baku untuk produksi    | Lihat PO aktif, perbarui status produksi, menambahkan stok barang             |
 | Administrator   | Konfigurasi sistem dan data master     | Full access + konfigurasi sistem, akses arsip        |
 
 ---
@@ -323,11 +322,11 @@ Setiap dokumen PO yang di-generate memuat 8 elemen wajib:
 | ---------------------- | ----------- | -------------------------------------- |
 | Nayla Rabia Gustari    | 20241320034 | Project Manager                        |
 | Adrian Ronald Daga     | 20241320011 | Frontend/Backend Developer . (Website) |
-| Muhamad Alvin Ramadhan | 20241320035 | Frontend/Backend Developer · (Mobile)  |
-| Akbar                  | 20241320017 |
-| Eka Febryanto          | 20241320014 |
-| Sopyan Rinaldhi        | 20241320028 |
-| Julia Habibah          | 20241320020 |
+| Muhamad Alvin Ramadhan | 20241320035 | Frontend Developer · (Mobile)          |
+| Sopyan Rinaldhi        | 20241320028 | Backend Developer · (Mobile)           |
+| Eka Febryanto          | 20241320014 | Qa Tester (Website)                    |
+| Julia Habibah          | 20241320020 | Sistem Analyst                         |
+| Akbar                  | 20241320017 | Qa Tester (Mobile)                     |
 
 ---
 

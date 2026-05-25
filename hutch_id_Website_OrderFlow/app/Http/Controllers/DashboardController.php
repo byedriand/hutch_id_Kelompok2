@@ -48,6 +48,32 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
+        // Compute stock availability flag for dashboard items
+        $processCollection = function ($collection) {
+            return $collection->map(function ($po) {
+                $stokCukup = true;
+                $shortageTotal = 0;
+
+                foreach ($po->detailPesanan as $detail) {
+                    $produk = $detail->produk;
+                    if (! $produk) continue;
+                    $requested = intval($detail->jumlah);
+                    $available = intval($produk->stok ?? 0);
+                    if ($requested > $available) {
+                        $stokCukup = false;
+                        $shortageTotal += ($requested - $available);
+                    }
+                }
+
+                $po->stok_cukup = $stokCukup;
+                $po->shortage_total = $shortageTotal;
+                return $po;
+            });
+        };
+
+        $pesananMenunggu = $processCollection($pesananMenunggu);
+        $pesananProduksi = $processCollection($pesananProduksi);
+
         return view('dashboard', compact(
             'totalAktif', 'jumlahMenunggu', 'siapKirim', 'selesaiBulanIni', 'nilaiSelesai',
             'pesananMenunggu', 'pesananProduksi'

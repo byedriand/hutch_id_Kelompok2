@@ -166,6 +166,24 @@
         </div>
     </div>
 
+    @if(!empty($detail_kurang))
+        <div class="alert alert-warning rounded-4 mb-4">
+            <strong>Perhatian:</strong> Stok beberapa produk pada PO ini tidak mencukupi.
+            <div class="mt-2">
+                <ul class="mb-0">
+                    @foreach($detail_kurang as $d)
+                        <li>{{ $d['nama_produk'] }}: Dipesan {{ $d['jumlah_dipesan'] }} unit — Stok tersedia {{ $d['stok_tersedia'] }} (kurang {{ $d['kurang'] }} unit)</li>
+                    @endforeach
+                </ul>
+            </div>
+            @if(auth()->user()->role === 'operator_gudang')
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-success" onclick="location.href='{{ route('produk.index') }}'">Tambah Stok</button>
+                </div>
+            @endif
+        </div>
+    @endif
+
     @if(session('share_link'))
         <div class="alert alert-success rounded-4">Link share siap: <a href="{{ session('share_link') }}" target="_blank">{{ session('share_link') }}</a></div>
     @endif

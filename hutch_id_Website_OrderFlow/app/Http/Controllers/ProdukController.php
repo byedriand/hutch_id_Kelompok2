@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Produk;
 use App\Models\Notifikasi;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProdukController extends Controller
 {
@@ -49,16 +50,25 @@ class ProdukController extends Controller
         }
 
         $validated = $request->validate([
-            'stok' => 'required|integer|min:0|max:999999',
-            'tipe_perubahan' => 'required|in:set,tambah,kurangi',
-            'jumlah_perubahan' => 'nullable|integer|min:0',
+            'tipe_perubahan' => ['required', Rule::in(['set','tambah','kurangi'])],
+            'stok' => [
+                Rule::requiredIf($request->input('tipe_perubahan') === 'set'),
+                'nullable', 'integer', 'min:0', 'max:999999'
+            ],
+            'jumlah_perubahan' => [
+                Rule::requiredIf(in_array($request->input('tipe_perubahan'), ['tambah','kurangi'])),
+                'nullable', 'integer', 'min:0'
+            ],
             'keterangan' => 'nullable|string|max:500',
         ], [
-            'stok.required' => 'Jumlah stok harus diisi.',
+            'stok.required' => 'Jumlah stok harus diisi ketika memilih "Set Ke Nilai Baru".',
             'stok.integer' => 'Jumlah stok harus berupa angka.',
             'stok.min' => 'Jumlah stok tidak boleh negatif.',
             'tipe_perubahan.required' => 'Tipe perubahan harus dipilih.',
             'tipe_perubahan.in' => 'Tipe perubahan tidak valid.',
+            'jumlah_perubahan.required' => 'Jumlah perubahan harus diisi untuk tipe perubahan ini.',
+            'jumlah_perubahan.integer' => 'Jumlah perubahan harus berupa angka.',
+            'jumlah_perubahan.min' => 'Jumlah perubahan tidak boleh negatif.',
         ]);
 
         $stokLama = $produk->stok;
@@ -133,6 +143,9 @@ class ProdukController extends Controller
         $produk->stok = $validated['stok'];
         $produk->save();
 
+        // Resolve or delete related 'stok_kurang' notifications when this product's shortage is addressed
+        $this->resolveStokKurangNotificationsForProduct($produk);
+
         // Create notification for quick update
         $perubahan = $produk->stok - $stokLama;
         $tipePerubahan = $perubahan > 0 ? 'Penambahan' : ($perubahan < 0 ? 'Pengurangan' : 'Penyesuaian');
@@ -159,6 +172,72 @@ class ProdukController extends Controller
             'message' => "Stok '{$produk->nama}' diperbarui dari {$stokLama} menjadi {$produk->stok}",
             'stok' => $produk->stok,
         ]);
+    }
+
+    private function resolveStokKurangNotificationsForProduct(Produk $produk)
+    {
+        try {
+            $notifs = Notifikasi::where('tipe', 'stok_kurang')->whereNull('dibaca_at')->get();
+
+            foreach ($notifs as $notif) {
+                $data = $notif->data ?? [];
+                $detailKurang = $data['detail_kurang'] ?? [];
+                $updatedDetails = [];
+                $changed = false;
+
+                foreach ($detailKurang as $detail) {
+                    $matchesProduct = false;
+
+                    if (isset($detail['produk_id']) && $detail['produk_id'] == $produk->id) {
+                        $matchesProduct = true;
+                    } elseif (isset($detail['nama_produk']) && str_contains(strtolower($detail['nama_produk']), strtolower($produk->nama))) {
+                        $matchesProduct = true;
+                    }
+
+                    if (! $matchesProduct) {
+                        $updatedDetails[] = $detail;
+                        continue;
+                    }
+
+                    $needed = $detail['jumlah_dipesan'] ?? $detail['kebutuhan'] ?? null;
+                    if ($needed === null) {
+                        $needed = ($detail['stok_tersedia'] ?? 0) + ($detail['kurang'] ?? 0);
+                    }
+
+                    if ($produk->stok >= $needed) {
+                        $changed = true;
+                        continue;
+                    }
+
+                    // Keep the detail but adjust the remaining shortage.
+                    $detail['stok_tersedia'] = $produk->stok;
+                    $detail['kurang'] = max(0, $needed - $produk->stok);
+                    $updatedDetails[] = $detail;
+                    $changed = true;
+                }
+
+                if (! $changed) {
+                    continue;
+                }
+
+                if (empty($updatedDetails)) {
+                    $notif->delete();
+                    continue;
+                }
+
+                $data['detail_kurang'] = $updatedDetails;
+                $pesanDetail = collect($updatedDetails)->map(function ($item) {
+                    return $item['nama_produk'] . ': ' . $item['kurang'] . ' unit (Stok: ' . ($item['stok_tersedia'] ?? 0) . ')';
+                })->implode(', ');
+
+                $notif->update([
+                    'data' => $data,
+                    'pesan' => 'Pesanan membutuhkan produksi tambahan: ' . $pesanDetail . '. Mohon operator gudang menambah stok yang kurang.',
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to resolve related stok_kurang notifications: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -205,6 +284,7 @@ class ProdukController extends Controller
 
         $perubahan = $produk->stok - $stokLama;
 
+        $this->resolveStokKurangNotificationsForProduct($produk);
         Notifikasi::create([
             'pesanan_id' => null,
             'tipe' => 'stok_ditambah',

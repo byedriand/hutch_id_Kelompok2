@@ -60,7 +60,62 @@ class PesananController extends Controller
             $query->whereDate('tanggal_pengiriman', '<=', $request->sampai);
         }
 
+        // Advanced filters
+        if ($request->min_total) {
+            $query->where('total_nilai', '>=', $request->min_total);
+        }
+
+        if ($request->max_total) {
+            $query->where('total_nilai', '<=', $request->max_total);
+        }
+
+        if ($request->produk) {
+            $query->whereHas('detailPesanan.produk', function ($q) use ($request) {
+                $q->where('nama', 'like', '%' . $request->produk . '%');
+            });
+        }
+
+        if ($request->multi_item) {
+            $query->whereHas('detailPesanan', function ($q) {
+                $q->selectRaw('pesanan_id, count(*) as item_count')
+                  ->groupBy('pesanan_id')
+                  ->havingRaw('count(*) > 1');
+            }, '>=', 1);
+        }
+
         $pesanan = $query->latest()->paginate(15);
+
+        // Calculate shortage info for each paginated pesanan
+        $pesanan->getCollection()->transform(function ($po) {
+            $shortageTotal = 0;
+            $shortageDetails = [];
+
+            foreach ($po->detailPesanan as $detail) {
+                $produk = $detail->produk;
+                if (! $produk) continue;
+
+                $requested = intval($detail->jumlah);
+                $available = intval($produk->stok ?? 0);
+
+                if ($requested > $available) {
+                    $kurang = $requested - $available;
+                    $shortageTotal += $kurang;
+                    $shortageDetails[] = [
+                        'produk_id' => $produk->id,
+                        'nama_produk' => $produk->nama,
+                        'jumlah_dipesan' => $requested,
+                        'stok_tersedia' => $available,
+                        'kurang' => $kurang,
+                    ];
+                }
+            }
+
+            $po->has_shortage = $shortageTotal > 0;
+            $po->shortage_total = $shortageTotal;
+            $po->shortage_details = $shortageDetails;
+
+            return $po;
+        });
 
         return view('pesanan.index', compact('pesanan'));
     }
@@ -217,9 +272,24 @@ class PesananController extends Controller
 
         $pesanan->load('pelanggan', 'detailPesanan.produk', 'historiStatus.user', 'creator');
 
+        // Calculate any stock shortages for display in the detail view
+        $detail_kurang = [];
+        foreach ($pesanan->detailPesanan as $detail) {
+            $produk = $detail->produk;
+            if ($produk && $produk->stok < $detail->jumlah) {
+                $detail_kurang[] = [
+                    'produk_id' => $produk->id,
+                    'nama_produk' => $produk->nama,
+                    'jumlah_dipesan' => $detail->jumlah,
+                    'stok_tersedia' => $produk->stok,
+                    'kurang' => $detail->jumlah - $produk->stok,
+                ];
+            }
+        }
+
         $statusOptions = $this->getAllowedStatusOptions($pesanan, auth()->user());
 
-        return view('pesanan.show', compact('pesanan', 'statusOptions'));
+        return view('pesanan.show', compact('pesanan', 'statusOptions', 'detail_kurang'));
     }
 
     /**
