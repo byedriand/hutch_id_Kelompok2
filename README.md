@@ -3,8 +3,8 @@
 <img src="https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" />
 <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
 <img src="https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white" />
-<img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" />
 <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+<img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" />
 
 # 👜 Hutch.id — Website OrderFlow
 
@@ -32,6 +32,18 @@ Sistem ini mengelola seluruh siklus pesanan pelanggan, mulai dari:
 > Sistem ini dikembangkan berdasarkan kebutuhan operasional **hutch.id** — Bag Manufacturing & In-House Brand yang bergerak di bidang konveksi tas UMKM.
 
 ---
+
+## 🔔 Perkembangan Terbaru (Progress)
+
+Versi saat ini menambahkan perbaikan pada alur stok dan notifikasi serta penyempurnaan tampilan:
+
+- Notifikasi `stok_kurang` kini menyimpan detail kekurangan per produk (`data.detail_kurang`) saat PO memiliki item melebihi stok.
+- Tombol "Aksi Cepat" pada daftar produk telah dihapus dari UI produk; quick-update stok tetap tersedia melalui modal notifikasi dan halaman edit produk.
+- Saat stok ditambahkan (quick-update), sistem otomatis mencoba menyelesaikan atau memperbarui notifikasi `stok_kurang` untuk produk terkait.
+- Form edit stok sekarang hanya menyediakan dua aksi: `Tambahkan Stok` dan `Kurangi Stok` (menghilangkan opsi "Set ke nilai baru").
+- Daftar Pesanan dan Dashboard menampilkan indikator "Kurang" beserta jumlah unit yang kurang untuk PO yang terkena efek kekurangan stok.
+
+Langkah-langkah ini memperbaiki konsistensi UI dan memastikan notifikasi selalu mencerminkan kondisi stok saat ini.
 
 ## ✨ Fitur Utama
 
@@ -75,7 +87,6 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 - **HTML / CSS / JavaScript** — Standard web technologies
 - **Bootstrap** — CSS framework untuk responsive design
 
-
 ### Libraries Tambahan
 
 - **DOMPDF** — Library untuk generate PDF dokumen PO
@@ -90,12 +101,14 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 
 ## 👥 Kelas Pengguna & Hak Akses
 
-| Peran           | Deskripsi                              | Hak Akses                                            |
-| --------------- | -------------------------------------- | ---------------------------------------------------- |
-| Staf Penjualan  | Menerima dan mencatat pesanan          | Buat PO, lihat daftar PO, cetak PO PDF               |
-| Pemilik UMKM    | Memantau dan mengelola seluruh pesanan | Full access: konfirmasi, ubah status, laporan, cetak |
-| Operator Gudang | Memproses bahan baku untuk produksi    | Lihat PO aktif, perbarui status produksi             |
-| Administrator   | Konfigurasi sistem dan data master     | Full access + konfigurasi sistem, akses arsip        |
+| Peran           | Deskripsi singkat             | Hak Akses (ringkas)                                                                                                                                    |
+| --------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Staf Penjualan  | Menerima dan mencatat pesanan | Buat PO, edit PO sebelum konfirmasi, lihat/print PO. Tidak boleh mengonfirmasi atau mengubah status produksi.                                          |
+| Pemilik UMKM    | Pemilik / manajer bisnis      | Akses penuh untuk konfirmasi PO, ubah status produksi, batalkan PO, dan lihat laporan.                                                                 |
+| Operator Gudang | Petugas gudang / produksi     | Lihat PO aktif, verifikasi bahan, tambah/kurangi stok, mulai produksi (ubah status ke "Dalam Produksi"). Tidak mengelola user atau konfigurasi sistem. |
+| Administrator   | Admin sistem                  | Akses penuh: manajemen user, konfigurasi, arsip, dan semua aksi operasional.                                                                           |
+
+RBAC diimplementasikan melalui `PesananPolicy` dan middleware role-based; sesuaikan kebijakan di `app/Policies` bila diperlukan.
 
 ---
 
@@ -222,14 +235,38 @@ Web: http://localhost:8000
 
 ---
 
+## 🐳 Menjalankan dengan Docker
+
+Untuk menjalankan aplikasi menggunakan Docker Compose (direkomendasikan untuk pengujian cepat atau lingkungan terisolasi):
+
+1. Pastikan Docker & Docker Compose terinstall.
+2. Salin file `.env.example` menjadi `.env` dan sesuaikan variabel bila perlu.
+
+Jalankan:
+
+```bash
+docker compose up --build -d
+```
+
+Service utama akan berjalan (mis. web server dan database). Akses aplikasi di:
+
+```
+http://localhost:8080
+```
+
+Catatan:
+
+- Jika Anda ingin menggunakan port lain atau mengatur variable DB, edit `docker-compose.yml` atau `.env` sebelum `up`.
+- Untuk melihat log container gunakan `docker compose logs -f`.
+
 ## 🔑 Akun Default (Seeder)
 
 | Role            | Email               | Password |
 | --------------- | ------------------- | -------- |
-| Administrator   | admin@hutchid.com   | password |
-| Pemilik UMKM    | pemilik@hutchid.com | password |
-| Staf Penjualan  | staf@hutchid.com    | password |
-| Operator Gudang | gudang@hutchid.com  | password |
+| Administrator   | admin@hutch.id   | password123 |
+| Pemilik UMKM    | pemilik@hutch.id | password123 |
+| Staf Penjualan  | staf@hutch.id    | password123 |
+| Operator Gudang | gudang@hutch.id  | password123 |
 
 ---
 
@@ -325,9 +362,9 @@ Setiap dokumen PO yang di-generate memuat 8 elemen wajib:
 | Adrian Ronald Daga     | 20241320011 | Frontend/Backend Developer . (Website) |
 | Muhamad Alvin Ramadhan | 20241320035 | Frontend Developer · (Mobile)          |
 | Sopyan Rinaldhi        | 20241320028 | Backend Developer · (Mobile)           |
-| Eka Febryanto          | 20241320014 | Qa Tester                              |
+| Eka Febryanto          | 20241320014 | Qa Tester (Website)                              |
 | Julia Habibah          | 20241320020 | Sistem Analyst                         |
-| Akbar                  | 20241320017 | Dokumentasi                            |
+| Akbar                  | 20241320017 | Qa Tester (Mobile)                            |
 
 ---
 
