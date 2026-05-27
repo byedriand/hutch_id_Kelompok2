@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/responsive.dart';
 import '../widgets/sidebar.dart';
 import 'pelanggan/daftar_pelanggan_screen.dart';
 import '../models/user_model.dart';
@@ -61,6 +62,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = Responsive.isMobile(context);
+
     // Generate screens dynamically to ensure state changes are passed down correctly
     final List<Widget> screens = [
       DashboardScreenContent(
@@ -68,6 +71,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         totalPelanggan: _totalPelanggan,
         poPending: _poPending,
         poSelesai: _poSelesai,
+        user: widget.user,
+        pesananList: pesananList,
         onNavigate: (index) {
           setState(() {
             selectedMenuIndex = index;
@@ -133,6 +138,40 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       ),
     ];
 
+    // ── Mobile Layout ────────────────────────────────────────────────────────
+    if (isMobile) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF0F4FF),
+        body: Stack(
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              switchInCurve: Curves.easeInOut,
+              switchOutCurve: Curves.easeInOut,
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: Container(
+                key: ValueKey<int>(selectedMenuIndex),
+                child: screens[selectedMenuIndex],
+              ),
+            ),
+            if (_isLoading)
+              const Positioned(
+                top: 0, left: 0, right: 0,
+                child: LinearProgressIndicator(
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563eb)),
+                  minHeight: 3,
+                ),
+              ),
+          ],
+        ),
+        bottomNavigationBar: _buildMobileBottomNav(),
+      );
+    }
+
+    // ── Desktop Layout ───────────────────────────────────────────────────────
     return Scaffold(
       body: Row(
         children: [
@@ -172,9 +211,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                 ),
                 if (_isLoading)
                   const Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
+                    top: 0, left: 0, right: 0,
                     child: LinearProgressIndicator(
                       backgroundColor: Colors.transparent,
                       valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563eb)),
@@ -188,14 +225,113 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       ),
     );
   }
+
+  Widget _buildMobileBottomNav() {
+    final int badge = pesananList
+        .where((p) => p['status'] == 'Pending' || p['status'] == 'Proses')
+        .length;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 65,
+          child: Row(
+            children: [
+              _buildNavItem(0, Icons.dashboard_rounded, 'Dashboard'),
+              _buildNavItem(1, Icons.shopping_cart_rounded, 'Pesanan', badge: badge),
+              _buildNavItem(2, Icons.add_circle_rounded, 'Buat PO'),
+              _buildNavItem(3, Icons.people_rounded, 'Pelanggan'),
+              _buildNavItem(4, Icons.picture_as_pdf_rounded, 'Arsip'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label, {int badge = 0}) {
+    final bool isSelected = selectedMenuIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => selectedMenuIndex = index),
+        child: Container(
+          color: Colors.transparent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF2563eb).withValues(alpha: 0.12)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 22,
+                      color: isSelected ? const Color(0xFF2563eb) : Colors.grey[400],
+                    ),
+                  ),
+                  if (badge > 0)
+                    Positioned(
+                      top: -4, right: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$badge',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                  color: isSelected ? const Color(0xFF2563eb) : Colors.grey[400],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-// Dashboard Content - Design Wow
+// Dashboard Content - Responsive (Mobile + Desktop)
 class DashboardScreenContent extends StatelessWidget {
   final int totalPesanan;
   final int totalPelanggan;
   final int poPending;
   final int poSelesai;
+  final User user;
+  final List<Map<String, dynamic>> pesananList;
   final ValueChanged<int> onNavigate;
 
   const DashboardScreenContent({
@@ -204,11 +340,20 @@ class DashboardScreenContent extends StatelessWidget {
     required this.totalPelanggan,
     required this.poPending,
     required this.poSelesai,
+    required this.user,
+    required this.pesananList,
     required this.onNavigate,
   });
 
   @override
   Widget build(BuildContext context) {
+    return Responsive.isMobile(context)
+        ? _buildMobileLayout(context)
+        : _buildDesktopLayout(context);
+  }
+
+  // ── Desktop Layout ──────────────────────────────────────────────────────────
+  Widget _buildDesktopLayout(BuildContext context) {
     return Container(
       color: const Color(0xFFF8FAFC),
       padding: const EdgeInsets.all(24),
@@ -236,44 +381,270 @@ class DashboardScreenContent extends StatelessWidget {
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
               children: [
-                _buildModernCard(
-                  context,
-                  'Total Pesanan',
-                  '$totalPesanan',
-                  Icons.shopping_cart,
-                  const Color(0xFF3B82F6),
-                  const Color(0xFFDBEAFE),
-                  () => onNavigate(1),
-                ),
-                _buildModernCard(
-                  context,
-                  'Total Pelanggan',
-                  '$totalPelanggan',
-                  Icons.people,
-                  const Color(0xFF10B981),
-                  const Color(0xFFD1FAE5),
-                  () => onNavigate(3),
-                ),
-                _buildModernCard(
-                  context,
-                  'PO Pending',
-                  '$poPending',
-                  Icons.pending_actions,
-                  const Color(0xFFF59E0B),
-                  const Color(0xFFFEF3C7),
-                  () => onNavigate(1),
-                ),
-                _buildModernCard(
-                  context,
-                  'Selesai',
-                  '$poSelesai',
-                  Icons.check_circle,
-                  const Color(0xFF8B5CF6),
-                  const Color(0xFFEDE9FE),
-                  () => onNavigate(1),
-                ),
+                _buildModernCard(context, 'Total Pesanan', '$totalPesanan', Icons.shopping_cart, const Color(0xFF3B82F6), const Color(0xFFDBEAFE), () => onNavigate(1)),
+                _buildModernCard(context, 'Total Pelanggan', '$totalPelanggan', Icons.people, const Color(0xFF10B981), const Color(0xFFD1FAE5), () => onNavigate(3)),
+                _buildModernCard(context, 'PO Pending', '$poPending', Icons.pending_actions, const Color(0xFFF59E0B), const Color(0xFFFEF3C7), () => onNavigate(1)),
+                _buildModernCard(context, 'Selesai', '$poSelesai', Icons.check_circle, const Color(0xFF8B5CF6), const Color(0xFFEDE9FE), () => onNavigate(1)),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Mobile Layout ───────────────────────────────────────────────────────────
+  Widget _buildMobileLayout(BuildContext context) {
+    final String initials = user.nama.isNotEmpty
+        ? user.nama.split(' ').take(2).map((e) => e.isNotEmpty ? e[0].toUpperCase() : '').join()
+        : 'U';
+    final recentPesanan = pesananList.take(3).toList();
+
+    return Container(
+      color: const Color(0xFFF0F4FF),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header gradient ──────────────────────────────────────────
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF1e3a8a), Color(0xFF2563eb)],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Halo, ${user.nama.split(' ').first} 👋',
+                              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(user.role, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                          ],
+                        ),
+                        CircleAvatar(
+                          radius: 26,
+                          backgroundColor: Colors.white24,
+                          child: Text(
+                            initials,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(12)),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.storefront, color: Colors.white70, size: 16),
+                          SizedBox(width: 8),
+                          Text('HUTCHID — Bag Manufacturing', style: TextStyle(color: Colors.white, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Stats Cards ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Ringkasan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1e3a8a))),
+                    const SizedBox(height: 12),
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.6,
+                      children: [
+                        _buildMobileStatCard('Total Pesanan', '$totalPesanan', Icons.shopping_cart_rounded, const Color(0xFF3B82F6), const Color(0xFFDBEAFE), () => onNavigate(1)),
+                        _buildMobileStatCard('Pelanggan', '$totalPelanggan', Icons.people_rounded, const Color(0xFF10B981), const Color(0xFFD1FAE5), () => onNavigate(3)),
+                        _buildMobileStatCard('PO Pending', '$poPending', Icons.pending_actions_rounded, const Color(0xFFF59E0B), const Color(0xFFFEF3C7), () => onNavigate(1)),
+                        _buildMobileStatCard('Selesai', '$poSelesai', Icons.check_circle_rounded, const Color(0xFF8B5CF6), const Color(0xFFEDE9FE), () => onNavigate(1)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Quick Actions ────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Aksi Cepat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1e3a8a))),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _buildQuickAction(Icons.add_circle_rounded, 'Buat PO', const Color(0xFF2563eb), () => onNavigate(2))),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildQuickAction(Icons.person_add_rounded, 'Tambah\nPelanggan', const Color(0xFF10B981), () => onNavigate(3))),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildQuickAction(Icons.list_alt_rounded, 'Daftar\nPesanan', const Color(0xFFF59E0B), () => onNavigate(1))),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Recent Pesanan ───────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Pesanan Terbaru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1e3a8a))),
+                        GestureDetector(
+                          onTap: () => onNavigate(1),
+                          child: const Text('Lihat Semua →', style: TextStyle(fontSize: 12, color: Color(0xFF2563eb), fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    recentPesanan.isEmpty
+                        ? Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                            child: Center(child: Text('Belum ada pesanan', style: TextStyle(color: Colors.grey[400], fontSize: 13))),
+                          )
+                        : Column(children: recentPesanan.map(_buildRecentItem).toList()),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileStatCard(String title, String value, IconData icon, Color color, Color bgColor, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
+            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))],
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: color)),
+                  Text(title, style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAction(IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 6),
+            Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color), textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentItem(Map<String, dynamic> pesanan) {
+    Color statusColor = Colors.orange;
+    if (pesanan['status'] == 'Proses') statusColor = Colors.blue;
+    else if (pesanan['status'] == 'Selesai') statusColor = Colors.green;
+    else if (pesanan['status'] == 'Draft') statusColor = Colors.grey;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+            child: Icon(Icons.receipt_long_rounded, color: statusColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(pesanan['pelanggan'] ?? 'Umum', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1e3a8a))),
+                const SizedBox(height: 2),
+                Text(pesanan['no'] ?? '', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+            child: Text(pesanan['status'] ?? 'Pending', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
           ),
         ],
       ),

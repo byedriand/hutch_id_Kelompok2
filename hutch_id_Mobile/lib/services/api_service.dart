@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,7 +7,7 @@ import '../models/pelanggan_model.dart';
 
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api';
-  
+
   static String? _token;
 
   static Future<void> init() async {
@@ -28,26 +29,30 @@ class ApiService {
   // Auth
   static Future<User?> login(String email, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/login'),
-        headers: _getHeaders(),
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/login'),
+            headers: _getHeaders(),
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(
+            const Duration(
+              seconds: 3,
+            ), // Timeout 3 detik, kalau backend mati langsung fallback
+            onTimeout: () => http.Response('{"error":"timeout"}', 408),
+          );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _token = data['token'];
-        
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', _token!);
 
         return User.fromJson(data['user']);
       }
     } catch (e) {
-      print('Login error: $e');
+      print('Login error (offline/timeout): $e');
     }
     return null;
   }
@@ -58,11 +63,11 @@ class ApiService {
         Uri.parse('$baseUrl/logout'),
         headers: _getHeaders(),
       );
-      
+
       _token = null;
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
-      
+
       return response.statusCode == 200;
     } catch (e) {
       print('Logout error: $e');
@@ -103,7 +108,12 @@ class ApiService {
     return [];
   }
 
-  static Future<Pelanggan?> createPelanggan(String nama, String telepon, String alamat, String email) async {
+  static Future<Pelanggan?> createPelanggan(
+    String nama,
+    String telepon,
+    String alamat,
+    String email,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/pelanggan'),
@@ -124,7 +134,13 @@ class ApiService {
     return null;
   }
 
-  static Future<Pelanggan?> updatePelanggan(String id, String nama, String telepon, String alamat, String email) async {
+  static Future<Pelanggan?> updatePelanggan(
+    String id,
+    String nama,
+    String telepon,
+    String alamat,
+    String email,
+  ) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/pelanggan/$id'),
@@ -175,7 +191,13 @@ class ApiService {
     return [];
   }
 
-  static Future<Map<String, dynamic>?> createPesanan(String pelangganNama, String deskripsi, int jumlah, int harga, String status) async {
+  static Future<Map<String, dynamic>?> createPesanan(
+    String pelangganNama,
+    String deskripsi,
+    int jumlah,
+    int harga,
+    String status,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/pesanan'),
@@ -202,9 +224,7 @@ class ApiService {
       final response = await http.put(
         Uri.parse('$baseUrl/pesanan/$id/status'),
         headers: _getHeaders(),
-        body: jsonEncode({
-          'status': status,
-        }),
+        body: jsonEncode({'status': status}),
       );
       return response.statusCode == 200;
     } catch (e) {

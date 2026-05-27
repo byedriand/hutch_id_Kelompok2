@@ -80,7 +80,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    User? user = await ApiService.login(email, password);
+    User? user;
+
+    // Coba login via API dulu
+    try {
+      user = await ApiService.login(email, password);
+    } catch (_) {
+      user = null;
+    }
+
+    // Kalau API gagal/offline → fallback ke dummy data lokal
+    if (user == null) {
+      try {
+        final matched = users.firstWhere(
+          (u) => u.email == email && u.password == password,
+        );
+        user = matched;
+      } catch (_) {
+        user = null;
+      }
+    }
 
     setState(() => _isLoading = false);
 
@@ -93,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              MainHomeScreen(user: user),
+              MainHomeScreen(user: user!),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: animation,
