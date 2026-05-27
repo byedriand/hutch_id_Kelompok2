@@ -15,7 +15,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
 
     // Verify that login screen contents are displayed.
-    expect(find.text('HUTCH PRESTIGE'), findsWidgets);
+    expect(find.text('HUTCHID'), findsWidgets);
     expect(find.text('Login'), findsOneWidget);
     expect(find.text('Masuk Sekarang'), findsOneWidget);
   });
