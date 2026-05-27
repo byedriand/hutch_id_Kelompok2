@@ -5,12 +5,14 @@ class PelangganCard extends StatelessWidget {
   final Pelanggan pelanggan;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool showActions;
 
   const PelangganCard({
     super.key,
     required this.pelanggan,
     required this.onEdit,
     required this.onDelete,
+    this.showActions = true,
   });
 
   @override
@@ -22,7 +24,7 @@ class PelangganCard extends StatelessWidget {
         border: Border.all(color: Colors.grey[200]!, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -66,13 +68,13 @@ class PelangganCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        const Color(0xFF2563eb).withOpacity(0.15),
-                        const Color(0xFF3B82F6).withOpacity(0.1),
+                        const Color(0xFF2563eb).withValues(alpha: 0.15),
+                        const Color(0xFF3B82F6).withValues(alpha: 0.1),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: const Color(0xFF2563eb).withOpacity(0.3),
+                      color: const Color(0xFF2563eb).withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
@@ -136,42 +138,44 @@ class PelangganCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Edit'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563eb),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+            if (showActions) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit, size: 16),
+                      label: const Text('Edit'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563eb),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete, size: 16),
-                    label: const Text('Hapus'),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red, width: 1.5),
-                      foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete, size: 16),
+                      label: const Text('Hapus'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red, width: 1.5),
+                        foregroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

@@ -70,7 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.7), color.withOpacity(0.3)],
+            colors: [color.withValues(alpha: 0.7), color.withValues(alpha: 0.3)],
           ),
         ),
         child: Padding(

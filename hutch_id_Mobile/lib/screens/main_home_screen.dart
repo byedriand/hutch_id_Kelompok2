@@ -81,6 +81,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       ),
       DaftarPesananScreenContent(
         pesananList: pesananList,
+        userRole: widget.user.role,
         onDelete: (id) async {
           final success = await ApiService.deletePesanan(id);
           if (success) {
@@ -108,6 +109,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       ),
       DaftarPelangganScreenWidget(
         pelangganList: pelangganList,
+        userRole: widget.user.role,
         onAdd: (nama, telepon, alamat, email) async {
           final result = await ApiService.createPelanggan(nama, telepon, alamat, email);
           if (result != null) {
@@ -129,6 +131,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       ),
       ArsipPdfScreenContent(
         pdfFiles: pdfFiles,
+        userRole: widget.user.role,
         onDelete: (id) async {
           final success = await ApiService.deleteArsipPdf(id);
           if (success) {
@@ -248,7 +251,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             children: [
               _buildNavItem(0, Icons.dashboard_rounded, 'Dashboard'),
               _buildNavItem(1, Icons.shopping_cart_rounded, 'Pesanan', badge: badge),
-              _buildNavItem(2, Icons.add_circle_rounded, 'Buat PO'),
+              if (widget.user.role == 'Administrator' || widget.user.role == 'Staf Penjualan')
+                _buildNavItem(2, Icons.add_circle_rounded, 'Buat PO'),
               _buildNavItem(3, Icons.people_rounded, 'Pelanggan'),
               _buildNavItem(4, Icons.picture_as_pdf_rounded, 'Arsip'),
             ],
@@ -500,10 +504,12 @@ class DashboardScreenContent extends StatelessWidget {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _buildQuickAction(Icons.add_circle_rounded, 'Buat PO', const Color(0xFF2563eb), () => onNavigate(2))),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildQuickAction(Icons.person_add_rounded, 'Tambah\nPelanggan', const Color(0xFF10B981), () => onNavigate(3))),
-                        const SizedBox(width: 10),
+                        if (user.role == 'Administrator' || user.role == 'Staf Penjualan') ...[
+                          Expanded(child: _buildQuickAction(Icons.add_circle_rounded, 'Buat PO', const Color(0xFF2563eb), () => onNavigate(2))),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildQuickAction(Icons.person_add_rounded, 'Tambah\nPelanggan', const Color(0xFF10B981), () => onNavigate(3))),
+                          const SizedBox(width: 10),
+                        ],
                         Expanded(child: _buildQuickAction(Icons.list_alt_rounded, 'Daftar\nPesanan', const Color(0xFFF59E0B), () => onNavigate(1))),
                       ],
                     ),
@@ -611,9 +617,9 @@ class DashboardScreenContent extends StatelessWidget {
 
   Widget _buildRecentItem(Map<String, dynamic> pesanan) {
     Color statusColor = Colors.orange;
-    if (pesanan['status'] == 'Proses') statusColor = Colors.blue;
-    else if (pesanan['status'] == 'Selesai') statusColor = Colors.green;
-    else if (pesanan['status'] == 'Draft') statusColor = Colors.grey;
+    if (pesanan['status'] == 'Proses') { statusColor = Colors.blue; }
+    else if (pesanan['status'] == 'Selesai') { statusColor = Colors.green; }
+    else if (pesanan['status'] == 'Draft') { statusColor = Colors.grey; }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -722,12 +728,14 @@ class DashboardScreenContent extends StatelessWidget {
 // Daftar Pesanan - Design Wow
 class DaftarPesananScreenContent extends StatefulWidget {
   final List<Map<String, dynamic>> pesananList;
+  final String userRole;
   final Future<void> Function(String) onDelete;
   final Future<void> Function(String, String) onStatusChanged;
 
   const DaftarPesananScreenContent({
     super.key,
     required this.pesananList,
+    required this.userRole,
     required this.onDelete,
     required this.onStatusChanged,
   });
@@ -886,48 +894,50 @@ class _DaftarPesananScreenContentState extends State<DaftarPesananScreenContent>
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      SizedBox(
-                                        height: 32,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return AlertDialog(
-                                                  title: const Text('Hapus Pesanan'),
-                                                  content: Text('Hapus pesanan ${pesanan['no']}?'),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () => Navigator.pop(context),
-                                                      child: const Text('Batal'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () async {
-                                                        await widget.onDelete(pesanan['id'].toString());
-                                                        if (context.mounted) {
-                                                          Navigator.pop(context);
-                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                            SnackBar(content: Text('${pesanan['no']} dihapus')),
-                                                          );
-                                                        }
-                                                      },
-                                                      child: const Text('Hapus', style: TextStyle(color: Colors.red)),
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            );
-                                          },
-                                          icon: const Icon(Icons.delete, size: 16),
-                                          label: const Text('Hapus'),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.red,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      if (widget.userRole == 'Administrator' || widget.userRole == 'Staf Penjualan') ...[
+                                        const SizedBox(width: 8),
+                                        SizedBox(
+                                          height: 32,
+                                          child: ElevatedButton.icon(
+                                            onPressed: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return AlertDialog(
+                                                    title: const Text('Hapus Pesanan'),
+                                                    content: Text('Hapus pesanan ${pesanan['no']}?'),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () => Navigator.pop(context),
+                                                        child: const Text('Batal'),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () async {
+                                                          await widget.onDelete(pesanan['id'].toString());
+                                                          if (context.mounted) {
+                                                            Navigator.pop(context);
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                              SnackBar(content: Text('${pesanan['no']} dihapus')),
+                                                            );
+                                                          }
+                                                        },
+                                                        child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            },
+                                            icon: const Icon(Icons.delete, size: 16),
+                                            label: const Text('Hapus'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                                            ),
                                           ),
                                         ),
-                                      ),
+                                      ],
                                     ],
                                   ),
                                 ],
@@ -1003,7 +1013,7 @@ class _DaftarPesananScreenContentState extends State<DaftarPesananScreenContent>
                                 child: Text(status),
                               ))
                           .toList(),
-                      onChanged: (value) {
+                      onChanged: widget.userRole == 'Pemilik UMKM' ? null : (value) {
                         if (value != null) {
                           setDialogState(() {
                             currentStatus = value;
@@ -1017,27 +1027,28 @@ class _DaftarPesananScreenContentState extends State<DaftarPesananScreenContent>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Batal'),
+                  child: Text(widget.userRole == 'Pemilik UMKM' ? 'Tutup' : 'Batal'),
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    await widget.onStatusChanged(pesanan['id'].toString(), currentStatus);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Status pesanan ${pesanan['no']} diubah menjadi $currentStatus'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563eb),
-                    foregroundColor: Colors.white,
+                if (widget.userRole != 'Pemilik UMKM')
+                  ElevatedButton(
+                    onPressed: () async {
+                      await widget.onStatusChanged(pesanan['id'].toString(), currentStatus);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Status pesanan ${pesanan['no']} diubah menjadi $currentStatus'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563eb),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Simpan Perubahan'),
                   ),
-                  child: const Text('Simpan Perubahan'),
-                ),
               ],
             );
           },
@@ -1329,7 +1340,8 @@ class _BuatPoScreenContentState extends State<BuatPoScreenContent> {
 
   Widget _buildPelangganDropdown() {
     return DropdownButtonFormField<String>(
-      value: selectedPelanggan,
+      key: ValueKey(selectedPelanggan),
+      initialValue: selectedPelanggan,
       hint: const Text('Pilih Pelanggan'),
       decoration: InputDecoration(
         labelText: 'Nama Pelanggan',
@@ -1398,7 +1410,8 @@ class _BuatPoScreenContentState extends State<BuatPoScreenContent> {
 
   Widget _buildDropdown() {
     return DropdownButtonFormField<String>(
-      value: selectedStatus,
+      key: ValueKey(selectedStatus),
+      initialValue: selectedStatus,
       hint: const Text('Pilih Status'),
       decoration: InputDecoration(
         labelText: 'Status',
@@ -1450,11 +1463,13 @@ class _DaftarPelangganScreenContentState extends State<DaftarPelangganScreenCont
 // Arsip PDF - Design Wow
 class ArsipPdfScreenContent extends StatefulWidget {
   final List<Map<String, dynamic>> pdfFiles;
+  final String userRole;
   final Future<void> Function(String) onDelete;
 
   const ArsipPdfScreenContent({
     super.key,
     required this.pdfFiles,
+    required this.userRole,
     required this.onDelete,
   });
 
@@ -1518,7 +1533,7 @@ class _ArsipPdfScreenContentState extends State<ArsipPdfScreenContent> {
                             child: const Icon(Icons.picture_as_pdf, color: Colors.red, size: 28),
                           ),
                           title: Text(
-                            file['nama'],
+                            file['filename'] ?? file['nama'] ?? 'File PDF',
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
@@ -1526,7 +1541,7 @@ class _ArsipPdfScreenContentState extends State<ArsipPdfScreenContent> {
                             ),
                           ),
                           subtitle: Text(
-                            '${file['ukuran']} • ${file['tanggal']}',
+                            '${file['size'] ?? file['ukuran'] ?? '-'} • ${file['created_at']?.toString().substring(0, 10) ?? file['tanggal'] ?? ''}',
                             style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                           ),
                           trailing: PopupMenuButton(
@@ -1542,7 +1557,7 @@ class _ArsipPdfScreenContentState extends State<ArsipPdfScreenContent> {
                                 onTap: () {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('📥 Download ${file['nama']}'),
+                                      content: Text('📥 Download ${file['filename'] ?? file['nama']}'),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -1559,53 +1574,54 @@ class _ArsipPdfScreenContentState extends State<ArsipPdfScreenContent> {
                                 onTap: () {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('🔗 Bagikan ${file['nama']}'),
+                                      content: Text('🔗 Bagikan ${file['filename'] ?? file['nama']}'),
                                       backgroundColor: Colors.orange,
                                     ),
                                   );
                                 },
                               ),
-                              PopupMenuItem(
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.delete, size: 18, color: Colors.red),
-                                    SizedBox(width: 8),
-                                    Text('Hapus'),
-                                  ],
+                              if (widget.userRole == 'Administrator' || widget.userRole == 'Operator Gudang')
+                                PopupMenuItem(
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.delete, size: 18, color: Colors.red),
+                                      SizedBox(width: 8),
+                                      Text('Hapus'),
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text('🗑️ Hapus File'),
+                                          content: Text('Hapus ${file['filename'] ?? file['nama']}?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text('Batal'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () async {
+                                                Navigator.pop(context);
+                                                await widget.onDelete(file['id'].toString());
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text('✅ ${file['filename'] ?? file['nama']} dihapus'),
+                                                      backgroundColor: Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                              child: const Text('Hapus', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
                                 ),
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: const Text('🗑️ Hapus File'),
-                                        content: Text('Hapus ${file['nama']}?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            child: const Text('Batal'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () async {
-                                              Navigator.pop(context);
-                                              await widget.onDelete(file['id'].toString());
-                                              if (context.mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text('✅ ${file['nama']} dihapus'),
-                                                    backgroundColor: Colors.red,
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                            child: const Text('Hapus', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
                             ],
                           ),
                         ),

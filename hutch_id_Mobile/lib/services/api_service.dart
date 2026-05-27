@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -52,7 +53,7 @@ class ApiService {
         return User.fromJson(data['user']);
       }
     } catch (e) {
-      print('Login error (offline/timeout): $e');
+      debugPrint('Login error (offline/timeout): $e');
     }
     return null;
   }
@@ -70,7 +71,7 @@ class ApiService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Logout error: $e');
+      debugPrint('Logout error: $e');
     }
     return false;
   }
@@ -86,7 +87,7 @@ class ApiService {
         return jsonDecode(response.body);
       }
     } catch (e) {
-      print('Dashboard error: $e');
+      debugPrint('Dashboard error: $e');
     }
     return null;
   }
@@ -103,7 +104,7 @@ class ApiService {
         return list.map((item) => Pelanggan.fromJson(item)).toList();
       }
     } catch (e) {
-      print('Get pelanggan error: $e');
+      debugPrint('Get pelanggan error: $e');
     }
     return [];
   }
@@ -129,7 +130,7 @@ class ApiService {
         return Pelanggan.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Create pelanggan error: $e');
+      debugPrint('Create pelanggan error: $e');
     }
     return null;
   }
@@ -156,7 +157,7 @@ class ApiService {
         return Pelanggan.fromJson(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Update pelanggan error: $e');
+      debugPrint('Update pelanggan error: $e');
     }
     return null;
   }
@@ -169,7 +170,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      print('Delete pelanggan error: $e');
+      debugPrint('Delete pelanggan error: $e');
     }
     return false;
   }
@@ -186,7 +187,7 @@ class ApiService {
         return list.map((item) => Map<String, dynamic>.from(item)).toList();
       }
     } catch (e) {
-      print('Get pesanan error: $e');
+      debugPrint('Get pesanan error: $e');
     }
     return [];
   }
@@ -214,7 +215,7 @@ class ApiService {
         return Map<String, dynamic>.from(jsonDecode(response.body));
       }
     } catch (e) {
-      print('Create pesanan error: $e');
+      debugPrint('Create pesanan error: $e');
     }
     return null;
   }
@@ -228,7 +229,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      print('Update pesanan status error: $e');
+      debugPrint('Update pesanan status error: $e');
     }
     return false;
   }
@@ -241,7 +242,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      print('Delete pesanan error: $e');
+      debugPrint('Delete pesanan error: $e');
     }
     return false;
   }
@@ -258,7 +259,7 @@ class ApiService {
         return list.map((item) => Map<String, dynamic>.from(item)).toList();
       }
     } catch (e) {
-      print('Get arsip pdf error: $e');
+      debugPrint('Get arsip pdf error: $e');
     }
     return [];
   }
@@ -271,7 +272,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      print('Delete arsip pdf error: $e');
+      debugPrint('Delete arsip pdf error: $e');
     }
     return false;
   }

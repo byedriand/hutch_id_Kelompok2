@@ -4,6 +4,7 @@ import '../../widgets/pelanggan_card.dart';
 
 class DaftarPelangganScreenWidget extends StatefulWidget {
   final List<Pelanggan> pelangganList;
+  final String userRole;
   final Future<void> Function(String, String, String, String) onAdd;
   final Future<void> Function(String, String, String, String, String) onEdit;
   final Future<void> Function(String) onDelete;
@@ -11,6 +12,7 @@ class DaftarPelangganScreenWidget extends StatefulWidget {
   const DaftarPelangganScreenWidget({
     super.key,
     required this.pelangganList,
+    required this.userRole,
     required this.onAdd,
     required this.onEdit,
     required this.onDelete,
@@ -63,6 +65,7 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
   }
 
   void editPelanggan(Pelanggan pelanggan) {
+    final formKey = GlobalKey<FormState>();
     TextEditingController namaCtrl = TextEditingController(text: pelanggan.nama);
     TextEditingController telpCtrl = TextEditingController(text: pelanggan.telepon);
     TextEditingController alamatCtrl = TextEditingController(text: pelanggan.alamat);
@@ -74,30 +77,75 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
         return AlertDialog(
           title: const Text('Edit Pelanggan'),
           content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: namaCtrl,
-                  decoration: const InputDecoration(labelText: 'Nama Pelanggan'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: telpCtrl,
-                  decoration: const InputDecoration(labelText: 'Telepon'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: alamatCtrl,
-                  decoration: const InputDecoration(labelText: 'Alamat'),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: emailCtrl,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
-              ],
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: namaCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Pelanggan',
+                      prefixIcon: Icon(Icons.person, size: 18),
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Nama tidak boleh kosong'
+                        : null,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: telpCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Telepon',
+                      prefixIcon: Icon(Icons.phone, size: 18),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Telepon tidak boleh kosong';
+                      }
+                      if (!RegExp(r'^\d+$').hasMatch(value.trim())) {
+                        return 'Telepon hanya boleh berisi angka';
+                      }
+                      if (value.trim().length < 8 || value.trim().length > 15) {
+                        return 'Telepon minimal 8 dan maksimal 15 digit';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: alamatCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Alamat',
+                      prefixIcon: Icon(Icons.location_on, size: 18),
+                    ),
+                    maxLines: 2,
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Alamat tidak boleh kosong'
+                        : null,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email, size: 18),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Email tidak boleh kosong';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                          .hasMatch(value.trim())) {
+                        return 'Format email tidak valid';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -107,18 +155,20 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
             ),
             TextButton(
               onPressed: () async {
-                await widget.onEdit(
-                  pelanggan.id,
-                  namaCtrl.text,
-                  telpCtrl.text,
-                  alamatCtrl.text,
-                  emailCtrl.text,
-                );
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${namaCtrl.text} berhasil diperbarui')),
+                if (formKey.currentState!.validate()) {
+                  await widget.onEdit(
+                    pelanggan.id,
+                    namaCtrl.text.trim(),
+                    telpCtrl.text.trim(),
+                    alamatCtrl.text.trim(),
+                    emailCtrl.text.trim(),
                   );
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${namaCtrl.text} berhasil diperbarui')),
+                    );
+                  }
                 }
               },
               child: const Text('Simpan'),
@@ -160,6 +210,7 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
   }
 
   void tambahPelanggan() {
+    final formKey = GlobalKey<FormState>();
     TextEditingController namaCtrl = TextEditingController();
     TextEditingController telpCtrl = TextEditingController();
     TextEditingController alamatCtrl = TextEditingController();
@@ -171,30 +222,75 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
         return AlertDialog(
           title: const Text('Tambah Pelanggan Baru'),
           content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: namaCtrl,
-                  decoration: const InputDecoration(labelText: 'Nama Pelanggan'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: telpCtrl,
-                  decoration: const InputDecoration(labelText: 'Telepon'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: alamatCtrl,
-                  decoration: const InputDecoration(labelText: 'Alamat'),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: emailCtrl,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
-              ],
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: namaCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama Pelanggan',
+                      prefixIcon: Icon(Icons.person, size: 18),
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Nama tidak boleh kosong'
+                        : null,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: telpCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Telepon',
+                      prefixIcon: Icon(Icons.phone, size: 18),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Telepon tidak boleh kosong';
+                      }
+                      if (!RegExp(r'^\d+$').hasMatch(value.trim())) {
+                        return 'Telepon hanya boleh berisi angka';
+                      }
+                      if (value.trim().length < 8 || value.trim().length > 15) {
+                        return 'Telepon minimal 8 dan maksimal 15 digit';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: alamatCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Alamat',
+                      prefixIcon: Icon(Icons.location_on, size: 18),
+                    ),
+                    maxLines: 2,
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Alamat tidak boleh kosong'
+                        : null,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email, size: 18),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Email tidak boleh kosong';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                          .hasMatch(value.trim())) {
+                        return 'Format email tidak valid';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -204,12 +300,12 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
             ),
             TextButton(
               onPressed: () async {
-                if (namaCtrl.text.isNotEmpty && emailCtrl.text.isNotEmpty) {
+                if (formKey.currentState!.validate()) {
                   await widget.onAdd(
-                    namaCtrl.text,
-                    telpCtrl.text,
-                    alamatCtrl.text,
-                    emailCtrl.text,
+                    namaCtrl.text.trim(),
+                    telpCtrl.text.trim(),
+                    alamatCtrl.text.trim(),
+                    emailCtrl.text.trim(),
                   );
                   if (context.mounted) {
                     Navigator.pop(context);
@@ -217,10 +313,6 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
                       SnackBar(content: Text('${namaCtrl.text} berhasil ditambahkan')),
                     );
                   }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Nama dan Email harus diisi')),
-                  );
                 }
               },
               child: const Text('Tambah'),
@@ -274,18 +366,20 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: tambahPelanggan,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Tambah Pelanggan'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563eb),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  if (widget.userRole == 'Administrator' || widget.userRole == 'Staf Penjualan') ...[
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: tambahPelanggan,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Tambah Pelanggan'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563eb),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ],
@@ -312,6 +406,7 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
                         pelanggan: filteredList[index],
                         onEdit: () => editPelanggan(filteredList[index]),
                         onDelete: () => deletePelanggan(filteredList[index]),
+                        showActions: widget.userRole == 'Administrator' || widget.userRole == 'Staf Penjualan',
                       );
                     },
                   ),

@@ -35,7 +35,11 @@ class _SidebarState extends State<Sidebar> {
               children: [
                 const Text(
                   'HUTCHID',
-                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Text(
                   'Modul Management',
@@ -49,19 +53,33 @@ class _SidebarState extends State<Sidebar> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               'MENU',
-              style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           _buildMenuItem(0, Icons.dashboard, 'Dashboard'),
-          _buildMenuItem(1, Icons.shopping_cart, 'Daftar Pesanan', badge: widget.pesananBadgeCount),
-          _buildMenuItem(2, Icons.add_circle, 'Buat PO'),
+          _buildMenuItem(
+            1,
+            Icons.shopping_cart,
+            'Daftar Pesanan',
+            badge: widget.pesananBadgeCount,
+          ),
+          if (widget.user?.role == 'Administrator' || widget.user?.role == 'Staf Penjualan')
+            _buildMenuItem(2, Icons.add_circle, 'Buat PO'),
           _buildMenuItem(3, Icons.people, 'Pelanggan'),
           const Divider(color: Colors.white24, indent: 16, endIndent: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               'LAIN',
-              style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           _buildMenuItem(4, Icons.picture_as_pdf, 'Arsip PDF'),
@@ -80,7 +98,10 @@ class _SidebarState extends State<Sidebar> {
                   backgroundColor: const Color(0xFF2563eb),
                   child: Text(
                     _getInitials(widget.user?.nama ?? 'Guest'),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -90,13 +111,20 @@ class _SidebarState extends State<Sidebar> {
                     children: [
                       Text(
                         widget.user?.nama ?? 'Guest',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         widget.user?.role ?? 'Visitor',
-                        style: const TextStyle(color: Colors.white70, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -127,27 +155,50 @@ class _SidebarState extends State<Sidebar> {
                               Navigator.pop(context);
                               Navigator.of(context).pushReplacement(
                                 PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: const Offset(0.0, -0.05),
-                                          end: Offset.zero,
-                                        ).animate(CurvedAnimation(
-                                          parent: animation,
-                                          curve: Curves.easeInOutCubic,
-                                        )),
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  transitionDuration: const Duration(milliseconds: 1000),
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => const LoginScreen(),
+                                  transitionsBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                        child,
+                                      ) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: SlideTransition(
+                                            position:
+                                                Tween<Offset>(
+                                                  begin: const Offset(
+                                                    0.0,
+                                                    -0.05,
+                                                  ),
+                                                  end: Offset.zero,
+                                                ).animate(
+                                                  CurvedAnimation(
+                                                    parent: animation,
+                                                    curve:
+                                                        Curves.easeInOutCubic,
+                                                  ),
+                                                ),
+                                            child: child,
+                                          ),
+                                        );
+                                      },
+                                  transitionDuration: const Duration(
+                                    milliseconds: 1000,
+                                  ),
                                 ),
                               );
                             },
-                            child: const Text('Keluar', style: TextStyle(color: Colors.red)),
+                            child: const Text(
+                              'Keluar',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ),
                         ],
                       );
@@ -157,7 +208,9 @@ class _SidebarState extends State<Sidebar> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1e40af),
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -208,19 +261,30 @@ class _SidebarState extends State<Sidebar> {
                 Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
                 if (badge != null && badge > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '$badge',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
               ],
