@@ -1340,7 +1340,7 @@ class _BuatPoScreenContentState extends State<BuatPoScreenContent> {
 
   Widget _buildPelangganDropdown() {
     return DropdownButtonFormField<String>(
-      key: ValueKey(selectedPelanggan),
+      key: ValueKey('pelanggan_$selectedPelanggan'),
       initialValue: selectedPelanggan,
       hint: const Text('Pilih Pelanggan'),
       decoration: InputDecoration(
@@ -1410,7 +1410,7 @@ class _BuatPoScreenContentState extends State<BuatPoScreenContent> {
 
   Widget _buildDropdown() {
     return DropdownButtonFormField<String>(
-      key: ValueKey(selectedStatus),
+      key: ValueKey('status_$selectedStatus'),
       initialValue: selectedStatus,
       hint: const Text('Pilih Status'),
       decoration: InputDecoration(
