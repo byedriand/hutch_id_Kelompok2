@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/responsive.dart';
 import '../widgets/sidebar.dart';
+import '../widgets/shimmer_loading.dart';
 import 'pelanggan/daftar_pelanggan_screen.dart';
 import '../models/user_model.dart';
 import '../models/pelanggan_model.dart';
@@ -73,6 +74,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         poSelesai: _poSelesai,
         user: widget.user,
         pesananList: pesananList,
+        isLoading: _isLoading,
         onNavigate: (index) {
           setState(() {
             selectedMenuIndex = index;
@@ -82,6 +84,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       DaftarPesananScreenContent(
         pesananList: pesananList,
         userRole: widget.user.role,
+        isLoading: _isLoading,
         onDelete: (id) async {
           final success = await ApiService.deletePesanan(id);
           if (success) {
@@ -110,6 +113,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       DaftarPelangganScreenWidget(
         pelangganList: pelangganList,
         userRole: widget.user.role,
+        isLoading: _isLoading,
         onAdd: (nama, telepon, alamat, email) async {
           final result = await ApiService.createPelanggan(nama, telepon, alamat, email);
           if (result != null) {
@@ -132,6 +136,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
       ArsipPdfScreenContent(
         pdfFiles: pdfFiles,
         userRole: widget.user.role,
+        isLoading: _isLoading,
         onDelete: (id) async {
           final success = await ApiService.deleteArsipPdf(id);
           if (success) {
@@ -336,6 +341,7 @@ class DashboardScreenContent extends StatelessWidget {
   final int poSelesai;
   final User user;
   final List<Map<String, dynamic>> pesananList;
+  final bool isLoading;
   final ValueChanged<int> onNavigate;
 
   const DashboardScreenContent({
@@ -346,6 +352,7 @@ class DashboardScreenContent extends StatelessWidget {
     required this.poSelesai,
     required this.user,
     required this.pesananList,
+    required this.isLoading,
     required this.onNavigate,
   });
 
@@ -534,13 +541,46 @@ class DashboardScreenContent extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    recentPesanan.isEmpty
-                        ? Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                            child: Center(child: Text('Belum ada pesanan', style: TextStyle(color: Colors.grey[400], fontSize: 13))),
+                    isLoading
+                        ? Column(
+                            children: List.generate(
+                              3,
+                              (index) => Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: Colors.grey[200]!),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    ShimmerLoading(width: 36, height: 36, borderRadius: 10),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          ShimmerLoading(width: 100, height: 14),
+                                          SizedBox(height: 6),
+                                          ShimmerLoading(width: 60, height: 10),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    ShimmerLoading(width: 60, height: 18, borderRadius: 20),
+                                  ],
+                                ),
+                              ),
+                            ),
                           )
-                        : Column(children: recentPesanan.map(_buildRecentItem).toList()),
+                        : recentPesanan.isEmpty
+                            ? Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                                child: Center(child: Text('Belum ada pesanan', style: TextStyle(color: Colors.grey[400], fontSize: 13))),
+                              )
+                            : Column(children: recentPesanan.map(_buildRecentItem).toList()),
                   ],
                 ),
               ),
@@ -577,7 +617,12 @@ class DashboardScreenContent extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: color)),
+                  isLoading
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 6),
+                          child: ShimmerLoading(width: 50, height: 20),
+                        )
+                      : Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: color)),
                   Text(title, style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.w500)),
                 ],
               ),
@@ -697,14 +742,19 @@ class DashboardScreenContent extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1e3a8a),
-                      ),
-                    ),
+                    isLoading
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: ShimmerLoading(width: 80, height: 28),
+                          )
+                        : Text(
+                            value,
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1e3a8a),
+                            ),
+                          ),
                     const SizedBox(height: 4),
                     Text(
                       title,
@@ -729,6 +779,7 @@ class DashboardScreenContent extends StatelessWidget {
 class DaftarPesananScreenContent extends StatefulWidget {
   final List<Map<String, dynamic>> pesananList;
   final String userRole;
+  final bool isLoading;
   final Future<void> Function(String) onDelete;
   final Future<void> Function(String, String) onStatusChanged;
 
@@ -736,6 +787,7 @@ class DaftarPesananScreenContent extends StatefulWidget {
     super.key,
     required this.pesananList,
     required this.userRole,
+    required this.isLoading,
     required this.onDelete,
     required this.onStatusChanged,
   });
@@ -764,14 +816,43 @@ class _DaftarPesananScreenContentState extends State<DaftarPesananScreenContent>
           ),
           const SizedBox(height: 24),
           Expanded(
-            child: widget.pesananList.isEmpty
-                ? Center(
-                    child: Text(
-                      'Tidak ada pesanan',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            child: widget.isLoading
+                ? ListView.builder(
+                    itemCount: 3,
+                    itemBuilder: (context, index) => Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: const Row(
+                        children: [
+                          ShimmerLoading(width: 48, height: 48, borderRadius: 10),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ShimmerLoading(width: 120, height: 16),
+                                SizedBox(height: 8),
+                                ShimmerLoading(width: 180, height: 12),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   )
-                : ListView.builder(
+                : widget.pesananList.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Tidak ada pesanan',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      )
+                    : ListView.builder(
                     itemCount: widget.pesananList.length,
                     itemBuilder: (context, index) {
                       final pesanan = widget.pesananList[index];
@@ -1464,12 +1545,14 @@ class _DaftarPelangganScreenContentState extends State<DaftarPelangganScreenCont
 class ArsipPdfScreenContent extends StatefulWidget {
   final List<Map<String, dynamic>> pdfFiles;
   final String userRole;
+  final bool isLoading;
   final Future<void> Function(String) onDelete;
 
   const ArsipPdfScreenContent({
     super.key,
     required this.pdfFiles,
     required this.userRole,
+    required this.isLoading,
     required this.onDelete,
   });
 
@@ -1497,14 +1580,43 @@ class _ArsipPdfScreenContentState extends State<ArsipPdfScreenContent> {
           ),
           const SizedBox(height: 24),
           Expanded(
-            child: widget.pdfFiles.isEmpty
-                ? Center(
-                    child: Text(
-                      'Tidak ada arsip PDF',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            child: widget.isLoading
+                ? ListView.builder(
+                    itemCount: 3,
+                    itemBuilder: (context, index) => Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: const Row(
+                        children: [
+                          ShimmerLoading(width: 40, height: 40, borderRadius: 10),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ShimmerLoading(width: 140, height: 16),
+                                SizedBox(height: 8),
+                                ShimmerLoading(width: 100, height: 12),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   )
-                : ListView.builder(
+                : widget.pdfFiles.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Tidak ada arsip PDF',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      )
+                    : ListView.builder(
                     itemCount: widget.pdfFiles.length,
                     itemBuilder: (context, index) {
                       final file = widget.pdfFiles[index];

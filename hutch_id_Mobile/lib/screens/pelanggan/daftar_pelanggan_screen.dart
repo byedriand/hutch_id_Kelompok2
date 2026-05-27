@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../models/pelanggan_model.dart';
 import '../../widgets/pelanggan_card.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class DaftarPelangganScreenWidget extends StatefulWidget {
   final List<Pelanggan> pelangganList;
   final String userRole;
+  final bool isLoading;
   final Future<void> Function(String, String, String, String) onAdd;
   final Future<void> Function(String, String, String, String, String) onEdit;
   final Future<void> Function(String) onDelete;
@@ -13,6 +15,7 @@ class DaftarPelangganScreenWidget extends StatefulWidget {
     super.key,
     required this.pelangganList,
     required this.userRole,
+    required this.isLoading,
     required this.onAdd,
     required this.onEdit,
     required this.onDelete,
@@ -386,30 +389,62 @@ class _DaftarPelangganScreenState extends State<DaftarPelangganScreenWidget> {
           ),
           const SizedBox(height: 20),
           Expanded(
-            child: filteredList.isEmpty
-                ? Center(
-                    child: Text(
-                      'Tidak ada pelanggan yang ditemukan',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  )
-                : GridView.builder(
+            child: widget.isLoading
+                ? GridView.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
                       crossAxisSpacing: 20,
                       mainAxisSpacing: 20,
                       childAspectRatio: 0.9,
                     ),
-                    itemCount: filteredList.length,
+                    itemCount: 6,
                     itemBuilder: (context, index) {
-                      return PelangganCard(
-                        pelanggan: filteredList[index],
-                        onEdit: () => editPelanggan(filteredList[index]),
-                        onDelete: () => deletePelanggan(filteredList[index]),
-                        showActions: widget.userRole == 'Administrator' || widget.userRole == 'Staf Penjualan',
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[200]!),
+                        ),
+                        child: const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ShimmerLoading(width: 48, height: 48, borderRadius: 24),
+                            SizedBox(height: 16),
+                            ShimmerLoading(width: 120, height: 16),
+                            SizedBox(height: 8),
+                            ShimmerLoading(width: 80, height: 12),
+                            SizedBox(height: 8),
+                            ShimmerLoading(width: 140, height: 12),
+                          ],
+                        ),
                       );
                     },
-                  ),
+                  )
+                : filteredList.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Tidak ada pelanggan yang ditemukan',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      )
+                    : GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20,
+                          childAspectRatio: 0.9,
+                        ),
+                        itemCount: filteredList.length,
+                        itemBuilder: (context, index) {
+                          return PelangganCard(
+                            pelanggan: filteredList[index],
+                            onEdit: () => editPelanggan(filteredList[index]),
+                            onDelete: () => deletePelanggan(filteredList[index]),
+                            showActions: widget.userRole == 'Administrator' || widget.userRole == 'Staf Penjualan',
+                          );
+                        },
+                      ),
           ),
         ],
       ),
