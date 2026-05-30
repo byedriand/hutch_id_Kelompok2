@@ -14,8 +14,8 @@ class ProdukController extends Controller
      */
     public function index()
     {
-        // Only Operator Gudang can access stock management
-        if (auth()->user()->role !== 'operator_gudang') {
+        // Only Operator Gudang and Administrator can access stock management
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator'])) {
             abort(403, 'Anda tidak memiliki akses ke manajemen stok.');
         }
 
@@ -27,12 +27,79 @@ class ProdukController extends Controller
     }
 
     /**
+     * Show the form for creating a new product.
+     */
+    public function create()
+    {
+        // Only Operator Gudang and Administrator can create products
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator'])) {
+            abort(403, 'Anda tidak memiliki akses ke manajemen stok.');
+        }
+
+        return view('produk.create');
+    }
+
+    /**
+     * Store a newly created product in storage.
+     */
+    public function store(Request $request)
+    {
+        // Only Operator Gudang and Administrator can create products
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator'])) {
+            abort(403, 'Anda tidak memiliki akses ke manajemen stok.');
+        }
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255|unique:produk,nama',
+            'harga_jual' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0|max:999999',
+            'keterangan' => 'nullable|string|max:500',
+        ], [
+            'nama.required' => 'Nama produk harus diisi.',
+            'nama.unique' => 'Nama produk sudah terdaftar dalam sistem.',
+            'harga_jual.required' => 'Harga jual harus diisi.',
+            'harga_jual.numeric' => 'Harga jual harus berupa angka.',
+            'stok.required' => 'Stok awal harus diisi.',
+            'stok.integer' => 'Stok awal harus berupa angka bulat.',
+        ]);
+
+        $produk = Produk::create([
+            'nama' => $validated['nama'],
+            'harga_jual' => $validated['harga_jual'],
+            'stok' => $validated['stok'],
+            'keterangan' => $validated['keterangan'] ?? null,
+        ]);
+
+        // Create notification for new product
+        Notifikasi::create([
+            'pesanan_id' => null,
+            'tipe' => 'produk_baru',
+            'judul' => "Produk Baru '{$produk->nama}' Ditambahkan",
+            'pesan' => "Produk baru '{$produk->nama}' telah ditambahkan dengan stok awal {$produk->stok} unit oleh " . auth()->user()->name . ".",
+            'data' => [
+                'produk_id' => $produk->id,
+                'nama_produk' => $produk->nama,
+                'harga_jual' => $produk->harga_jual,
+                'stok' => $produk->stok,
+            ],
+            'untuk_roles' => ['administrator', 'pemilik_umkm', 'staf_penjualan', 'operator_gudang'],
+            'created_by' => auth()->id(),
+        ]);
+
+        // Log the action
+        \Log::info("Produk baru '{$produk->nama}' ditambahkan oleh " . auth()->user()->name);
+
+        return redirect()->route('produk.index')
+            ->with('success', "Produk '{$produk->nama}' berhasil ditambahkan dengan stok awal {$produk->stok} unit.");
+    }
+
+    /**
      * Show the form for editing product stock.
      */
     public function edit(Produk $produk)
     {
-        // Only Operator Gudang can access stock management
-        if (auth()->user()->role !== 'operator_gudang') {
+        // Only Operator Gudang and Administrator can access stock management
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator'])) {
             abort(403, 'Anda tidak memiliki akses ke manajemen stok.');
         }
 
@@ -44,8 +111,8 @@ class ProdukController extends Controller
      */
     public function update(Request $request, Produk $produk)
     {
-        // Only Operator Gudang can update stock
-        if (auth()->user()->role !== 'operator_gudang') {
+        // Only Operator Gudang and Administrator can update stock
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator'])) {
             abort(403, 'Anda tidak memiliki akses ke manajemen stok.');
         }
 
@@ -130,8 +197,8 @@ class ProdukController extends Controller
      */
     public function quickUpdate(Request $request, Produk $produk)
     {
-        // Only Operator Gudang can update stock
-        if (auth()->user()->role !== 'operator_gudang') {
+        // Only Operator Gudang and Administrator can update stock
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator'])) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -245,7 +312,7 @@ class ProdukController extends Controller
      */
     public function quickUpdateByName(Request $request)
     {
-        if (auth()->user()->role !== 'operator_gudang') {
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator'])) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 

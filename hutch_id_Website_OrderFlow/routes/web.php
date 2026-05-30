@@ -90,9 +90,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifikasi/stok-kurang-draft', [NotifikasiController::class, 'storeStokKurangDraft'])->name('notifikasi.stokKurangDraft');
     Route::delete('/notifikasi/{notifikasi}', [NotifikasiController::class, 'destroy'])->name('notifikasi.destroy');
 
-    // Stock Management - Operator Gudang Only
-    Route::middleware(['role:operator_gudang'])->group(function () {
+    // Stock Management - Operator Gudang & Administrator
+    Route::middleware(['role:operator_gudang,administrator'])->group(function () {
         Route::get('/produk', [ProdukController::class, 'index'])->name('produk.index');
+        Route::get('/produk/create', [ProdukController::class, 'create'])->name('produk.create');
+        Route::post('/produk', [ProdukController::class, 'store'])->name('produk.store');
         Route::get('/produk/{produk}/edit', [ProdukController::class, 'edit'])->name('produk.edit');
         Route::put('/produk/{produk}', [ProdukController::class, 'update'])->name('produk.update');
         Route::post('/produk/{produk}/quick-update', [ProdukController::class, 'quickUpdate'])->name('produk.quickUpdate');

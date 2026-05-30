@@ -246,9 +246,14 @@
 
 <div class="container-fluid">
     <div class="stok-header">
-        <div>
-            <h1>Manajemen Stok Barang</h1>
-            <p class="stok-header-desc mb-0">Kelola stok produk dan pantau ketersediaan barang</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>Manajemen Stok Barang</h1>
+                <p class="stok-header-desc mb-0">Kelola stok produk dan pantau ketersediaan barang</p>
+            </div>
+            <a href="javascript:void(0)" class="btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 0.9rem; padding: 0.75rem 1.5rem; font-weight: 600; transition: all 0.25s ease;" onclick="showAddStokModal()" title="Tambah Stok Baru">
+                <i class="fas fa-plus me-2"></i>Tambah Stok
+            </a>
         </div>
         <div class="stok-summary-box">
             <div class="stok-summary-item">
@@ -365,6 +370,66 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Tambah Stok Baru -->
+<div class="modal fade" id="addStokModal" tabindex="-1" aria-labelledby="addStokModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.12);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 1.5rem 1.5rem 0 0; padding: 1.5rem;">
+                <h5 class="modal-title" id="addStokModalLabel" style="color: white; font-weight: 700;">
+                    <i class="fas fa-box-open me-2"></i>Tambah Produk Baru
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form id="addStokForm" method="POST" action="{{ route('produk.store') }}">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="nama" class="form-label" style="font-weight: 600; color: #1e293b;">Nama Produk</label>
+                        <input type="text" class="form-control" id="nama" name="nama" placeholder="Masukkan nama produk" required style="border-radius: 0.9rem; border: 1px solid #dbe5f1; padding: 0.75rem 1rem;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="harga_jual" class="form-label" style="font-weight: 600; color: #1e293b;">Harga Jual (Rp)</label>
+                        <input type="number" class="form-control" id="harga_jual" name="harga_jual" placeholder="Masukkan harga jual" required style="border-radius: 0.9rem; border: 1px solid #dbe5f1; padding: 0.75rem 1rem;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="stok" class="form-label" style="font-weight: 600; color: #1e293b;">Stok Awal</label>
+                        <input type="number" class="form-control" id="stok" name="stok" placeholder="Masukkan jumlah stok awal" value="0" required style="border-radius: 0.9rem; border: 1px solid #dbe5f1; padding: 0.75rem 1rem;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="keterangan" class="form-label" style="font-weight: 600; color: #1e293b;">Keterangan</label>
+                        <textarea class="form-control" id="keterangan" name="keterangan" rows="2" placeholder="Masukkan keterangan produk (opsional)" style="border-radius: 0.9rem; border: 1px solid #dbe5f1; padding: 0.75rem 1rem;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #dbe5f1; padding: 1.5rem; background: #f8fbff; border-radius: 0 0 1.5rem 1.5rem;">
+                <button type="button" class="btn" data-bs-dismiss="modal" style="background: #e8eef7; color: #2d7dd2; border: none; border-radius: 0.9rem; padding: 0.6rem 1.5rem; font-weight: 600; transition: all 0.25s ease;">
+                    Batal
+                </button>
+                <button type="submit" form="addStokForm" class="btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 0.9rem; padding: 0.6rem 1.5rem; font-weight: 600; transition: all 0.25s ease;">
+                    <i class="fas fa-check me-2"></i>Simpan Produk
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showAddStokModal() {
+        const modal = new bootstrap.Modal(document.getElementById('addStokModal'), {
+            keyboard: false
+        });
+        modal.show();
+    }
+
+    // Format harga jual otomatis
+    document.getElementById('harga_jual').addEventListener('input', function(e) {
+        let value = this.value;
+        if (value && !isNaN(value)) {
+            this.value = parseInt(value);
+        }
+    });
+</script>
 
 @endsection
 
