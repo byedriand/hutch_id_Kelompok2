@@ -151,7 +151,7 @@
         .sidebar-menu {
             overflow-y: auto;
             max-height: calc(100vh - 280px);
-            padding-bottom: 1rem;
+            padding: 1rem 0 1rem 0;
         }
 
         .sidebar-menu::-webkit-scrollbar {
@@ -232,7 +232,7 @@
             color: rgba(255,255,255,0.92);
             padding: 1rem 1.25rem;
             border-radius: 18px;
-            margin: 0 0.9rem 1rem;
+            margin: 0 0.9rem 1.35rem;
             min-height: 56px;
             display: flex;
             align-items: center;
@@ -551,9 +551,10 @@
         .sidebar-section {
             letter-spacing: 0.1em;
             font-size: 0.68rem;
-            margin-top: 0.6rem;
-            margin-bottom: 0.4rem;
+            margin-top: 1.2rem;
+            margin-bottom: 0.8rem;
             font-weight: 700;
+            padding: 0 1.25rem;
         }
 
         .nav-link {
@@ -819,33 +820,37 @@
                                     <i class="fas fa-bell"></i>Notifikasi
                                     <span id="notif-badge" class="badge bg-danger ms-auto" style="font-size: 0.7rem; padding: 0.25rem 0.6rem; display: none;">0</span>
                                 </a>
-                        <a class="nav-link {{ request()->routeIs('pesanan.index') ? 'active' : '' }}" href="{{ route('pesanan.index') }}">
-                            <i class="fas fa-list"></i>Daftar Pesanan
-                            @if($jumlahMenunggu > 0)
-                                <span class="badge bg-danger ms-auto" style="font-size: 0.7rem; padding: 0.25rem 0.6rem;">{{ $jumlahMenunggu }}</span>
-                            @endif
-                        </a>
+                        @if(auth()->user()->role !== 'operator_gudang')
+                            <a class="nav-link {{ request()->routeIs('pesanan.index') ? 'active' : '' }}" href="{{ route('pesanan.index') }}">
+                                <i class="fas fa-list"></i>Daftar Pesanan
+                                @if($jumlahMenunggu > 0)
+                                    <span class="badge bg-danger ms-auto" style="font-size: 0.7rem; padding: 0.25rem 0.6rem;">{{ $jumlahMenunggu }}</span>
+                                @endif
+                            </a>
+                        @endif
                         @if(auth()->user()->role !== 'operator_gudang')
                             <a class="nav-link {{ request()->routeIs('pesanan.create') ? 'active' : '' }}" href="{{ route('pesanan.create') }}">
                                 <i class="fas fa-plus"></i>Buat PO
                             </a>
+                            <a class="nav-link {{ request()->routeIs('pelanggan.index') ? 'active' : '' }}" href="{{ route('pelanggan.index') }}">
+                                <i class="fas fa-users"></i>Pelanggan
+                            </a>
                         @endif
-                        <a class="nav-link {{ request()->routeIs('pelanggan.index') ? 'active' : '' }}" href="{{ route('pelanggan.index') }}">
-                            <i class="fas fa-users"></i>Pelanggan
-                        </a>
-                        @if(auth()->user()->role === 'operator_gudang')
+                        @if(auth()->user()->role === 'operator_gudang' || auth()->user()->role === 'administrator')
                             <a class="nav-link {{ request()->routeIs('produk.index') ? 'active' : '' }}" href="{{ route('produk.index') }}">
                                 <i class="fas fa-boxes"></i>Manajemen Stok
                             </a>
                         @endif
                     </nav>
 
-                            <div class="px-3 mt-2 mb-1 text-uppercase text-white-50 fw-semibold small sidebar-section">Lain</div>
-                            <nav class="nav flex-column py-1">
-                                <a class="nav-link {{ request()->routeIs('arsip.index') ? 'active' : '' }}" href="{{ route('arsip.index') }}">
-                                    <i class="fas fa-archive"></i>Arsip PDF
-                                </a>
-                            </nav>
+                            @if(auth()->user()->role === 'administrator')
+                                <div class="px-3 mt-2 mb-1 text-uppercase text-white-50 fw-semibold small sidebar-section">Lain</div>
+                                <nav class="nav flex-column py-1">
+                                    <a class="nav-link {{ request()->routeIs('arsip.index') ? 'active' : '' }}" href="{{ route('arsip.index') }}">
+                                        <i class="fas fa-archive"></i>Arsip PDF
+                                    </a>
+                                </nav>
+                            @endif
                         </div>
 
                         <div class="sidebar-footer">
