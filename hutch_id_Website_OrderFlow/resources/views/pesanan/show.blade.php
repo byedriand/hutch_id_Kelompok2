@@ -290,7 +290,10 @@
                                 <div>
                                     <strong>{{ ucfirst(str_replace('_', ' ', $history->status)) }}</strong>
                                 </div>
-                                <small class="text-muted">{{ $history->created_at ? \Illuminate\Support\Carbon::parse($history->created_at)->format('d M Y H:i') : '-' }}</small>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">{{ $history->created_at ? \Illuminate\Support\Carbon::parse($history->created_at)->format('d M Y H:i') . ' WIB' : '-' }}</small>
+                                    <small class="text-muted-light" style="font-size: 0.75rem; color: #9ca3af;">{{ $history->created_at ? \Illuminate\Support\Carbon::parse($history->created_at)->diffForHumans() : '' }}</small>
+                                </div>
                             </div>
                             <p class="mb-1 text-muted">{{ $history->keterangan }}</p>
                             <small class="text-muted">oleh {{ $history->user->name ?? 'Sistem' }}</small>
@@ -346,13 +349,9 @@
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-body">
                         <h5 class="mb-3">Batalkan Pesanan</h5>
-                        <form action="{{ route('pesanan.batalkan', $pesanan) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger w-100 rounded-pill" onclick="return confirm('Yakin ingin membatalkan pesanan ini?')">
-                                Batalkan Pesanan
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-danger w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#modalBatalkanPesanan">
+                            Batalkan Pesanan
+                        </button>
                     </div>
                 </div>
             @endif
@@ -398,4 +397,50 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Batalkan Pesanan -->
+<div class="modal fade" id="modalBatalkanPesanan" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-danger text-white rounded-top-4">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Batalkan Pesanan
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('pesanan.batalkan', $pesanan) }}" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        Anda akan membatalkan pesanan <strong>{{ $pesanan->nomor_po }}</strong>. 
+                        Mohon jelaskan alasan pembatalan ini untuk dokumentasi.
+                    </p>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold">Alasan Pembatalan <span class="text-danger">*</span></label>
+                        <textarea 
+                            class="form-control rounded-3 @error('alasan_pembatalan') is-invalid @enderror" 
+                            name="alasan_pembatalan" 
+                            rows="4"
+                            placeholder="Jelaskan alasan pembatalan pesanan ini (minimal 5 karakter)..."
+                            required
+                        >{{ old('alasan_pembatalan') }}</textarea>
+                        @error('alasan_pembatalan')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="modal-footer border-top pt-3">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <button type="submit" class="btn btn-danger rounded-pill">
+                        <i class="fas fa-check me-2"></i>Ya, Batalkan Pesanan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection

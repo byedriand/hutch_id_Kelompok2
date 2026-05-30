@@ -502,11 +502,23 @@ class PesananController extends Controller
             return back()->with('error', 'Pesanan tidak dapat dibatalkan karena sudah selesai atau dibatalkan.');
         }
 
-        $pesanan->update(['status' => 'dibatalkan']);
+        $validated = $request->validate([
+            'alasan_pembatalan' => 'required|string|min:5|max:500',
+        ], [
+            'alasan_pembatalan.required' => 'Alasan pembatalan harus diisi.',
+            'alasan_pembatalan.min' => 'Alasan pembatalan minimal 5 karakter.',
+            'alasan_pembatalan.max' => 'Alasan pembatalan maksimal 500 karakter.',
+        ]);
+
+        $pesanan->update([
+            'status' => 'dibatalkan',
+            'alasan_pembatalan' => $validated['alasan_pembatalan'],
+        ]);
+        
         $pesanan->historiStatus()->create([
             'user_id' => auth()->id(),
             'status' => 'dibatalkan',
-            'keterangan' => 'Pesanan dibatalkan oleh ' . auth()->user()->name,
+            'keterangan' => 'Pesanan dibatalkan oleh ' . auth()->user()->name . ' - Alasan: ' . $validated['alasan_pembatalan'],
         ]);
 
         return back()->with('success', 'Pesanan berhasil dibatalkan.');
