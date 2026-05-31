@@ -12,12 +12,12 @@ class RoleUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Administrator (matches screenshot: admin@hutch.id / password12)
+        // Administrator (matches screenshot: admin@hutch.id / password123)
         User::firstOrCreate(
             ['email' => 'admin@hutch.id'],
             [
                 'name' => 'Administrator',
-                'password' => bcrypt('password12'),
+                'password' => bcrypt('password123'),
                 'role' => 'administrator',
                 'email_verified_at' => now(),
             ]

@@ -206,12 +206,16 @@
             font-size: 16px;
             font-weight: 700;
             color: #0f3d7f;
+            flex: 0 1 auto;
         }
 
         .summary-row.total .amount {
             font-size: 16px;
             font-weight: 800;
             color: #2d7dd2;
+            white-space: nowrap;
+            margin-left: 20px;
+            text-align: right;
         }
 
         .summary-row strong {
@@ -221,11 +225,15 @@
 
         .summary-row .label {
             color: #6b7280;
+            flex: 0 1 auto;
         }
 
         .summary-row .amount {
             color: #1a3a52;
             font-weight: 600;
+            white-space: nowrap;
+            margin-left: 20px;
+            text-align: right;
         }
 
         /* Status Badge */
@@ -401,7 +409,7 @@
 
         <!-- Summary Section -->
         <div class="summary-section">
-            <div style="max-width: 400px; margin-left: auto;">
+            <div style="max-width: 600px; margin-left: auto;">
                 <div class="summary-row">
                     <span class="label">Subtotal</span>
                     <span class="amount">Rp {{ number_format($pesanan->total_nilai, 0, ',', '.') }}</span>

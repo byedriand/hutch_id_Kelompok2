@@ -245,8 +245,8 @@
                                             <td>{{ $index + 1 }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-3">
-                                                    @if(optional($item->produk)->gambar)
-                                                        <img src="{{ filter_var($item->produk->gambar, FILTER_VALIDATE_URL) ? $item->produk->gambar : asset('storage/' . ltrim($item->produk->gambar, '/')) }}" alt="{{ $item->produk->nama }}" class="product-thumb">
+                                                    @if(optional($item->produk)->foto_url)
+                                                        <img src="{{ $item->produk->foto_url }}" alt="{{ $item->produk->nama }}" class="product-thumb">
                                                     @else
                                                         <div class="product-thumb d-flex align-items-center justify-content-center text-muted small">No</div>
                                                     @endif

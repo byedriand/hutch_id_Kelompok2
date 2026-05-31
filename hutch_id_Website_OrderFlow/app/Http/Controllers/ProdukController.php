@@ -54,6 +54,7 @@ class ProdukController extends Controller
             'harga_jual' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0|max:999999',
             'keterangan' => 'nullable|string|max:500',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ], [
             'nama.required' => 'Nama produk harus diisi.',
             'nama.unique' => 'Nama produk sudah terdaftar dalam sistem.',
@@ -61,13 +62,22 @@ class ProdukController extends Controller
             'harga_jual.numeric' => 'Harga jual harus berupa angka.',
             'stok.required' => 'Stok awal harus diisi.',
             'stok.integer' => 'Stok awal harus berupa angka bulat.',
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format gambar harus jpeg, png, jpg, atau gif.',
+            'foto.max' => 'Ukuran gambar maksimal 5MB.',
         ]);
+
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('produk', 'public');
+        }
 
         $produk = Produk::create([
             'nama' => $validated['nama'],
             'harga_jual' => $validated['harga_jual'],
             'stok' => $validated['stok'],
             'keterangan' => $validated['keterangan'] ?? null,
+            'foto' => $fotoPath,
         ]);
 
         // Create notification for new product
@@ -127,6 +137,7 @@ class ProdukController extends Controller
                 'nullable', 'integer', 'min:0'
             ],
             'keterangan' => 'nullable|string|max:500',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ], [
             'stok.required' => 'Jumlah stok harus diisi ketika memilih "Set Ke Nilai Baru".',
             'stok.integer' => 'Jumlah stok harus berupa angka.',
@@ -136,6 +147,9 @@ class ProdukController extends Controller
             'jumlah_perubahan.required' => 'Jumlah perubahan harus diisi untuk tipe perubahan ini.',
             'jumlah_perubahan.integer' => 'Jumlah perubahan harus berupa angka.',
             'jumlah_perubahan.min' => 'Jumlah perubahan tidak boleh negatif.',
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format gambar harus jpeg, png, jpg, atau gif.',
+            'foto.max' => 'Ukuran gambar maksimal 5MB.',
         ]);
 
         $stokLama = $produk->stok;
@@ -152,6 +166,15 @@ class ProdukController extends Controller
                 return back()->withErrors(['jumlah_perubahan' => 'Stok tidak cukup untuk dikurangi sebanyak itu.'])->withInput();
             }
             $produk->stok = $stokLama - $jumlah;
+        }
+
+        // Handle photo upload
+        if ($request->hasFile('foto')) {
+            // Delete old photo if exists
+            if ($produk->foto && \Storage::disk('public')->exists($produk->foto)) {
+                \Storage::disk('public')->delete($produk->foto);
+            }
+            $produk->foto = $request->file('foto')->store('produk', 'public');
         }
 
         $produk->save();

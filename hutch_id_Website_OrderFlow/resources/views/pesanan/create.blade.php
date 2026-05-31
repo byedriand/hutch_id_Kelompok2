@@ -215,11 +215,11 @@
         }
         .item-table td .mono {
             width: 100%;
-            display: inline-block;
-            text-overflow: clip;
-            overflow: visible;
-            white-space: normal;
+            display: block;
+            overflow-wrap: break-word;
             word-break: break-word;
+            white-space: normal;
+            box-sizing: border-box;
         }
         .item-table tbody tr:hover td {
             background: #f1f7ff;
@@ -230,13 +230,13 @@
         .product-preview {
             display: flex;
             gap: 0.85rem;
-            align-items: flex-start;
+            align-items: center;
             width: 100%;
             min-width: 0;
         }
         .product-thumbnail {
-            width: 56px;
-            height: 56px;
+            width: 80px;
+            height: 80px;
             border-radius: 1.25rem;
             object-fit: cover;
             flex-shrink: 0;
@@ -250,17 +250,20 @@
         }
         .product-preview-info .form-select {
             width: 100%;
+            min-width: 220px;
         }
         .product-preview-info .product-info {
-            font-size: 0.82rem;
-            color: #64748b;
-            margin-top: 0.35rem;
+            font-size: 0.90rem;
+            color: #334155;
+            margin-top: 0.45rem;
+            font-weight: 600;
         }
         .product-preview-info .product-name {
             display: block;
-            font-weight: 700;
+            font-weight: 800;
             color: #0f172a;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.35rem;
+            font-size: 1.05rem;
         }
         .summary-grid {
             display: grid;
@@ -556,11 +559,11 @@
                             <thead>
                                 <tr>
                                     <th style="width: 4%;">#</th>
-                                    <th style="width: 28%;">Nama Produk</th>
-                                    <th style="width: 18%;">Spesifikasi</th>
-                                    <th style="width: 10%;">Qty</th>
-                                    <th style="width: 17%;">Harga Satuan</th>
-                                    <th style="width: 18%;">Subtotal</th>
+                                    <th style="width: 22%;">Nama Produk</th>
+                                    <th style="width: 14%;">Spesifikasi</th>
+                                    <th style="width: 9%;">Qty</th>
+                                    <th style="width: 19%;">Harga Satuan</th>
+                                    <th style="width: 22%;">Subtotal</th>
                                     <th style="width: 5%;">Aksi</th>
                                 </tr>
                             </thead>
@@ -579,7 +582,8 @@
                                                         <option value="" disabled>Tidak ada produk tersedia. Tambahkan produk di menu Produk.</option>
                                                     @endforelse
                                                 </select>
-                                                <div id="preview-info-1" class="product-info">Pilih produk untuk melihat detail dan gambar.</div>
+                                                <span id="preview-name-1" class="product-name d-none"></span>
+                                                <div id="preview-info-1" class="product-info d-none">Pilih produk untuk melihat detail dan gambar.</div>
                                             </div>
                                         </div>
                                     </td>
@@ -696,9 +700,12 @@
 @push('scripts')
 @php
     $dataProduk = $produk->map(function ($p) {
-        $gambar = $p->gambar ?? null;
-        if ($gambar && !filter_var($gambar, FILTER_VALIDATE_URL)) {
-            $gambar = asset('storage/' . ltrim($gambar, '/'));
+        $gambar = $p->foto_url;
+        
+        // Fallback: generate placeholder berdasarkan nama produk
+        if (!$gambar) {
+            $namaEncoded = urlencode($p->nama);
+            $gambar = "https://via.placeholder.com/200?text=" . $namaEncoded;
         }
 
         return [
@@ -781,7 +788,13 @@ function updateHarga(select, id) {
     document.getElementById(`harga-${id}`).value = harga ? 'Rp ' + formatNumber(harga) : '';
     document.getElementById(`harga-hidden-${id}`).value = harga;
     document.getElementById(`preview-${id}`).src = produk && produk.gambar ? produk.gambar : placeholderProductImage;
-    document.getElementById(`preview-info-${id}`).textContent = produk ? `${produk.nama} · Stok ${produk.stok ?? '-'}` : 'Pilih produk untuk melihat detail dan gambar.';
+    
+    if (produk) {
+        document.getElementById(`preview-info-${id}`).classList.add('d-none');
+    } else {
+        document.getElementById(`preview-info-${id}`).classList.remove('d-none');
+    }
+    
     hitungBaris(id);
 }
 
@@ -904,6 +917,7 @@ function tambahItem() {
                         <option value="">-- Pilih Produk --</option>
                         ${dataProduk.map(p => `<option value="${p.id}" data-harga="${p.harga}" data-stok="${p.stok}">${p.nama}</option>`).join('')}
                     </select>
+                    <span id="preview-name-${itemCount}" class="product-name d-none"></span>
                     <div id="preview-info-${itemCount}" class="product-info">Pilih produk untuk melihat detail dan gambar.</div>
                 </div>
             </div>

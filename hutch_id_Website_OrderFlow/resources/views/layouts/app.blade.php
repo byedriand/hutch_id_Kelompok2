@@ -836,7 +836,7 @@
                                 <i class="fas fa-users"></i>Pelanggan
                             </a>
                         @endif
-                        @if(auth()->user()->role === 'operator_gudang' || auth()->user()->role === 'administrator')
+                        @if(auth()->user()->role === 'operator_gudang')
                             <a class="nav-link {{ request()->routeIs('produk.index') ? 'active' : '' }}" href="{{ route('produk.index') }}">
                                 <i class="fas fa-boxes"></i>Manajemen Stok
                             </a>
@@ -844,7 +844,7 @@
                     </nav>
 
                             @if(auth()->user()->role === 'administrator')
-                                <div class="px-3 mt-2 mb-1 text-uppercase text-white-50 fw-semibold small sidebar-section">Lain</div>
+                                <div class="px-3 mt-2 mb-1 text-uppercase text-white-50 fw-semibold small sidebar-section">Admin</div>
                                 <nav class="nav flex-column py-1">
                                     <a class="nav-link {{ request()->routeIs('arsip.index') ? 'active' : '' }}" href="{{ route('arsip.index') }}">
                                         <i class="fas fa-archive"></i>Arsip PDF

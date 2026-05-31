@@ -317,7 +317,7 @@
                     <h5 class="mb-0">Form Ubah Stok</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('produk.update', $produk->id) }}">
+                    <form method="POST" action="{{ route('produk.update', $produk->id) }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -416,6 +416,34 @@
                             </div>
                         </div>
 
+                        <!-- Upload Foto -->
+                        <div class="notes-section">
+                            <label for="foto">Upload Foto Produk (Opsional)</label>
+                            <div style="display: flex; gap: 2rem; align-items: flex-start;">
+                                <div style="flex: 1;">
+                                    <div style="border: 2px dashed rgba(59, 130, 246, 0.3); border-radius: 1rem; padding: 1.5rem; text-align: center; background: rgba(248, 250, 255, 0.5); cursor: pointer; transition: all 0.25s ease;" id="dropZone">
+                                        <input type="file" id="foto" name="foto" accept="image/*" style="display: none;">
+                                        <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: #3b82f6; margin-bottom: 0.5rem; display: block;"></i>
+                                        <p style="color: #475569; margin: 0.5rem 0; font-weight: 600;">Klik atau drag gambar ke sini</p>
+                                        <small style="color: #64748b;">Format: JPG, PNG, GIF | Max: 5MB</small>
+                                    </div>
+                                </div>
+                                <div style="width: 120px;">
+                                    @if ($produk->foto)
+                                        <img id="preview" src="{{ asset('storage/' . $produk->foto) }}" alt="Preview" style="width: 100%; height: 120px; object-fit: cover; border-radius: 1rem; border: 1px solid rgba(219, 234, 254, 0.5);">
+                                    @else
+                                        <div id="preview" style="width: 100%; height: 120px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1)); border-radius: 1rem; border: 1px dashed rgba(219, 234, 254, 0.5); display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                                            <small>Preview</small>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="input-hint" style="margin-top: 0.75rem;">
+                                <i class="fas fa-info-circle"></i>
+                                Upload foto produk untuk ditampilkan saat membuat pesanan
+                            </div>
+                        </div>
+
                         <!-- Submit Buttons -->
                         <div class="action-buttons">
                             <button type="submit" class="btn btn-stok-simpan">
@@ -481,5 +509,84 @@
     document.getElementById('preview-text').textContent = currentStok;
     document.getElementById('preview-result').textContent = currentStok;
     previewValue.textContent = 0;
+
+    // Handle File Upload
+    const dropZone = document.getElementById('dropZone');
+    const fotoInput = document.getElementById('foto');
+    const preview = document.getElementById('preview');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropZone.style.borderColor = '#3b82f6';
+        dropZone.style.background = 'rgba(59, 130, 246, 0.05)';
+    }
+
+    function unhighlight(e) {
+        dropZone.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+        dropZone.style.background = 'rgba(248, 250, 255, 0.5)';
+    }
+
+    dropZone.addEventListener('drop', handleDrop, false);
+    dropZone.addEventListener('click', () => fotoInput.click());
+    fotoInput.addEventListener('change', handleFileSelect);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fotoInput.files = files;
+        handleFileSelect({ target: { files: files } });
+    }
+
+    function handleFileSelect(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (!file.type.startsWith('image/')) {
+                alert('Silakan pilih file gambar');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Ukuran file terlalu besar (max 5MB)');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                if (preview.tagName === 'DIV') {
+                    preview.innerHTML = '';
+                    preview.style.background = 'transparent';
+                    preview.style.border = 'none';
+                    const img = document.createElement('img');
+                    img.id = 'preview';
+                    img.src = event.target.result;
+                    img.style.width = '100%';
+                    img.style.height = '120px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '1rem';
+                    img.style.border = '1px solid rgba(219, 234, 254, 0.5)';
+                    preview.appendChild(img);
+                } else {
+                    preview.src = event.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
 </script>
 @endsection
