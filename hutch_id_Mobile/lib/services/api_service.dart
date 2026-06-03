@@ -11,6 +11,7 @@ class ApiService {
   static String get baseUrl => AppConfig.baseUrl;
 
   static String? _token;
+  static bool isOffline = false;
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -45,6 +46,7 @@ class ApiService {
           );
 
       if (response.statusCode == 200) {
+        isOffline = false;
         final data = jsonDecode(response.body);
         _token = data['token'];
 
@@ -52,8 +54,11 @@ class ApiService {
         await prefs.setString('auth_token', _token!);
 
         return User.fromJson(data['user']);
+      } else {
+        isOffline = true;
       }
     } catch (e) {
+      isOffline = true;
       debugPrint('Login error (offline/timeout): $e');
     }
     return null;
@@ -77,17 +82,48 @@ class ApiService {
     return false;
   }
 
+  // ── Local-CRUD helpers (offline fallback) ────────────────────────────────
+  static Future<List<Pelanggan>> _getLocalPelangganList() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? cached = prefs.getString('cached_pelanggan');
+      if (cached != null) {
+        final List decoded = jsonDecode(cached);
+        return decoded.map((item) => Pelanggan.fromJson(item)).toList();
+      }
+    } catch (e) {
+      debugPrint('_getLocalPelangganList error: $e');
+    }
+    return [];
+  }
+
+  static Future<void> _saveLocalPelangganList(List<Pelanggan> list) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'cached_pelanggan',
+        jsonEncode(list.map((p) => p.toJson()).toList()),
+      );
+    } catch (e) {
+      debugPrint('_saveLocalPelangganList error: $e');
+    }
+  }
+
   // Dashboard
   static Future<Map<String, dynamic>?> getDashboard() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/dashboard'),
-        headers: _getHeaders(),
-      );
+      final response = await http
+          .get(Uri.parse('$baseUrl/dashboard'), headers: _getHeaders())
+          .timeout(const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408));
       if (response.statusCode == 200) {
+        isOffline = false;
         return jsonDecode(response.body);
+      } else {
+        isOffline = true;
       }
     } catch (e) {
+      isOffline = true;
       debugPrint('Dashboard error: $e');
     }
     return null;
@@ -96,15 +132,19 @@ class ApiService {
   // Pelanggan
   static Future<List<Pelanggan>> getPelanggan() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/pelanggan'),
-        headers: _getHeaders(),
-      );
+      final response = await http
+          .get(Uri.parse('$baseUrl/pelanggan'), headers: _getHeaders())
+          .timeout(const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408));
       if (response.statusCode == 200) {
+        isOffline = false;
         final List list = jsonDecode(response.body);
         return list.map((item) => Pelanggan.fromJson(item)).toList();
+      } else {
+        isOffline = true;
       }
     } catch (e) {
+      isOffline = true;
       debugPrint('Get pelanggan error: $e');
     }
     return [];
@@ -116,24 +156,36 @@ class ApiService {
     String alamat,
     String email,
   ) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/pelanggan'),
-        headers: _getHeaders(),
-        body: jsonEncode({
-          'nama': nama,
-          'telepon': telepon,
-          'alamat': alamat,
-          'email': email,
-        }),
-      );
-      if (response.statusCode == 201) {
-        return Pelanggan.fromJson(jsonDecode(response.body));
+    if (!isOffline) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse('$baseUrl/pelanggan'),
+              headers: _getHeaders(),
+              body: jsonEncode({'nama': nama, 'telepon': telepon, 'alamat': alamat, 'email': email}),
+            )
+            .timeout(const Duration(seconds: 5),
+                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+        if (response.statusCode == 201) {
+          return Pelanggan.fromJson(jsonDecode(response.body));
+        } else {
+          isOffline = true;
+        }
+      } catch (e) {
+        isOffline = true;
+        debugPrint('Create pelanggan error: $e');
       }
-    } catch (e) {
-      debugPrint('Create pelanggan error: $e');
     }
-    return null;
+    // ── Offline fallback: save locally ───────────────────────────────────
+    final list = await _getLocalPelangganList();
+    final newId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+    final newPelanggan = Pelanggan(
+      id: newId, nama: nama, telepon: telepon, alamat: alamat, email: email, jumlahPO: 0,
+    );
+    list.add(newPelanggan);
+    await _saveLocalPelangganList(list);
+    debugPrint('createPelanggan offline: saved locally with id=$newId');
+    return newPelanggan;
   }
 
   static Future<Pelanggan?> updatePelanggan(
@@ -143,35 +195,64 @@ class ApiService {
     String alamat,
     String email,
   ) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/pelanggan/$id'),
-        headers: _getHeaders(),
-        body: jsonEncode({
-          'nama': nama,
-          'telepon': telepon,
-          'alamat': alamat,
-          'email': email,
-        }),
-      );
-      if (response.statusCode == 200) {
-        return Pelanggan.fromJson(jsonDecode(response.body));
+    if (!isOffline) {
+      try {
+        final response = await http
+            .put(
+              Uri.parse('$baseUrl/pelanggan/$id'),
+              headers: _getHeaders(),
+              body: jsonEncode({'nama': nama, 'telepon': telepon, 'alamat': alamat, 'email': email}),
+            )
+            .timeout(const Duration(seconds: 5),
+                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+        if (response.statusCode == 200) {
+          return Pelanggan.fromJson(jsonDecode(response.body));
+        } else {
+          isOffline = true;
+        }
+      } catch (e) {
+        isOffline = true;
+        debugPrint('Update pelanggan error: $e');
       }
-    } catch (e) {
-      debugPrint('Update pelanggan error: $e');
+    }
+    // ── Offline fallback: update locally ─────────────────────────────────
+    final list = await _getLocalPelangganList();
+    final idx = list.indexWhere((p) => p.id == id);
+    if (idx != -1) {
+      final updated = Pelanggan(
+        id: id, nama: nama, telepon: telepon, alamat: alamat, email: email,
+        jumlahPO: list[idx].jumlahPO,
+      );
+      list[idx] = updated;
+      await _saveLocalPelangganList(list);
+      debugPrint('updatePelanggan offline: updated locally id=$id');
+      return updated;
     }
     return null;
   }
 
   static Future<bool> deletePelanggan(String id) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/pelanggan/$id'),
-        headers: _getHeaders(),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      debugPrint('Delete pelanggan error: $e');
+    if (!isOffline) {
+      try {
+        final response = await http
+            .delete(Uri.parse('$baseUrl/pelanggan/$id'), headers: _getHeaders())
+            .timeout(const Duration(seconds: 5),
+                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+        if (response.statusCode == 200) return true;
+        isOffline = true;
+      } catch (e) {
+        isOffline = true;
+        debugPrint('Delete pelanggan error: $e');
+      }
+    }
+    // ── Offline fallback: delete locally ─────────────────────────────────
+    final list = await _getLocalPelangganList();
+    final before = list.length;
+    list.removeWhere((p) => p.id == id);
+    if (list.length < before) {
+      await _saveLocalPelangganList(list);
+      debugPrint('deletePelanggan offline: removed locally id=$id');
+      return true;
     }
     return false;
   }
@@ -179,18 +260,60 @@ class ApiService {
   // Pesanan
   static Future<List<Map<String, dynamic>>> getPesanan() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/pesanan'),
-        headers: _getHeaders(),
-      );
+      final response = await http
+          .get(Uri.parse('$baseUrl/pesanan'), headers: _getHeaders())
+          .timeout(const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408));
       if (response.statusCode == 200) {
+        isOffline = false;
         final List list = jsonDecode(response.body);
         return list.map((item) => Map<String, dynamic>.from(item)).toList();
+      } else {
+        isOffline = true;
       }
     } catch (e) {
+      isOffline = true;
       debugPrint('Get pesanan error: $e');
     }
     return [];
+  }
+
+  // ── Local-CRUD helpers (pesanan offline fallback) ─────────────────────────
+  static Future<List<Map<String, dynamic>>> _getLocalPesananList() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? cached = prefs.getString('cached_pesanan');
+      if (cached != null) {
+        final List decoded = jsonDecode(cached);
+        return decoded.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+    } catch (e) {
+      debugPrint('_getLocalPesananList error: $e');
+    }
+    return [];
+  }
+
+  static Future<void> _saveLocalPesananList(List<Map<String, dynamic>> list) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_pesanan', jsonEncode(list));
+    } catch (e) {
+      debugPrint('_saveLocalPesananList error: $e');
+    }
+  }
+
+  /// Generate PO number in format PO-YYYYMMDD-XXX
+  static String generatePoNumber(List<Map<String, dynamic>> existingList) {
+    final now = DateTime.now();
+    final datePart =
+        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    // Count how many POs exist for today
+    final todayPrefix = 'PO-$datePart-';
+    final todayCount = existingList
+        .where((p) => (p['no'] ?? '').toString().startsWith(todayPrefix))
+        .length;
+    final seq = (todayCount + 1).toString().padLeft(3, '0');
+    return 'PO-$datePart-$seq';
   }
 
   static Future<Map<String, dynamic>?> createPesanan(
@@ -200,50 +323,143 @@ class ApiService {
     int harga,
     String status,
   ) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/pesanan'),
-        headers: _getHeaders(),
-        body: jsonEncode({
-          'pelanggan': pelangganNama,
-          'deskripsi': deskripsi,
-          'jumlah': jumlah,
-          'harga': harga,
-          'status': status,
-        }),
-      );
-      if (response.statusCode == 201) {
-        return Map<String, dynamic>.from(jsonDecode(response.body));
+    if (!isOffline) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse('$baseUrl/pesanan'),
+              headers: _getHeaders(),
+              body: jsonEncode({
+                'pelanggan': pelangganNama,
+                'deskripsi': deskripsi,
+                'jumlah': jumlah,
+                'harga': harga,
+                'status': status,
+              }),
+            )
+            .timeout(const Duration(seconds: 5),
+                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+        if (response.statusCode == 201) {
+          return Map<String, dynamic>.from(jsonDecode(response.body));
+        } else {
+          isOffline = true;
+        }
+      } catch (e) {
+        isOffline = true;
+        debugPrint('Create pesanan error: $e');
       }
-    } catch (e) {
-      debugPrint('Create pesanan error: $e');
     }
-    return null;
+    // ── Offline fallback: save locally with auto PO number ─────────────────
+    final list = await _getLocalPesananList();
+    final now = DateTime.now();
+    final newNo = generatePoNumber(list);
+    final newId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+    const monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    final tanggal =
+        '${now.day} ${monthNames[now.month - 1]} ${now.year}';
+    final total = jumlah * harga;
+    final totalFormatted =
+        'Rp ${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+    final newPesanan = <String, dynamic>{
+      'id': newId,
+      'no': newNo,
+      'pelanggan': pelangganNama,
+      'deskripsi': deskripsi,
+      'jumlah': jumlah,
+      'harga': harga,
+      'total': totalFormatted,
+      'status': status,
+      'tanggal': tanggal,
+      'audit_trail': [
+        {'status': status, 'waktu': DateTime.now().toIso8601String(), 'catatan': 'PO dibuat (offline)'}
+      ],
+    };
+    list.add(newPesanan);
+    await _saveLocalPesananList(list);
+    debugPrint('createPesanan offline: saved with no=$newNo');
+    return newPesanan;
   }
 
-  static Future<bool> updatePesananStatus(String id, String status) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/pesanan/$id/status'),
-        headers: _getHeaders(),
-        body: jsonEncode({'status': status}),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      debugPrint('Update pesanan status error: $e');
+  static Future<bool> updatePesananStatus(String id, String status, {String? catatan}) async {
+    if (!isOffline) {
+      try {
+        final response = await http
+            .put(
+              Uri.parse('$baseUrl/pesanan/$id/status'),
+              headers: _getHeaders(),
+              // ignore: use_null_aware_elements
+              body: jsonEncode({'status': status, if (catatan != null) 'catatan': catatan}),
+            )
+            .timeout(const Duration(seconds: 5),
+                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+        if (response.statusCode == 200) {
+          // Also update local cache to stay in sync
+          final list = await _getLocalPesananList();
+          final idx = list.indexWhere((p) => p['id'].toString() == id);
+          if (idx != -1) {
+            list[idx]['status'] = status;
+            final trail = List<Map<String, dynamic>>.from(
+                (list[idx]['audit_trail'] as List? ?? []).map((e) => Map<String, dynamic>.from(e)));
+            trail.add({'status': status, 'waktu': DateTime.now().toIso8601String(), 'catatan': catatan ?? ''});
+            list[idx]['audit_trail'] = trail;
+            await _saveLocalPesananList(list);
+          }
+          return true;
+        } else {
+          isOffline = true;
+        }
+      } catch (e) {
+        isOffline = true;
+        debugPrint('Update pesanan status error: $e');
+      }
+    }
+    // ── Offline fallback ──────────────────────────────────────────────
+    final list = await _getLocalPesananList();
+    final idx = list.indexWhere((p) => p['id'].toString() == id);
+    if (idx != -1) {
+      list[idx]['status'] = status;
+      final trail = List<Map<String, dynamic>>.from(
+          (list[idx]['audit_trail'] as List? ?? []).map((e) => Map<String, dynamic>.from(e)));
+      trail.add({'status': status, 'waktu': DateTime.now().toIso8601String(), 'catatan': catatan ?? '(offline)'});
+      list[idx]['audit_trail'] = trail;
+      await _saveLocalPesananList(list);
+      debugPrint('updatePesananStatus offline: id=$id -> $status');
+      return true;
     }
     return false;
   }
 
   static Future<bool> deletePesanan(String id) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/pesanan/$id'),
-        headers: _getHeaders(),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      debugPrint('Delete pesanan error: $e');
+    if (!isOffline) {
+      try {
+        final response = await http
+            .delete(Uri.parse('$baseUrl/pesanan/$id'), headers: _getHeaders())
+            .timeout(const Duration(seconds: 5),
+                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+        if (response.statusCode == 200) {
+          // Also remove from local cache
+          final list = await _getLocalPesananList();
+          list.removeWhere((p) => p['id'].toString() == id);
+          await _saveLocalPesananList(list);
+          return true;
+        }
+        isOffline = true;
+      } catch (e) {
+        isOffline = true;
+        debugPrint('Delete pesanan error: $e');
+      }
+    }
+    // ── Offline fallback ──────────────────────────────────────────────
+    final list = await _getLocalPesananList();
+    final before = list.length;
+    list.removeWhere((p) => p['id'].toString() == id);
+    if (list.length < before) {
+      await _saveLocalPesananList(list);
+      debugPrint('deletePesanan offline: removed id=$id');
+      return true;
     }
     return false;
   }
@@ -251,15 +467,19 @@ class ApiService {
   // Arsip PDF
   static Future<List<Map<String, dynamic>>> getArsipPdf() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/arsip-pdf'),
-        headers: _getHeaders(),
-      );
+      final response = await http
+          .get(Uri.parse('$baseUrl/arsip-pdf'), headers: _getHeaders())
+          .timeout(const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408));
       if (response.statusCode == 200) {
+        isOffline = false;
         final List list = jsonDecode(response.body);
         return list.map((item) => Map<String, dynamic>.from(item)).toList();
+      } else {
+        isOffline = true;
       }
     } catch (e) {
+      isOffline = true;
       debugPrint('Get arsip pdf error: $e');
     }
     return [];

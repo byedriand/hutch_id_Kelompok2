@@ -1,8 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../main_home_screen.dart';
 import '../../services/api_service.dart';
-import '../../utils/responsive.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   late TextEditingController passwordController;
   bool _obscurePassword = true;
   bool _isLoading = false;
+  String? _selectedRole;
 
   // Data user dummy untuk login
   final List<User> users = [
@@ -26,14 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
       deskripsi: 'Akses Penuh',
       email: 'admin@hutchprestige.com',
       password: 'admin123',
-    ),
-    User(
-      id: '2',
-      nama: 'Pemilik UMKM',
-      role: 'Pemilik UMKM',
-      deskripsi: 'Owner',
-      email: 'owner@hutchprestige.com',
-      password: 'owner123',
     ),
     User(
       id: '3',
@@ -58,6 +51,11 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    
+    // Default to Administrator
+    _selectedRole = 'Administrator';
+    emailController.text = users[0].email;
+    passwordController.text = users[0].password;
   }
 
   @override
@@ -73,7 +71,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email dan Password harus diisi')),
+        const SnackBar(
+          content: Text('Email dan Password harus diisi'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -106,7 +107,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (user != null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Selamat datang, ${user.nama}!')),
+        SnackBar(
+          content: Text('Selamat datang kembali, ${user.nama}!'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFF10B981),
+        ),
       );
 
       Navigator.of(context).pushReplacement(
@@ -136,7 +141,8 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Email atau Password salah'),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -144,443 +150,390 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool mobile = Responsive.isMobile(context);
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 768;
+
     return Scaffold(
-      body: mobile ? _buildMobileLayout() : _buildDesktopLayout(),
-    );
-  }
-
-  // ─── DESKTOP LAYOUT ────────────────────────────────────────────────────────
-  Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        // Bagian kiri - Logo dan Role Selection
-        Expanded(
-          flex: 1,
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1e3a8a), Color(0xFF2563eb)],
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildLogoSection(),
-                const SizedBox(height: 40),
-                const Text(
-                  'Pilih Role Anda',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      _buildRoleCard('Administrator', 'Akses Penuh', Icons.admin_panel_settings),
-                      const SizedBox(height: 12),
-                      _buildRoleCard('Pemilik UMKM', 'Owner', Icons.person),
-                      const SizedBox(height: 12),
-                      _buildRoleCard('Staf Penjualan', 'Sales', Icons.people),
-                      const SizedBox(height: 12),
-                      _buildRoleCard('Operator Gudang', 'Warehouse', Icons.store),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        // Bagian kanan - Form Login
-        Expanded(
-          flex: 1,
-          child: Container(
-            color: Colors.grey[50],
-            padding: const EdgeInsets.all(40),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Login',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 30),
-                _buildEmailField(),
-                const SizedBox(height: 20),
-                _buildPasswordField(),
-                const SizedBox(height: 30),
-                _buildLoginButton(),
-                const SizedBox(height: 20),
-                _buildDemoCredentials(),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ─── MOBILE LAYOUT ─────────────────────────────────────────────────────────
-  Widget _buildMobileLayout() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF1e3a8a), Color(0xFF2563eb), Color(0xFFEFF6FF)],
-          stops: [0.0, 0.35, 0.35],
-        ),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Header / Logo
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                child: _buildLogoSection(compact: true),
-              ),
-
-              // Card form login
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Masuk ke Akun',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1e3a8a),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Pilih role atau masukkan kredensial',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[500]),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Role quick-select chips
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: users.map((u) => _buildRoleChip(u)).toList(),
-                    ),
-                    const SizedBox(height: 20),
-                    const Divider(),
-                    const SizedBox(height: 16),
-
-                    _buildEmailField(),
-                    const SizedBox(height: 16),
-                    _buildPasswordField(),
-                    const SizedBox(height: 24),
-                    _buildLoginButton(),
-                    const SizedBox(height: 16),
-                    _buildDemoCredentials(),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── SHARED COMPONENTS ─────────────────────────────────────────────────────
-
-  Widget _buildLogoSection({bool compact = false}) {
-    return Column(
-      children: [
-        Container(
-          width: compact ? 72 : 100,
-          height: compact ? 72 : 100,
-          decoration: BoxDecoration(
-            color: Colors.white10,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(
-            Icons.shopping_bag,
-            size: compact ? 42 : 60,
-            color: Colors.white,
-          ),
-        ),
-        SizedBox(height: compact ? 12 : 20),
-        Text(
-          'HUTCHID',
-          style: TextStyle(
-            fontSize: compact ? 26 : 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 2,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Bag Manufacturing & In-House Brand',
-          style: TextStyle(fontSize: 12, color: Colors.white70),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 2),
-        const Text(
-          'Sistem Manajemen Pesanan',
-          style: TextStyle(fontSize: 11, color: Colors.white60),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmailField() {
-    return TextField(
-      controller: emailController,
-      keyboardType: TextInputType.emailAddress,
-      decoration: InputDecoration(
-        labelText: 'Email',
-        hintText: 'Masukkan email Anda',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF2563eb), width: 2),
-        ),
-        prefixIcon: const Icon(Icons.email, color: Color(0xFF2563eb)),
-        filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextField(
-      controller: passwordController,
-      obscureText: _obscurePassword,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        hintText: 'Masukkan password Anda',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF2563eb), width: 2),
-        ),
-        prefixIcon: const Icon(Icons.lock, color: Color(0xFF2563eb)),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey,
-          ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-        ),
-        filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-      ),
-    );
-  }
-
-  Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : login,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2563eb),
-          disabledBackgroundColor: Colors.grey[300],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          elevation: 2,
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                height: 22,
-                width: 22,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2.5,
-                ),
-              )
-            : const Text(
-                'Masuk Sekarang',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: 0.5,
-                ),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildDemoCredentials() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue[200]!),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: const Color(0xFF0F172A), // Slate 900
+      body: Stack(
         children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline, size: 14, color: Color(0xFF2563eb)),
-              SizedBox(width: 6),
-              Text(
-                'Demo Credentials:',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1e3a8a),
+          // Elegant minimal background accent
+          Positioned(
+            top: -200,
+            left: size.width * 0.1,
+            child: Container(
+              width: 500,
+              height: 500,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF1E293B).withValues(alpha: 0.15),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.05),
+                    blurRadius: 200,
+                    spreadRadius: 50,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -200,
+            right: size.width * 0.1,
+            child: Container(
+              width: 600,
+              height: 600,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF1E293B).withValues(alpha: 0.15),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.04),
+                    blurRadius: 200,
+                    spreadRadius: 50,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          // Full-screen scrollable layout to prevent any height overflows
+          Center(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 450),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildBrandHeader(),
+                    const SizedBox(height: 32),
+                    _buildLoginCard(isDesktop),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-          SizedBox(height: 6),
-          Text('📧 admin@hutchprestige.com', style: TextStyle(fontSize: 11)),
-          Text('🔑 admin123', style: TextStyle(fontSize: 11)),
         ],
       ),
     );
   }
 
-  // Role chip untuk mobile
-  Widget _buildRoleChip(User user) {
-    const Map<String, IconData> roleIcons = {
-      'Administrator': Icons.admin_panel_settings,
-      'Pemilik UMKM': Icons.person,
-      'Staf Penjualan': Icons.people,
-      'Operator Gudang': Icons.store,
-    };
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          emailController.text = user.email;
-          passwordController.text = user.password;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Role dipilih: ${user.role}'),
-            duration: const Duration(milliseconds: 800),
-            behavior: SnackBarBehavior.floating,
+  // ─── BRAND HEADER ──────────────────────────────────────────────────────────
+  Widget _buildBrandHeader() {
+    return Column(
+      children: [
+        // Minimalist geometric logo
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white.withValues(alpha: 0.03),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEFF6FF),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF2563eb).withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(roleIcons[user.role] ?? Icons.person, size: 14, color: const Color(0xFF2563eb)),
-            const SizedBox(width: 6),
-            Text(
-              user.role,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF1e3a8a),
-                fontWeight: FontWeight.w600,
-              ),
+          child: const Center(
+            child: Icon(
+              Icons.shopping_bag_outlined,
+              size: 34,
+              color: Colors.white,
             ),
-          ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          'HUTCHID',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 4,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'BAG MANUFACTURING & IN-HOUSE BRAND',
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            color: Colors.white.withValues(alpha: 0.4),
+            letterSpacing: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── LOGIN CARD ────────────────────────────────────────────────────────────
+  Widget _buildLoginCard(bool isDesktop) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Masuk Portal',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Pilih akun cepat atau masukkan email Anda',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.4),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Cupertino-style segmented control for quick role selection
+                _buildRoleSegmentedControl(),
+                
+                const SizedBox(height: 24),
+                
+                _buildEmailField(),
+                const SizedBox(height: 16),
+                _buildPasswordField(),
+                
+                const SizedBox(height: 24),
+                _buildLoginButton(),
+                
+                const SizedBox(height: 24),
+                _buildDemoCredentials(),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  // Role card untuk desktop
-  Widget _buildRoleCard(String role, String deskripsi, IconData icon) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          try {
-            final user = users.firstWhere((u) => u.role == role);
-            setState(() {
-              emailController.text = user.email;
-              passwordController.text = user.password;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Form diisi untuk role: ${user.role}'),
-                duration: const Duration(milliseconds: 500),
+  // ─── SEGMENTED ROLE CONTROL ────────────────────────────────────────────────
+  Widget _buildRoleSegmentedControl() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        children: users.map((user) {
+          final isSelected = _selectedRole == user.role;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedRole = user.role;
+                  emailController.text = user.email;
+                  passwordController.text = user.password;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white.withValues(alpha: 0.06) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isSelected ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    user.role == 'Administrator'
+                        ? 'Admin'
+                        : user.role == 'Staf Penjualan'
+                            ? 'Sales'
+                            : 'Gudang',
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ),
               ),
-            );
-          } catch (e) {
-            // Ignore
-          }
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white10,
-            border: Border.all(color: Colors.white24),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ─── TEXT FIELDS ───────────────────────────────────────────────────────────
+  Widget _buildEmailField() {
+    return _buildGlassTextField(
+      controller: emailController,
+      label: 'Alamat Email',
+      hint: 'Masukkan alamat email Anda',
+      prefixIcon: Icons.email_outlined,
+      keyboardType: TextInputType.emailAddress,
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return _buildGlassTextField(
+      controller: passwordController,
+      label: 'Kata Sandi',
+      hint: 'Masukkan kata sandi Anda',
+      prefixIcon: Icons.lock_outlined,
+      obscureText: _obscurePassword,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: Colors.white.withValues(alpha: 0.3),
+          size: 18,
+        ),
+        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+      ),
+    );
+  }
+
+  Widget _buildGlassTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData prefixIcon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType? keyboardType,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2), fontSize: 12),
+          prefixIcon: Icon(prefixIcon, color: Colors.white.withValues(alpha: 0.5), size: 18),
+          suffixIcon: suffixIcon,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+        ),
+      ),
+    );
+  }
+
+  // ─── LOGIN BUTTON ──────────────────────────────────────────────────────────
+  Widget _buildLoginButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : login,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF3B82F6), // Royal Blue accent
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 0,
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Text(
+                'Masuk',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+      ),
+    );
+  }
+
+  // ─── DEMO CREDENTIALS ──────────────────────────────────────────────────────
+  Widget _buildDemoCredentials() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.01),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Icon(icon, color: Colors.white, size: 24),
-              const SizedBox(width: 12),
+              Icon(Icons.info_outline_rounded, size: 14, color: Colors.white.withValues(alpha: 0.4)),
+              const SizedBox(width: 8),
+              Text(
+                'Detail Akun Aktif:',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('Email', style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 10)),
                   Text(
-                    role,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
+                    emailController.text.isNotEmpty ? emailController.text : 'Pilih role...',
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
                   ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('Password', style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 10)),
                   Text(
-                    deskripsi,
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                    passwordController.text.isNotEmpty ? passwordController.text : 'Pilih role...',
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
                   ),
                 ],
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

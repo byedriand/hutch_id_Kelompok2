@@ -28,10 +28,12 @@ class Pelanggan {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'nama': nama,
       'telepon': telepon,
       'alamat': alamat,
       'email': email,
+      'jumlah_po': jumlahPO,
     };
   }
 }

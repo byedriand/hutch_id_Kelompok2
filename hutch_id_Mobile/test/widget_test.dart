@@ -1,4 +1,4 @@
-// This is a basic Flutter widget test for HUTCH PRESTIGE application.
+// This is a basic Flutter widget test for HUTCHID application.
 //
 // To perform an interaction with a widget in your test, use the WidgetTester
 // utility in the flutter_test package. For example, you can send tap and scroll
