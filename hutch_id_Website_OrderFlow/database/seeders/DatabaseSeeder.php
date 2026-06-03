@@ -24,16 +24,6 @@ class DatabaseSeeder extends Seeder
         );
 
         \App\Models\User::updateOrCreate(
-            ['email' => 'owner@hutchprestige.com'],
-            [
-                'name' => 'Pemilik UMKM',
-                'password' => bcrypt('owner123'),
-                'role' => 'Pemilik UMKM',
-                'deskripsi' => 'Owner',
-            ]
-        );
-
-        \App\Models\User::updateOrCreate(
             ['email' => 'sales@hutchprestige.com'],
             [
                 'name' => 'Staf Penjualan',
