@@ -1612,6 +1612,14 @@
                                 <i class="fas fa-boxes"></i>Manajemen Stok
                             </a>
                         @endif
+                        @if(auth()->user()->role === 'staf_penjualan')
+                            <div class="px-3 mt-3 mb-1 text-uppercase text-white-50 fw-semibold small sidebar-section">Staf</div>
+                            <nav class="nav flex-column py-1">
+                                <a class="nav-link {{ request()->routeIs('produk.staff') ? 'active' : '' }}" href="{{ route('produk.staff') }}">
+                                    <i class="fas fa-cube"></i>Tambah Produk
+                                </a>
+                            </nav>
+                        @endif
                     </nav>
 
                             @if(auth()->user()->role === 'administrator')

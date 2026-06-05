@@ -101,6 +101,14 @@ Route::middleware(['auth'])->group(function () {
         // Quick update by product name (fallback for notifications without produk_id)
         Route::post('/produk/quick-update-by-name', [ProdukController::class, 'quickUpdateByName'])->name('produk.quickUpdateByName');
     });
+
+    // Product Management for Staff - Staf Penjualan
+    Route::middleware(['role:staf_penjualan'])->group(function () {
+        Route::get('/produk/staf/tambah', [ProdukController::class, 'staffView'])->name('produk.staff');
+        Route::post('/produk/staf/tambah', [ProdukController::class, 'staffStore'])->name('produk.staff.store');
+        Route::get('/produk/staf/{produk}/edit', [ProdukController::class, 'staffEdit'])->name('produk.staff.edit');
+        Route::put('/produk/staf/{produk}', [ProdukController::class, 'staffUpdate'])->name('produk.staff.update');
+    });
 });
 
 // Admin Dashboard - Administrator Only

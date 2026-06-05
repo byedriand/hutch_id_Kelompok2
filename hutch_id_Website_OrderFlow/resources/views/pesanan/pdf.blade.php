@@ -8,440 +8,378 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 13px;
-            color: #1a3a52;
-            background: #f8fbff;
+            background: white;
             padding: 0;
-            line-height: 1.5;
+            font-size: 12px;
+            color: #2c3e50;
         }
 
-        .page {
-            background: #ffffff;
-            padding: 40px;
+        .invoice {
+            max-width: 100%;
             margin: 0;
+            background: white;
+            padding: 30px 45px;
             min-height: 100vh;
-            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Header dengan Logo */
-        .top-header {
+        /* Header Section */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 32px;
-            padding-bottom: 24px;
-            border-bottom: 3px solid #2d7dd2;
+            margin-bottom: 30px;
+            padding-bottom: 22px;
+            border-bottom: 1px solid #cccccc;
         }
 
-        .logo-section {
+        .logo {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .logo-box {
+            width: 85px;
+            height: 85px;
+            border: 2px solid #333333;
+            border-radius: 4px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            justify-content: center;
+            overflow: hidden;
+            background: white;
+            flex-shrink: 0;
         }
 
-        .logo-img {
-            width: 60px;
-            height: 60px;
+        .logo-box img {
+            width: 100%;
+            height: 100%;
             object-fit: contain;
+            padding: 3px;
         }
 
-        .brand-info h3 {
+        .logo-text h3 {
+            font-size: 14px;
+            font-weight: 900;
+            color: #333333;
             margin: 0;
-            font-size: 18px;
-            font-weight: 800;
-            color: #0f3d7f;
+            letter-spacing: 0px;
+            text-transform: uppercase;
+        }
+
+        .logo-text p {
+            color: #666666;
+            margin: 2px 0 0 0;
+            font-size: 10px;
+            font-weight: 400;
+            letter-spacing: 0px;
+            text-transform: capitalize;
+        }
+
+        .invoice-title {
+            text-align: right;
+        }
+
+        .invoice-title h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin: 0;
+            color: #333333;
+            line-height: 1;
+            letter-spacing: 0px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #e8e8e8;
+            border-radius: 4px;
+            font-weight: 700;
+            color: #666666;
+            font-size: 10px;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0px;
+            border-left: none;
+        }
+
+        hr {
+            display: none;
+        }
+
+        /* Info Section */
+        .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 100px;
+            margin-bottom: 25px;
+            padding: 20px 0;
+            background: transparent;
+            border-left: none;
+            border-radius: 0px;
+        }
+
+        .info h4 {
+            color: #666666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 10px;
+            font-weight: 700;
             letter-spacing: 0.05em;
         }
 
-        .brand-info p {
-            margin: 4px 0 0;
+        .info p {
+            margin-bottom: 6px;
+            color: #333333;
             font-size: 12px;
-            color: #6b7280;
-            font-weight: 500;
+            line-height: 1.8;
         }
 
-        .po-info {
-            text-align: right;
-        }
-
-        .po-info h2 {
-            margin: 0;
-            font-size: 28px;
+        .company-name {
+            font-size: 18px;
             font-weight: 900;
-            color: #0f3d7f;
-            letter-spacing: -0.02em;
-        }
-
-        .po-info p {
-            margin: 4px 0 0;
-            color: #6b7280;
-            font-size: 12px;
-        }
-
-        /* Divider dekoratif */
-        .divider {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #2d7dd2, transparent);
-            margin: 24px 0;
-        }
-
-        /* Content Grid */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 32px;
-            margin-bottom: 32px;
-        }
-
-        .section {
-            margin-bottom: 0;
-        }
-
-        .section-title {
-            display: block;
             margin-bottom: 12px;
-            font-size: 12px;
+            color: #333333;
+            letter-spacing: 0px;
+        }
+
+        .info strong {
+            color: #333333;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #0f3d7f;
         }
 
-        .section-content {
-            line-height: 1.7;
-            color: #334155;
-            font-size: 13px;
-        }
-
-        .section-content strong {
-            color: #0f3d7f;
-            font-weight: 600;
-        }
-
-        .section-content br {
-            margin-bottom: 2px;
-        }
-
-        /* Tabel Modern */
-        .table-section {
-            margin: 32px 0;
-        }
-
+        /* Table Styling */
         .table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 12px;
-        }
-
-        .table thead {
-            background: linear-gradient(135deg, #0f3d7f 0%, #1d457c 100%);
+            margin: 25px 0 30px;
+            background: white;
+            box-shadow: none;
+            border-radius: 0px;
+            overflow: visible;
+            border-top: 1px solid #cccccc;
+            border-bottom: 1px solid #cccccc;
         }
 
         .table th {
-            color: #ffffff;
-            padding: 14px 12px;
+            background: #f0f0f0;
+            padding: 12px 15px;
             text-align: left;
             font-weight: 700;
-            font-size: 11px;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
+            color: #666666;
             border: none;
+            box-shadow: none;
         }
 
         .table td {
-            padding: 14px 12px;
-            border-bottom: 1px solid #e8edf5;
-            color: #334155;
+            padding: 14px 15px;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 12px;
+            color: #333333;
+            font-weight: 400;
+            vertical-align: middle;
         }
 
-        .table tbody tr {
-            background: #ffffff;
-            transition: background-color 0.2s ease;
+        .table td:first-child {
+            padding-left: 15px;
         }
 
-        .table tbody tr:nth-child(even) {
-            background: #f8fbff;
+        .table td.text-right {
+            padding-right: 15px;
+        }
+
+        .table tbody tr:nth-child(odd) {
+            background: white;
         }
 
         .table tbody tr:hover {
-            background: #f0f4f8;
+            background: white;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: 1px solid #cccccc;
         }
 
         .text-right {
-            text-align: right;
+            text-align: right !important;
         }
 
         .text-center {
-            text-align: center;
+            text-align: center !important;
         }
 
         /* Summary Section */
-        .summary-section {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 2px solid #e8edf5;
+        .summary-box {
+            margin-left: auto;
+            width: 340px;
+            background: #f5f5f5;
+            padding: 0;
+            border-radius: 0px;
+            border: 1px solid #cccccc;
+            overflow: hidden;
+            box-shadow: none;
         }
 
         .summary-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            font-size: 13px;
+            padding: 12px 18px;
+            font-size: 11px;
+            color: #333333;
+            border-bottom: 1px solid #e8e8e8;
+            background: transparent;
         }
 
-        .summary-row.total {
-            background: linear-gradient(135deg, rgba(45, 125, 210, 0.08), rgba(45, 125, 210, 0.04));
-            padding: 14px;
-            border-radius: 8px;
-            margin-top: 12px;
-            border-left: 4px solid #2d7dd2;
-        }
-
-        .summary-row.total strong {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0f3d7f;
-            flex: 0 1 auto;
-        }
-
-        .summary-row.total .amount {
-            font-size: 16px;
-            font-weight: 800;
-            color: #2d7dd2;
-            white-space: nowrap;
-            margin-left: 20px;
-            text-align: right;
-        }
-
-        .summary-row strong {
-            color: #0f3d7f;
-            font-weight: 600;
+        .summary-row:last-child {
+            border-bottom: 1px solid #e8e8e8;
         }
 
         .summary-row .label {
-            color: #6b7280;
-            flex: 0 1 auto;
+            flex: 1;
+            font-weight: 600;
+            color: #666666;
+            text-transform: uppercase;
+            font-size: 10px;
         }
 
         .summary-row .amount {
-            color: #1a3a52;
-            font-weight: 600;
-            white-space: nowrap;
-            margin-left: 20px;
             text-align: right;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 11px;
+            min-width: 120px;
             font-weight: 700;
+            color: #333333;
+        }
+
+        .summary-row.total {
+            background: #f5f5f5;
+            padding: 14px 18px;
+            font-size: 12px;
+            font-weight: 900;
+            color: #333333;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0px;
+            box-shadow: none;
+            border-bottom: none;
+            border-top: 1px dashed #cccccc;
         }
 
-        .status-selesai {
-            background: rgba(34, 197, 94, 0.12);
-            color: #166534;
-        }
-
-        .status-menunggu {
-            background: rgba(234, 179, 8, 0.12);
-            color: #92400e;
-        }
-
-        .status-dalam_produksi {
-            background: rgba(59, 130, 246, 0.12);
-            color: #1e40af;
-        }
-
-        .status-dikirim {
-            background: rgba(99, 102, 241, 0.12);
-            color: #312e81;
-        }
-
-        /* Footer */
-        .footer-section {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e8edf5;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 32px;
-        }
-
-        .footer-info {
+        .summary-row.total .label {
+            color: #333333;
             font-size: 11px;
-            color: #6b7280;
-            line-height: 1.6;
         }
 
-        .footer-info strong {
-            color: #1a3a52;
-            font-weight: 600;
-        }
-
-        .signature-section {
-            text-align: right;
-            padding-top: 40px;
-        }
-
-        .signature-line {
-            border-top: 1px solid #1a3a52;
-            padding-top: 8px;
-            margin-top: 40px;
-            font-size: 11px;
-            color: #1a3a52;
-            font-weight: 600;
-        }
-
-        /* Watermark */
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 80px;
-            opacity: 0.05;
-            color: #0f3d7f;
-            pointer-events: none;
-            font-weight: 800;
-            z-index: -1;
+        .summary-row.total .amount {
+            font-size: 13px;
+            color: #333333;
         }
     </style>
 </head>
 <body>
-    <div class="watermark">PURCHASE ORDER</div>
-    
-    <div class="page">
-        <!-- Header dengan Logo -->
-        <div class="top-header">
-            <div class="logo-section">
-                <img src="{{ asset('images/hutch-logo.png') }}" alt="Hutch Prestige Logo" class="logo-img">
-                <div class="brand-info">
-                    <h3>HUTCH PRESTIGE</h3>
-                    <p>Bag Manufacturing & In-House Brand</p>
+
+    <div class="invoice">
+
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-box">
+                    <img src="{{ public_path('images/hutch-logo.png') }}" alt="Hutch Prestige Logo">
+                </div>
+                <div class="logo-text">
+                    <h3>Hutch Prestige</h3>
+                    <p>Bag Manufacturing</p>
                 </div>
             </div>
-            <div class="po-info">
-                <h2>PO</h2>
-                <p>{{ $pesanan->nomor_po }}</p>
+
+            <div class="invoice-title">
+                <h1>INVOICE</h1>
+                <div class="status">{{ $pesanan->status ? ucwords(str_replace('_', ' ', $pesanan->status)) : 'PENDING' }}</div>
             </div>
         </div>
 
-        <!-- Tanggal Info -->
-        <div class="divider"></div>
-        <div class="content-grid">
-            <div class="section">
-                <span class="section-title">Tanggal Pesanan</span>
-                <div class="section-content">
-                    <strong>{{ $pesanan->tanggal_pesanan->format('d F Y') }}</strong><br>
-                    <span style="font-size: 12px; color: #6b7280;">{{ $pesanan->tanggal_pesanan->format('H:i') }} WIB</span>
-                </div>
+        <!-- Info Section -->
+        <div class="info">
+            <div>
+                <h4>Kepada</h4>
+                <div class="company-name">{{ $pesanan->pelanggan->nama ?? 'Pelanggan' }}</div>
+                <p>👤 {{ $pesanan->pelanggan->pic ?? 'Kontak Utama' }}</p>
+                <p>📞 {{ $pesanan->pelanggan->telepon ?? '+62 XXX-XXXX-XXXX' }}</p>
             </div>
-            <div class="section">
-                <span class="section-title">Target Pengiriman</span>
-                <div class="section-content">
-                    <strong>{{ $pesanan->tanggal_pengiriman->format('d F Y') }}</strong><br>
-                    <span style="font-size: 12px; color: #6b7280;">{{ $pesanan->tanggal_pengiriman->diffForHumans() }}</span>
-                </div>
-            </div>
-        </div>
 
-        <div class="content-grid">
-            <div class="section">
-                <span class="section-title">Informasi Pelanggan</span>
-                <div class="section-content">
-                    <strong>{{ $pesanan->pelanggan->nama }}</strong><br>
-                    {{ $pesanan->pelanggan->alamat }}<br>
-                    <strong style="color: #6b7280;">{{ $pesanan->pelanggan->telepon }}</strong><br>
-                    {{ $pesanan->pelanggan->email ?? '-' }}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                <div>
+                    <h4>No Invoice</h4>
+                    <p style="font-weight: 700; font-size: 13px;">{{ $pesanan->nomor_po ?? 'PO-XXXXXXX' }}</p>
                 </div>
-            </div>
-            <div class="section">
-                <span class="section-title">Status Pesanan</span>
-                <div class="section-content">
-                    <span class="status-badge status-{{ strtolower(str_replace(' ', '_', $pesanan->status)) }}">
-                        {{ ucwords(str_replace('_', ' ', $pesanan->status)) }}
-                    </span>
-                    <p style="margin-top: 12px; color: #6b7280; font-size: 12px;">
-                        Dibuat oleh: <strong>{{ $pesanan->creator->name ?? 'Sistem' }}</strong>
+                <div>
+                    <h4>Tanggal</h4>
+                    <p style="font-weight: 400;">
+                        @php
+                            $days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                            $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                            if($pesanan->tanggal_pesanan) {
+                                $date = $pesanan->tanggal_pesanan;
+                                $dayName = $days[$date->dayOfWeek];
+                                $monthName = $months[$date->month - 1];
+                                echo $dayName . ', ' . $date->day . ' ' . $monthName . ' ' . $date->year;
+                            } else {
+                                echo 'Tanggal';
+                            }
+                        @endphp
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Tabel Produk -->
-        <div class="table-section">
-            <h4 style="font-size: 13px; font-weight: 700; color: #0f3d7f; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Detail Pesanan</h4>
-            <table class="table">
-                <thead>
+        <!-- Table -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width: 45%; text-align: left;">Keterangan</th>
+                    <th style="width: 20%; text-align: right;">Harga</th>
+                    <th style="width: 15%; text-align: center;">Jumlah</th>
+                    <th style="width: 20%; text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($pesanan->detailPesanan as $item)
                     <tr>
-                        <th style="width: 5%;">#</th>
-                        <th>Produk</th>
-                        <th>Spesifikasi</th>
-                        <th style="width: 10%;">Qty</th>
-                        <th style="width: 15%;">Harga Satuan</th>
-                        <th style="width: 15%;">Subtotal</th>
+                        <td style="width: 45%; text-align: left;">{{ optional($item->produk)->nama ?? 'Produk' }}</td>
+                        <td style="width: 20%; text-align: right;">Rp{{ number_format($item->harga_satuan ?? 0, 0, ',', '.') }}</td>
+                        <td style="width: 15%; text-align: center;">{{ $item->jumlah ?? 0 }}</td>
+                        <td style="width: 20%; text-align: right;">Rp{{ number_format(($item->jumlah ?? 0) * ($item->harga_satuan ?? 0), 0, ',', '.') }}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach($pesanan->detailPesanan as $index => $item)
-                        <tr>
-                            <td class="text-center">{{ $index + 1 }}</td>
-                            <td><strong>{{ optional($item->produk)->nama ?? 'N/A' }}</strong></td>
-                            <td>{{ $item->spesifikasi ?? '-' }}</td>
-                            <td class="text-right"><strong>{{ $item->jumlah }}</strong></td>
-                            <td class="text-right">Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
-                            <td class="text-right"><strong>Rp {{ number_format($item->jumlah * $item->harga_satuan, 0, ',', '.') }}</strong></td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                @empty
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: #999999; font-style: italic;">Belum ada item produk</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
 
-        <!-- Summary Section -->
-        <div class="summary-section">
-            <div style="max-width: 600px; margin-left: auto;">
-                <div class="summary-row">
-                    <span class="label">Subtotal</span>
-                    <span class="amount">Rp {{ number_format($pesanan->total_nilai, 0, ',', '.') }}</span>
-                </div>
-                <div class="summary-row total">
-                    <strong>TOTAL NILAI</strong>
-                    <span class="amount">Rp {{ number_format($pesanan->total_nilai, 0, ',', '.') }}</span>
-                </div>
+        <!-- Summary Box -->
+        <div class="summary-box">
+            <div class="summary-row">
+                <span class="label">Subtotal</span>
+                <span class="amount">Rp{{ number_format($pesanan->total_nilai ?? 0, 0, ',', '.') }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Pajak</span>
+                <span class="amount">Rp0</span>
+            </div>
+            <div class="summary-row total">
+                <span class="label">Total</span>
+                <span class="amount">Rp{{ number_format($pesanan->total_nilai ?? 0, 0, ',', '.') }}</span>
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="footer-section">
-            <div class="footer-info">
-                <strong>Catatan Penting:</strong><br>
-                • Pembayaran sesuai syarat dan ketentuan<br>
-                • Pesanan berlaku hingga tanggal pengiriman<br>
-                • Hubungi kami untuk perubahan pesanan<br>
-                <br>
-                <strong>Kontak:</strong><br>
-                Email: info@hutch.id<br>
-                Website: www.hutch.id
-            </div>
-            <div class="signature-section">
-                <p style="margin-bottom: 60px; color: #6b7280; font-size: 12px;">
-                    Dicetak pada: {{ now()->format('d F Y H:i') }}
-                </p>
-                <div class="signature-line">
-                    Staf Penjualan
-                </div>
-            </div>
-        </div>
     </div>
 </body>
 </html>

@@ -10,6 +10,38 @@ use Illuminate\Validation\Rule;
 class ProdukController extends Controller
 {
     /**
+     * Helper function to store product photo directly to /public/images/
+     */
+    private function storeProductPhoto($file)
+    {
+        if (!$file) {
+            return null;
+        }
+        
+        // Generate unique filename with original extension
+        $extension = $file->getClientOriginalExtension();
+        $filename = \Str::random(32) . '.' . $extension;
+        
+        $file->move(public_path('images'), $filename);
+        return 'images/' . $filename;
+    }
+    
+    /**
+     * Helper function to delete product photo from /public/images/
+     */
+    private function deleteProductPhoto($path)
+    {
+        if (!$path) {
+            return;
+        }
+        
+        $fullPath = public_path($path);
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+    }
+
+    /**
      * Display a listing of products (for stock management).
      */
     public function index()
@@ -69,7 +101,7 @@ class ProdukController extends Controller
 
         $fotoPath = null;
         if ($request->hasFile('foto')) {
-            $fotoPath = $request->file('foto')->store('produk', 'public');
+            $fotoPath = $this->storeProductPhoto($request->file('foto'));
         }
 
         $produk = Produk::create([
@@ -171,10 +203,8 @@ class ProdukController extends Controller
         // Handle photo upload
         if ($request->hasFile('foto')) {
             // Delete old photo if exists
-            if ($produk->foto && \Storage::disk('public')->exists($produk->foto)) {
-                \Storage::disk('public')->delete($produk->foto);
-            }
-            $produk->foto = $request->file('foto')->store('produk', 'public');
+            $this->deleteProductPhoto($produk->foto);
+            $produk->foto = $this->storeProductPhoto($request->file('foto'));
         }
 
         $produk->save();
@@ -403,4 +433,158 @@ class ProdukController extends Controller
             'stok' => $produk->stok,
         ]);
     }
+
+    /**
+     * Display products management page for staff.
+     */
+    public function staffView()
+    {
+        // Only Staf Penjualan can access this
+        if (auth()->user()->role !== 'staf_penjualan') {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        $produk = Produk::orderBy('nama')->get();
+
+        return view('produk.staff-tambah', compact('produk'));
+    }
+
+    /**
+     * Store a newly created product by staff.
+     */
+    public function staffStore(Request $request)
+    {
+        // Only Staf Penjualan can create products through this method
+        if (auth()->user()->role !== 'staf_penjualan') {
+            abort(403, 'Anda tidak memiliki akses untuk menambah produk.');
+        }
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255|unique:produk,nama',
+            'harga_jual' => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string|max:1000',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ], [
+            'nama.required' => 'Nama produk harus diisi.',
+            'nama.unique' => 'Nama produk sudah terdaftar dalam sistem.',
+            'harga_jual.required' => 'Harga jual harus diisi.',
+            'harga_jual.numeric' => 'Harga jual harus berupa angka.',
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format gambar harus jpeg, png, jpg, atau gif.',
+            'foto.max' => 'Ukuran gambar maksimal 5MB.',
+        ]);
+
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $this->storeProductPhoto($request->file('foto'));
+        }
+
+        $produk = Produk::create([
+            'nama' => $validated['nama'],
+            'harga_jual' => $validated['harga_jual'],
+            'stok' => 0,  // Default stok value, staff cannot set initial stock
+            'keterangan' => $validated['keterangan'] ?? null,
+            'foto' => $fotoPath,
+        ]);
+
+        // Create notification for new product
+        Notifikasi::create([
+            'pesanan_id' => null,
+            'tipe' => 'produk_baru',
+            'judul' => "Produk Baru '{$produk->nama}' Ditambahkan",
+            'pesan' => "Produk baru '{$produk->nama}' telah ditambahkan oleh " . auth()->user()->name . " (Staf Penjualan).",
+            'data' => [
+                'produk_id' => $produk->id,
+                'nama_produk' => $produk->nama,
+                'harga_jual' => $produk->harga_jual,
+                'ditambah_oleh' => auth()->user()->name,
+                'role' => 'staf_penjualan',
+            ],
+            'untuk_roles' => ['administrator', 'pemilik_umkm', 'staf_penjualan', 'operator_gudang'],
+            'created_by' => auth()->id(),
+        ]);
+
+        // Log the action
+        \Log::info("Produk baru '{$produk->nama}' ditambahkan oleh Staf Penjualan " . auth()->user()->name);
+
+        return redirect()->route('produk.staff')
+            ->with('success', "Produk '{$produk->nama}' berhasil ditambahkan.");
+    }
+
+    /**
+     * Show edit form for staff.
+     */
+    public function staffEdit(Produk $produk)
+    {
+        // Only Staf Penjualan can edit products through this method
+        if (auth()->user()->role !== 'staf_penjualan') {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit produk.');
+        }
+
+        $allProduk = Produk::orderBy('nama')->get();
+
+        return view('produk.staff-edit', compact('produk', 'allProduk'));
+    }
+
+    /**
+     * Update product by staff (name, price, description, foto only - NOT STOCK).
+     */
+    public function staffUpdate(Request $request, Produk $produk)
+    {
+        // Only Staf Penjualan can update products through this method
+        if (auth()->user()->role !== 'staf_penjualan') {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit produk.');
+        }
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255|unique:produk,nama,' . $produk->id,
+            'harga_jual' => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string|max:1000',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ], [
+            'nama.required' => 'Nama produk harus diisi.',
+            'nama.unique' => 'Nama produk sudah terdaftar dalam sistem.',
+            'harga_jual.required' => 'Harga jual harus diisi.',
+            'harga_jual.numeric' => 'Harga jual harus berupa angka.',
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format gambar harus jpeg, png, jpg, atau gif.',
+            'foto.max' => 'Ukuran gambar maksimal 5MB.',
+        ]);
+
+        $produk->nama = $validated['nama'];
+        $produk->harga_jual = $validated['harga_jual'];
+        $produk->keterangan = $validated['keterangan'] ?? null;
+
+        if ($request->hasFile('foto')) {
+            // Delete old photo if exists
+            $this->deleteProductPhoto($produk->foto);
+            $produk->foto = $this->storeProductPhoto($request->file('foto'));
+        }
+
+        $produk->save();
+
+        // Create notification
+        Notifikasi::create([
+            'pesanan_id' => null,
+            'tipe' => 'produk_baru',
+            'judul' => "Produk '{$produk->nama}' Diperbarui",
+            'pesan' => "Produk '{$produk->nama}' telah diperbarui oleh " . auth()->user()->name . " (Staf Penjualan).",
+            'data' => [
+                'produk_id' => $produk->id,
+                'nama_produk' => $produk->nama,
+                'harga_jual' => $produk->harga_jual,
+                'action' => 'edit',
+                'updated_by' => auth()->user()->name,
+            ],
+            'untuk_roles' => ['administrator', 'pemilik_umkm', 'operator_gudang'],
+            'created_by' => auth()->id(),
+        ]);
+
+        // Log the action
+        \Log::info("Produk '{$produk->nama}' diperbarui oleh Staf Penjualan " . auth()->user()->name);
+
+        return redirect()->route('produk.staff')
+            ->with('success', "Produk '{$produk->nama}' berhasil diperbarui.");
+    }
 }
+

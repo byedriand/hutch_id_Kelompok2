@@ -19,7 +19,7 @@ class Produk extends Model
 
     /**
      * Get the full URL untuk foto produk
-     * Handles both 'images/' dan 'storage/' paths
+     * Returns image from /images/ folder (compatible with Windows)
      */
     public function getFotoUrlAttribute()
     {
@@ -34,13 +34,16 @@ class Produk extends Model
             return $foto;
         }
         
-        // Jika path dimulai dengan 'images/', gunakan asset() langsung
+        // Jika path dimulai dengan 'images/', sudah benar
         if (strpos($foto, 'images/') === 0) {
-            return asset($foto);
+            return '/' . $foto;
         }
         
-        // Jika path dari storage folder, tambahkan 'storage/'
-        return asset('storage/' . ltrim($foto, '/'));
+        // Extract filename dari path
+        $filename = basename($foto);
+        
+        // Return dari /images/ folder (semua file sudah di-copy ke sini)
+        return '/images/' . $filename;
     }
 }
 

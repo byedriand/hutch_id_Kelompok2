@@ -1876,14 +1876,72 @@
             window.location.href = '{{ route("login") }}';
         }
 
-        // Check if logout just completed
-        window.addEventListener('load', function() {
-            const pendingRole = sessionStorage.getItem('pendingLoginRole');
-            if (pendingRole) {
-                showSuccessModal(pendingRole);
+        // Intercept form submission to store role and show loading state
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const btnLogin = this.querySelector('.btn-login');
+                const role = document.getElementById('roleInput').value;
+                
+                // Show loading state
+                if (btnLogin) {
+                    btnLogin.style.opacity = '0.7';
+                    btnLogin.style.pointerEvents = 'none';
+                    const originalText = btnLogin.innerHTML;
+                    btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+                    btnLogin._originalText = originalText;
+                }
+                
+                // Store role temporarily and submit form
+                sessionStorage.setItem('loginAttemptRole', role);
+                
+                // Submit the form using native submit
+                const formElement = this;
                 setTimeout(() => {
-                    continuePage();
-                }, 4000);
+                    formElement.submit();
+                }, 100);
+            });
+        }
+
+        // Check on page load to handle login response
+        window.addEventListener('load', function() {
+            const loginAttemptRole = sessionStorage.getItem('loginAttemptRole');
+            
+            if (loginAttemptRole) {
+                // Check if there are error messages (login failed)
+                const errorMessages = document.querySelector('.error-message');
+                
+                if (errorMessages) {
+                    // Login failed - clear the flag
+                    sessionStorage.removeItem('loginAttemptRole');
+                    console.log('Login failed with errors');
+                } else {
+                    // No errors, but still on login page - check if user is authenticated
+                    // by making a quick check to a protected route
+                    fetch('{{ route("dashboard") }}', { 
+                        method: 'HEAD',
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        if (response.status === 200) {
+                            // User is authenticated, show success and redirect
+                            showSuccessModal(loginAttemptRole);
+                            setTimeout(() => {
+                                sessionStorage.removeItem('loginAttemptRole');
+                                continuePage();
+                            }, 3000);
+                        } else {
+                            // User not authenticated
+                            sessionStorage.removeItem('loginAttemptRole');
+                        }
+                    })
+                    .catch(err => {
+                        // Error checking auth, clear flag
+                        sessionStorage.removeItem('loginAttemptRole');
+                    });
+                }
             }
 
             // Check if logout just completed
@@ -1895,26 +1953,6 @@
                 }, 5000);
             }
         });
-
-        // Intercept form submission to store role and show loading state
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
-                const btnLogin = this.querySelector('.btn-login');
-                const role = document.getElementById('roleInput').value;
-                
-                // Store role BEFORE form submission
-                sessionStorage.setItem('pendingLoginRole', role);
-                
-                if (btnLogin) {
-                    btnLogin.style.opacity = '0.7';
-                    btnLogin.style.pointerEvents = 'none';
-                    const originalText = btnLogin.innerHTML;
-                    btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-                }
-                // Let the form submit normally - the redirect will happen after successful login
-            });
-        }
 
         // Smooth role selection animation
         document.querySelectorAll('input[name="role-select"]').forEach(radio => {
