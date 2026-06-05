@@ -114,8 +114,10 @@ class ApiService {
     try {
       final response = await http
           .get(Uri.parse('$baseUrl/dashboard'), headers: _getHeaders())
-          .timeout(const Duration(seconds: 5),
-              onTimeout: () => http.Response('{"error":"timeout"}', 408));
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => http.Response('{"error":"timeout"}', 408),
+          );
       if (response.statusCode == 200) {
         isOffline = false;
         return jsonDecode(response.body);
@@ -134,11 +136,22 @@ class ApiService {
     try {
       final response = await http
           .get(Uri.parse('$baseUrl/pelanggan'), headers: _getHeaders())
-          .timeout(const Duration(seconds: 5),
-              onTimeout: () => http.Response('{"error":"timeout"}', 408));
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => http.Response('{"error":"timeout"}', 408),
+          );
       if (response.statusCode == 200) {
         isOffline = false;
-        final List list = jsonDecode(response.body);
+        final dynamic decoded = jsonDecode(response.body);
+
+        // Handle both API response with "value" key and raw array
+        List list = [];
+        if (decoded is Map && decoded.containsKey('value')) {
+          list = decoded['value'] ?? [];
+        } else if (decoded is List) {
+          list = decoded;
+        }
+
         return list.map((item) => Pelanggan.fromJson(item)).toList();
       } else {
         isOffline = true;
@@ -162,10 +175,17 @@ class ApiService {
             .post(
               Uri.parse('$baseUrl/pelanggan'),
               headers: _getHeaders(),
-              body: jsonEncode({'nama': nama, 'telepon': telepon, 'alamat': alamat, 'email': email}),
+              body: jsonEncode({
+                'nama': nama,
+                'telepon': telepon,
+                'alamat': alamat,
+                'email': email,
+              }),
             )
-            .timeout(const Duration(seconds: 5),
-                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408),
+            );
         if (response.statusCode == 201) {
           return Pelanggan.fromJson(jsonDecode(response.body));
         } else {
@@ -180,7 +200,12 @@ class ApiService {
     final list = await _getLocalPelangganList();
     final newId = 'local_${DateTime.now().millisecondsSinceEpoch}';
     final newPelanggan = Pelanggan(
-      id: newId, nama: nama, telepon: telepon, alamat: alamat, email: email, jumlahPO: 0,
+      id: newId,
+      nama: nama,
+      telepon: telepon,
+      alamat: alamat,
+      email: email,
+      jumlahPO: 0,
     );
     list.add(newPelanggan);
     await _saveLocalPelangganList(list);
@@ -201,10 +226,17 @@ class ApiService {
             .put(
               Uri.parse('$baseUrl/pelanggan/$id'),
               headers: _getHeaders(),
-              body: jsonEncode({'nama': nama, 'telepon': telepon, 'alamat': alamat, 'email': email}),
+              body: jsonEncode({
+                'nama': nama,
+                'telepon': telepon,
+                'alamat': alamat,
+                'email': email,
+              }),
             )
-            .timeout(const Duration(seconds: 5),
-                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408),
+            );
         if (response.statusCode == 200) {
           return Pelanggan.fromJson(jsonDecode(response.body));
         } else {
@@ -220,7 +252,11 @@ class ApiService {
     final idx = list.indexWhere((p) => p.id == id);
     if (idx != -1) {
       final updated = Pelanggan(
-        id: id, nama: nama, telepon: telepon, alamat: alamat, email: email,
+        id: id,
+        nama: nama,
+        telepon: telepon,
+        alamat: alamat,
+        email: email,
         jumlahPO: list[idx].jumlahPO,
       );
       list[idx] = updated;
@@ -236,8 +272,10 @@ class ApiService {
       try {
         final response = await http
             .delete(Uri.parse('$baseUrl/pelanggan/$id'), headers: _getHeaders())
-            .timeout(const Duration(seconds: 5),
-                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408),
+            );
         if (response.statusCode == 200) return true;
         isOffline = true;
       } catch (e) {
@@ -257,16 +295,51 @@ class ApiService {
     return false;
   }
 
-  // Pesanan
-  static Future<List<Map<String, dynamic>>> getPesanan() async {
+  // Pesanan - with filter support
+  static Future<List<Map<String, dynamic>>> getPesanan({
+    String? cari,
+    String? status,
+    String? dari,
+    String? sampai,
+    int? minTotal,
+    int? maxTotal,
+    String? produk,
+    bool? multiItem,
+  }) async {
     try {
+      final Map<String, String> queryParams = {};
+
+      if (cari != null && cari.isNotEmpty) queryParams['cari'] = cari;
+      if (status != null && status.isNotEmpty) queryParams['status'] = status;
+      if (dari != null && dari.isNotEmpty) queryParams['dari'] = dari;
+      if (sampai != null && sampai.isNotEmpty) queryParams['sampai'] = sampai;
+      if (minTotal != null) queryParams['min_total'] = minTotal.toString();
+      if (maxTotal != null) queryParams['max_total'] = maxTotal.toString();
+      if (produk != null && produk.isNotEmpty) queryParams['produk'] = produk;
+      if (multiItem == true) queryParams['multi_item'] = 'on';
+
+      final Uri uri = Uri.parse(
+        '$baseUrl/pesanan',
+      ).replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
+
       final response = await http
-          .get(Uri.parse('$baseUrl/pesanan'), headers: _getHeaders())
-          .timeout(const Duration(seconds: 5),
-              onTimeout: () => http.Response('{"error":"timeout"}', 408));
+          .get(uri, headers: _getHeaders())
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => http.Response('{"error":"timeout"}', 408),
+          );
       if (response.statusCode == 200) {
         isOffline = false;
-        final List list = jsonDecode(response.body);
+        final dynamic decoded = jsonDecode(response.body);
+
+        // Handle both API response with "value" key and raw array
+        List list = [];
+        if (decoded is Map && decoded.containsKey('value')) {
+          list = decoded['value'] ?? [];
+        } else if (decoded is List) {
+          list = decoded;
+        }
+
         return list.map((item) => Map<String, dynamic>.from(item)).toList();
       } else {
         isOffline = true;
@@ -293,7 +366,9 @@ class ApiService {
     return [];
   }
 
-  static Future<void> _saveLocalPesananList(List<Map<String, dynamic>> list) async {
+  static Future<void> _saveLocalPesananList(
+    List<Map<String, dynamic>> list,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('cached_pesanan', jsonEncode(list));
@@ -316,74 +391,11 @@ class ApiService {
     return 'PO-$datePart-$seq';
   }
 
-  static Future<Map<String, dynamic>?> createPesanan(
-    String pelangganNama,
-    String deskripsi,
-    int jumlah,
-    int harga,
-    String status,
-  ) async {
-    if (!isOffline) {
-      try {
-        final response = await http
-            .post(
-              Uri.parse('$baseUrl/pesanan'),
-              headers: _getHeaders(),
-              body: jsonEncode({
-                'pelanggan': pelangganNama,
-                'deskripsi': deskripsi,
-                'jumlah': jumlah,
-                'harga': harga,
-                'status': status,
-              }),
-            )
-            .timeout(const Duration(seconds: 5),
-                onTimeout: () => http.Response('{"error":"timeout"}', 408));
-        if (response.statusCode == 201) {
-          return Map<String, dynamic>.from(jsonDecode(response.body));
-        } else {
-          isOffline = true;
-        }
-      } catch (e) {
-        isOffline = true;
-        debugPrint('Create pesanan error: $e');
-      }
-    }
-    // ── Offline fallback: save locally with auto PO number ─────────────────
-    final list = await _getLocalPesananList();
-    final now = DateTime.now();
-    final newNo = generatePoNumber(list);
-    final newId = 'local_${DateTime.now().millisecondsSinceEpoch}';
-    const monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-    ];
-    final tanggal =
-        '${now.day} ${monthNames[now.month - 1]} ${now.year}';
-    final total = jumlah * harga;
-    final totalFormatted =
-        'Rp ${total.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
-    final newPesanan = <String, dynamic>{
-      'id': newId,
-      'no': newNo,
-      'pelanggan': pelangganNama,
-      'deskripsi': deskripsi,
-      'jumlah': jumlah,
-      'harga': harga,
-      'total': totalFormatted,
-      'status': status,
-      'tanggal': tanggal,
-      'audit_trail': [
-        {'status': status, 'waktu': DateTime.now().toIso8601String(), 'catatan': 'PO dibuat (offline)'}
-      ],
-    };
-    list.add(newPesanan);
-    await _saveLocalPesananList(list);
-    debugPrint('createPesanan offline: saved with no=$newNo');
-    return newPesanan;
-  }
-
-  static Future<bool> updatePesananStatus(String id, String status, {String? catatan}) async {
+  static Future<bool> updatePesananStatus(
+    String id,
+    String status, {
+    String? catatan,
+  }) async {
     if (!isOffline) {
       try {
         final response = await http
@@ -391,10 +403,15 @@ class ApiService {
               Uri.parse('$baseUrl/pesanan/$id/status'),
               headers: _getHeaders(),
               // ignore: use_null_aware_elements
-              body: jsonEncode({'status': status, if (catatan != null) 'catatan': catatan}),
+              body: jsonEncode({
+                'status': status,
+                if (catatan != null) 'catatan': catatan,
+              }),
             )
-            .timeout(const Duration(seconds: 5),
-                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408),
+            );
         if (response.statusCode == 200) {
           // Also update local cache to stay in sync
           final list = await _getLocalPesananList();
@@ -402,8 +419,15 @@ class ApiService {
           if (idx != -1) {
             list[idx]['status'] = status;
             final trail = List<Map<String, dynamic>>.from(
-                (list[idx]['audit_trail'] as List? ?? []).map((e) => Map<String, dynamic>.from(e)));
-            trail.add({'status': status, 'waktu': DateTime.now().toIso8601String(), 'catatan': catatan ?? ''});
+              (list[idx]['audit_trail'] as List? ?? []).map(
+                (e) => Map<String, dynamic>.from(e),
+              ),
+            );
+            trail.add({
+              'status': status,
+              'waktu': DateTime.now().toIso8601String(),
+              'catatan': catatan ?? '',
+            });
             list[idx]['audit_trail'] = trail;
             await _saveLocalPesananList(list);
           }
@@ -422,8 +446,15 @@ class ApiService {
     if (idx != -1) {
       list[idx]['status'] = status;
       final trail = List<Map<String, dynamic>>.from(
-          (list[idx]['audit_trail'] as List? ?? []).map((e) => Map<String, dynamic>.from(e)));
-      trail.add({'status': status, 'waktu': DateTime.now().toIso8601String(), 'catatan': catatan ?? '(offline)'});
+        (list[idx]['audit_trail'] as List? ?? []).map(
+          (e) => Map<String, dynamic>.from(e),
+        ),
+      );
+      trail.add({
+        'status': status,
+        'waktu': DateTime.now().toIso8601String(),
+        'catatan': catatan ?? '(offline)',
+      });
       list[idx]['audit_trail'] = trail;
       await _saveLocalPesananList(list);
       debugPrint('updatePesananStatus offline: id=$id -> $status');
@@ -437,8 +468,10 @@ class ApiService {
       try {
         final response = await http
             .delete(Uri.parse('$baseUrl/pesanan/$id'), headers: _getHeaders())
-            .timeout(const Duration(seconds: 5),
-                onTimeout: () => http.Response('{"error":"timeout"}', 408));
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408),
+            );
         if (response.statusCode == 200) {
           // Also remove from local cache
           final list = await _getLocalPesananList();
@@ -469,8 +502,10 @@ class ApiService {
     try {
       final response = await http
           .get(Uri.parse('$baseUrl/arsip-pdf'), headers: _getHeaders())
-          .timeout(const Duration(seconds: 5),
-              onTimeout: () => http.Response('{"error":"timeout"}', 408));
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => http.Response('{"error":"timeout"}', 408),
+          );
       if (response.statusCode == 200) {
         isOffline = false;
         final List list = jsonDecode(response.body);
@@ -483,6 +518,93 @@ class ApiService {
       debugPrint('Get arsip pdf error: $e');
     }
     return [];
+  }
+
+  // Produk
+  static Future<List<Map<String, dynamic>>> getProduk() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/produk'), headers: _getHeaders())
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => http.Response('{"error":"timeout"}', 408),
+          );
+      if (response.statusCode == 200) {
+        isOffline = false;
+        final List list = jsonDecode(response.body);
+        return list.map((item) => Map<String, dynamic>.from(item)).toList();
+      } else {
+        isOffline = true;
+      }
+    } catch (e) {
+      isOffline = true;
+      debugPrint('Get produk error: $e');
+    }
+    return [];
+  }
+
+  // Create Pesanan with improved structure
+  static Future<bool> createPesanan(Map<String, dynamic> poData) async {
+    if (!isOffline) {
+      try {
+        final response = await http
+            .post(
+              Uri.parse('$baseUrl/pesanan'),
+              headers: _getHeaders(),
+              body: jsonEncode(poData),
+            )
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => http.Response('{"error":"timeout"}', 408),
+            );
+        if (response.statusCode == 201) {
+          return true;
+        } else {
+          isOffline = true;
+        }
+      } catch (e) {
+        isOffline = true;
+        debugPrint('Create pesanan error: $e');
+      }
+    }
+    // ── Offline fallback: save locally ─────────────────────────────────
+    final list = await _getLocalPesananList();
+    final now = DateTime.now();
+    final newNo = generatePoNumber(list);
+    final newId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    final tanggal = '${now.day} ${monthNames[now.month - 1]} ${now.year}';
+
+    final newPesanan = <String, dynamic>{
+      'id': newId,
+      'no': newNo,
+      'nomor_po': newNo,
+      'pelanggan': poData['pelanggan_id'],
+      'pelanggan_id': poData['pelanggan_id'],
+      'tanggal_pengiriman': poData['tanggal_pengiriman'],
+      'total_nilai': poData['total_nilai'],
+      'catatan': poData['catatan'] ?? '',
+      'status': poData['status'] ?? 'draft',
+      'items': poData['items'] ?? [],
+      'tanggal': tanggal,
+    };
+    list.add(newPesanan);
+    await _saveLocalPesananList(list);
+    debugPrint('createPesanan offline: saved with no=$newNo');
+    return true;
   }
 
   static Future<bool> deleteArsipPdf(String id) async {

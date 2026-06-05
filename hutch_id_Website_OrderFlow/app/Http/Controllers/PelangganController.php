@@ -12,6 +12,19 @@ class PelangganController extends Controller
      */
     public function index(Request $request)
     {
+        // If API request, return JSON list
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $pelanggan = Pelanggan::withCount('pesanan')
+                ->when($request->cari, function ($query, $cari) {
+                    $query->where('nama', 'like', '%' . $cari . '%');
+                })
+                ->latest()
+                ->get();
+            
+            return response()->json($pelanggan);
+        }
+
+        // Web request, return paginated view
         $pelanggan = Pelanggan::withCount('pesanan')
             ->when($request->cari, function ($query, $cari) {
                 $query->where('nama', 'like', '%' . $cari . '%');
@@ -42,7 +55,11 @@ class PelangganController extends Controller
             'email' => 'nullable|email|max:255',
         ]);
 
-        Pelanggan::create($validated);
+        $pelanggan = Pelanggan::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json($pelanggan, 201);
+        }
 
         return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil ditambahkan.');
     }
@@ -77,20 +94,31 @@ class PelangganController extends Controller
 
         $pelanggan->update($validated);
 
+        if ($request->expectsJson()) {
+            return response()->json($pelanggan, 200);
+        }
+
         return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Pelanggan $pelanggan)
+    public function destroy(Pelanggan $pelanggan, Request $request)
     {
         // Only pemilik_umkm and administrator can delete pelanggan
         if (!in_array(auth()->user()->role, ['pemilik_umkm', 'administrator'])) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             abort(403, 'Anda tidak memiliki izin untuk menghapus pelanggan ini.');
         }
 
         $pelanggan->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Pelanggan berhasil dihapus'], 200);
+        }
 
         return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil dihapus.');
     }

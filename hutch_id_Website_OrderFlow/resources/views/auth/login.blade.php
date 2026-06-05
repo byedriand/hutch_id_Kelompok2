@@ -94,8 +94,8 @@
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 1100px;
-            padding: 12px;
+            max-width: 1200px;
+            padding: 15px;
             animation: fadeInUp 0.8s ease-out;
         }
 
@@ -149,7 +149,7 @@
         .login-left {
             flex: 1;
             background: linear-gradient(135deg, #0a3068 0%, #1e5fa5 50%, #2575d7 100%);
-            padding: 1.2rem 1.1rem;
+            padding: 2.2rem 1.8rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -191,7 +191,7 @@
 
         .login-right {
             flex: 1;
-            padding: 1.3rem 1.2rem;
+            padding: 2.2rem 1.8rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -201,38 +201,64 @@
 
         .login-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.2rem;
             color: white;
         }
 
         .logo-icon {
-            width: 90px;
-            height: 90px;
-            background: rgba(255, 255, 255, 0.12);
+            width: 105px;
+            height: 105px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 0.8rem;
+            margin: 0 auto 1.2rem;
             box-shadow: 
-                0 16px 40px rgba(0, 0, 0, 0.2),
-                inset 0 1px 2px rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            animation: logoFloat 3s ease-in-out infinite;
+                0 20px 50px rgba(0, 0, 0, 0.3),
+                inset 0 1px 2px rgba(255, 255, 255, 0.4),
+                0 0 40px rgba(37, 117, 215, 0.2);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            animation: logoFloat 4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite, logoPulseGlow 3s ease-in-out infinite;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmerEffect 3s infinite;
+            pointer-events: none;
         }
 
         @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
+            0%, 100% { transform: translateY(0px) rotateZ(0deg); }
+            50% { transform: translateY(-20px) rotateZ(2deg); }
+        }
+
+        @keyframes logoPulseGlow {
+            0%, 100% { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 0 40px rgba(37, 117, 215, 0.2); }
+            50% { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 0 60px rgba(37, 117, 215, 0.4); }
+        }
+
+        @keyframes shimmerEffect {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
         .logo-icon:hover {
-            animation: logoPulse 0.6s ease-out;
+            animation: logoPulse 0.6s ease-out, logoFloat 4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite, logoPulseGlow 3s ease-in-out infinite;
         }
 
         @keyframes logoPulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.08); }
             100% { transform: scale(1); }
         }
 
@@ -248,16 +274,22 @@
         }
 
         .logo-text {
-            font-size: 1.6rem;
+            font-size: 1.95rem;
             font-weight: 900;
             color: white;
-            margin-bottom: 0.15rem;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            margin-bottom: 0.3rem;
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 20px rgba(37, 117, 215, 0.3);
             letter-spacing: 0.08em;
             background: linear-gradient(135deg, #ffffff, #e0e7ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 20px rgba(37, 117, 215, 0.3); }
+            50% { text-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 30px rgba(59, 130, 246, 0.5); }
         }
 
         .logo-subtext {
@@ -272,17 +304,17 @@
 
         .subtitle {
             color: rgba(255, 255, 255, 0.95);
-            font-size: 0.75rem;
-            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
             animation: fadeIn 0.8s ease-out 0.3s both;
-            font-weight: 500;
+            font-weight: 600;
             letter-spacing: 0.5px;
         }
 
         .divider-text {
             color: rgba(255, 255, 255, 0.8);
-            font-size: 0.7rem;
-            margin-top: 0.3rem;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
             animation: fadeIn 0.8s ease-out 0.4s both;
         }
 
@@ -296,8 +328,8 @@
             display: block;
             font-weight: 700;
             color: white;
-            margin-bottom: 0.8rem;
-            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
             text-align: center;
             letter-spacing: 0.5px;
             animation: fadeIn 0.8s ease-out 0.1s both;
@@ -306,7 +338,7 @@
         .role-options {
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
+            gap: 0.6rem;
             margin-bottom: 0;
             width: 100%;
         }
@@ -339,9 +371,9 @@
         }
 
         .role-card-content {
-            padding: 0.65rem 0.85rem;
+            padding: 0.9rem 1rem;
             border: 2px solid rgba(255, 255, 255, 0.15);
-            border-radius: 9px;
+            border-radius: 12px;
             text-align: center;
             transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             background: rgba(255, 255, 255, 0.08);
@@ -350,7 +382,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.15rem;
+            gap: 0.35rem;
             position: relative;
             overflow: hidden;
         }
@@ -367,12 +399,22 @@
         }
 
         .role-card input[type="radio"]:checked + .role-card-content {
-            border-color: rgba(255, 255, 255, 0.8);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            border-color: rgba(255, 255, 255, 0.9);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
             box-shadow: 
-                0 0 30px rgba(255, 255, 255, 0.3),
-                inset 0 1px 2px rgba(255, 255, 255, 0.4);
-            transform: scale(1.05);
+                0 0 40px rgba(59, 130, 246, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            transform: scale(1.06) translateY(-2px);
+            animation: selectedCardGlow 0.6s ease-out;
+        }
+
+        @keyframes selectedCardGlow {
+            0% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            }
+            100% {
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            }
         }
 
         .role-card input[type="radio"]:checked + .role-card-content::before {
@@ -380,14 +422,14 @@
         }
 
         .role-card:hover .role-card-content {
-            border-color: rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateX(8px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+            transform: translateX(10px) translateY(-3px);
+            box-shadow: 0 12px 30px rgba(37, 117, 215, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3);
         }
 
         .role-icon {
-            font-size: 1.1rem;
+            font-size: 1.3rem;
             color: white;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -406,13 +448,13 @@
         .role-name {
             font-weight: 700;
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             letter-spacing: 0.3px;
             transition: all 0.3s ease;
         }
 
         .role-desc {
-            font-size: 0.55rem;
+            font-size: 0.65rem;
             color: rgba(255, 255, 255, 0.75);
             letter-spacing: 0.5px;
             text-transform: uppercase;
@@ -424,7 +466,7 @@
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.4rem;
             position: relative;
             animation: inputIn 0.6s ease-out backwards;
         }
@@ -449,38 +491,84 @@
 
         .form-group label {
             display: block;
-            font-weight: 600;
-            margin-bottom: 0.4rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
             color: #1a3a52;
-            font-size: 0.8rem;
-            letter-spacing: 0.3px;
+            font-size: 0.9rem;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            animation: labelFloat 0.4s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        @keyframes labelFloat {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group label i {
+            color: #2575d7;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus ~ label i,
+        .form-group:has(input:focus) label i {
+            transform: scale(1.2) rotate(10deg);
         }
 
         .form-group input {
             width: 100%;
-            padding: 0.75rem 0.8rem;
+            padding: 1rem 1.1rem;
             border: 2px solid #e0e7ff;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 11px;
+            font-size: 0.9rem;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(37, 117, 215, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-group input::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -100%;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #2575d7, transparent);
+            animation: none;
         }
 
         .form-group input:focus {
             outline: none;
             border-color: #2575d7;
             box-shadow: 
-                0 0 0 4px rgba(37, 117, 215, 0.1),
-                inset 0 1px 3px rgba(0, 0, 0, 0.05);
+                0 0 0 5px rgba(37, 117, 215, 0.15),
+                inset 0 1px 3px rgba(0, 0, 0, 0.05),
+                0 8px 20px rgba(37, 117, 215, 0.12);
             background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+        }
+
+        .form-group input:focus::before {
+            left: 0;
+            animation: lineSlide 0.6s ease-out;
+        }
+
+        @keyframes lineSlide {
+            from { left: -100%; }
+            to { left: 100%; }
         }
 
         .form-group input:hover:not(:focus) {
             border-color: #cbd5e1;
-            box-shadow: 0 4px 12px rgba(37, 117, 215, 0.08);
+            box-shadow: 0 6px 16px rgba(37, 117, 215, 0.12), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            background: linear-gradient(135deg, #f5f9ff 0%, #ffffff 100%);
         }
 
         .form-group input::placeholder {
@@ -495,23 +583,25 @@
         /* Button */
         .btn-login {
             width: 100%;
-            padding: 0.85rem;
+            padding: 1.1rem 1.2rem;
             background: linear-gradient(135deg, #2575d7, #1e5fa5);
             background-size: 200% 200%;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.85rem;
+            border-radius: 11px;
+            font-weight: 800;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 
-                0 12px 28px rgba(37, 117, 215, 0.35),
-                0 0 0 1px rgba(37, 117, 215, 0.1);
+                0 14px 32px rgba(37, 117, 215, 0.4),
+                0 0 0 1px rgba(37, 117, 215, 0.15),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
             position: relative;
             overflow: hidden;
-            margin-bottom: 0.6rem;
-            letter-spacing: 0.3px;
+            margin-bottom: 0.8rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .btn-login::before {
@@ -521,21 +611,36 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-            transition: left 0.5s ease;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
             z-index: 1;
         }
 
+        .btn-login::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
         .btn-login i {
-            transition: all 0.3s ease;
-            margin-right: 0.7rem;
+            transition: all 0.4s ease;
+            margin-right: 0.9rem;
+            font-size: 1.05rem;
         }
 
         .btn-login:hover {
-            transform: translateY(-4px);
+            transform: translateY(-5px);
             box-shadow: 
-                0 16px 40px rgba(37, 117, 215, 0.45),
-                0 0 0 1px rgba(37, 117, 215, 0.15);
+                0 20px 48px rgba(37, 117, 215, 0.5),
+                0 0 0 1px rgba(37, 117, 215, 0.2),
+                inset 0 1px 2px rgba(255, 255, 255, 0.4);
             background-position: 200% center;
         }
 
@@ -544,7 +649,7 @@
         }
 
         .btn-login:hover i {
-            transform: scale(1.15);
+            transform: scale(1.2) rotate(5deg);
         }
 
         .btn-login:active {
@@ -564,10 +669,10 @@
         .error-message {
             background: linear-gradient(135deg, #fef2f2, #fee2e2);
             color: #dc2626;
-            padding: 0.8rem 0.9rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            font-size: 0.8rem;
+            padding: 1rem 1.1rem;
+            border-radius: 9px;
+            margin-bottom: 1.2rem;
+            font-size: 0.9rem;
             border-left: 4px solid #dc2626;
             display: flex;
             align-items: center;
@@ -1087,6 +1192,505 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* Success Modal */
+        .success-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .success-modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .success-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 40px rgba(37, 117, 215, 0.15);
+            animation: modalPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2575d7, #1e5fa5, #0a3068);
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes modalPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .success-icon-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 10px 30px rgba(16, 185, 129, 0.3),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            animation: iconBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .success-icon-container::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        .success-icon-container i {
+            font-size: 2.5rem;
+            color: white;
+            position: relative;
+            z-index: 1;
+            animation: checkmarkDraw 0.6s ease-out;
+        }
+
+        @keyframes iconBounce {
+            0% {
+                transform: scale(0) rotateZ(-45deg);
+            }
+            50% {
+                transform: scale(1.1) rotateZ(5deg);
+            }
+            100% {
+                transform: scale(1) rotateZ(0);
+            }
+        }
+
+        @keyframes iconPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes checkmarkDraw {
+            from {
+                transform: scale(0) rotate(-45deg);
+            }
+            to {
+                transform: scale(1) rotate(0);
+            }
+        }
+
+        .success-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #1a3a52;
+            margin-bottom: 0.8rem;
+            letter-spacing: 0.5px;
+            animation: textFadeIn 0.6s ease-out 0.2s both;
+            background: linear-gradient(135deg, #1a3a52, #2575d7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .success-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            animation: textFadeIn 0.6s ease-out 0.3s both;
+        }
+
+        .success-role-info {
+            background: linear-gradient(135deg, #f0f7ff, #f5f9ff);
+            border: 2px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            animation: slideUpIn 0.6s ease-out 0.4s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-role-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(37, 117, 215, 0.08), transparent);
+            pointer-events: none;
+        }
+
+        .role-info-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .role-info-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #2575d7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .role-info-value i {
+            font-size: 1.5rem;
+            animation: iconRotate 0.8s ease-out;
+        }
+
+        @keyframes slideUpIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes textFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes iconRotate {
+            from {
+                transform: rotateY(-90deg) scale(0);
+            }
+            to {
+                transform: rotateY(0) scale(1);
+            }
+        }
+
+        .success-continue-btn {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            background: linear-gradient(135deg, #2575d7, #1e5fa5);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 25px rgba(37, 117, 215, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: slideUpIn 0.6s ease-out 0.5s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-continue-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .success-continue-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(37, 117, 215, 0.4);
+        }
+
+        .success-continue-btn:hover::before {
+            left: 100%;
+        }
+
+        .success-continue-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Logout Modal Styles */
+        .logout-icon-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 10px 30px rgba(239, 68, 68, 0.3),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            animation: iconBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .logout-icon-container::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.4) 0%, transparent 70%);
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        .logout-icon-container i {
+            font-size: 2.5rem;
+            color: white;
+            position: relative;
+            z-index: 1;
+            animation: checkmarkDraw 0.6s ease-out;
+        }
+
+        .logout-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #1a3a52;
+            margin-bottom: 0.8rem;
+            letter-spacing: 0.5px;
+            animation: textFadeIn 0.6s ease-out 0.2s both;
+            background: linear-gradient(135deg, #1a3a52, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logout-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            animation: textFadeIn 0.6s ease-out 0.3s both;
+        }
+
+        .logout-info {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border: 2px solid #fca5a5;
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            animation: slideUpIn 0.6s ease-out 0.4s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logout-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), transparent);
+            pointer-events: none;
+        }
+
+        .logout-info-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #991b1b;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-info-label::before {
+            content: '✓';
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .logout-continue-btn {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: slideUpIn 0.6s ease-out 0.5s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logout-continue-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .logout-continue-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-continue-btn:hover::before {
+            left: 100%;
+        }
+
+        .logout-continue-btn:active {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 640px) {
+            .success-modal {
+                padding: 2rem 1.5rem;
+                border-radius: 16px;
+            }
+
+            .success-icon-container {
+                width: 70px;
+                height: 70px;
+            }
+
+            .success-icon-container i {
+                font-size: 2rem;
+            }
+
+            .success-title {
+                font-size: 1.5rem;
+            }
+
+            .success-message {
+                font-size: 0.9rem;
+                margin-bottom: 1.2rem;
+            }
+
+            .success-role-info {
+                padding: 1rem;
+                margin-bottom: 1.2rem;
+            }
+
+            .role-info-value {
+                font-size: 1.1rem;
+                gap: 0.6rem;
+            }
+
+            .role-info-value i {
+                font-size: 1.3rem;
+            }
+
+            .success-continue-btn {
+                padding: 0.9rem;
+                font-size: 0.9rem;
+            }
+
+            .logout-icon-container {
+                width: 70px;
+                height: 70px;
+            }
+
+            .logout-icon-container i {
+                font-size: 2rem;
+            }
+
+            .logout-title {
+                font-size: 1.5rem;
+            }
+
+            .logout-message {
+                font-size: 0.9rem;
+                margin-bottom: 1.2rem;
+            }
+
+            .logout-info {
+                padding: 1rem;
+                margin-bottom: 1.2rem;
+            }
+
+            .logout-info-label {
+                font-size: 0.85rem;
+            }
+
+            .logout-continue-btn {
+                padding: 0.9rem;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1188,8 +1792,130 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Success Modal -->
+    <div class="success-modal-overlay" id="successModal">
+        <div class="success-modal">
+            <div class="success-icon-container">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="success-title">Login Berhasil!</h2>
+            <p class="success-message">Anda berhasil masuk ke sistem. Selamat datang di Hutch Prestige!</p>
+            
+            <div class="success-role-info">
+                <div class="role-info-label">Login Sebagai</div>
+                <div class="role-info-value">
+                    <i id="roleIcon" class="fas fa-crown"></i>
+                    <span id="roleName">Administrator</span>
+                </div>
+            </div>
+
+            <button class="success-continue-btn" onclick="continuePage()">
+                <i class="fas fa-arrow-right"></i> Lanjutkan
+            </button>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div class="success-modal-overlay" id="logoutModal">
+        <div class="success-modal">
+            <div class="logout-icon-container">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <h2 class="logout-title">Logout Berhasil!</h2>
+            <p class="logout-message">Anda telah berhasil keluar dari sistem.</p>
+
+            <button class="logout-continue-btn" onclick="redirectToLogin()">
+                <i class="fas fa-sign-in-alt"></i> Kembali ke Login
+            </button>
+        </div>
+    </div>
+
     <script>
+        // Role icons mapping
+        const roleIcons = {
+            'administrator': 'fas fa-crown',
+            'staf_penjualan': 'fas fa-user',
+            'operator_gudang': 'fas fa-warehouse'
+        };
+
+        const roleLabels = {
+            'administrator': 'Administrator',
+            'staf_penjualan': 'Staf Penjualan',
+            'operator_gudang': 'Operator Gudang'
+        };
+
+        // Function to show success modal
+        function showSuccessModal(role) {
+            const modal = document.getElementById('successModal');
+            const roleName = document.getElementById('roleName');
+            const roleIcon = document.getElementById('roleIcon');
+
+            roleName.textContent = roleLabels[role] || 'Administrator';
+            roleIcon.className = roleIcons[role] || 'fas fa-crown';
+
+            modal.classList.add('show');
+        }
+
+        // Function to continue to dashboard
+        function continuePage() {
+            // Clear the session storage flag
+            sessionStorage.removeItem('pendingLoginRole');
+            window.location.href = '{{ route("dashboard") }}';
+        }
+
+        // Function to show logout modal
+        function showLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            modal.classList.add('show');
+        }
+
+        // Function to redirect to login
+        function redirectToLogin() {
+            // Clear the session storage flag
+            sessionStorage.removeItem('pendingLogout');
+            window.location.href = '{{ route("login") }}';
+        }
+
+        // Check if logout just completed
+        window.addEventListener('load', function() {
+            const pendingRole = sessionStorage.getItem('pendingLoginRole');
+            if (pendingRole) {
+                showSuccessModal(pendingRole);
+                setTimeout(() => {
+                    continuePage();
+                }, 4000);
+            }
+
+            // Check if logout just completed
+            const pendingLogout = sessionStorage.getItem('pendingLogout');
+            if (pendingLogout) {
+                showLogoutModal();
+                setTimeout(() => {
+                    redirectToLogin();
+                }, 5000);
+            }
+        });
+
+        // Intercept form submission to store role and show loading state
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const btnLogin = this.querySelector('.btn-login');
+                const role = document.getElementById('roleInput').value;
+                
+                // Store role BEFORE form submission
+                sessionStorage.setItem('pendingLoginRole', role);
+                
+                if (btnLogin) {
+                    btnLogin.style.opacity = '0.7';
+                    btnLogin.style.pointerEvents = 'none';
+                    const originalText = btnLogin.innerHTML;
+                    btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+                }
+                // Let the form submit normally - the redirect will happen after successful login
+            });
+        }
+
         // Smooth role selection animation
         document.querySelectorAll('input[name="role-select"]').forEach(radio => {
             radio.addEventListener('change', function() {
@@ -1226,29 +1952,6 @@
         `;
         document.head.appendChild(style);
 
-        // Form submission animation
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
-                const btnLogin = this.querySelector('.btn-login');
-                if (btnLogin) {
-                    btnLogin.style.opacity = '0.7';
-                    btnLogin.style.pointerEvents = 'none';
-                    
-                    // Add loading state
-                    const originalText = btnLogin.innerHTML;
-                    btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-                    
-                    // Restore after 3 seconds if form doesn't submit
-                    setTimeout(() => {
-                        btnLogin.innerHTML = originalText;
-                        btnLogin.style.opacity = '1';
-                        btnLogin.style.pointerEvents = 'auto';
-                    }, 3000);
-                }
-            });
-        }
-
         // Add focus animation to inputs
         document.querySelectorAll('.form-group input').forEach(input => {
             input.addEventListener('focus', function() {
@@ -1270,5 +1973,6 @@
         `;
         document.head.appendChild(focusStyle);
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

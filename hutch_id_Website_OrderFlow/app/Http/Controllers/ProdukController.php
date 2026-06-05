@@ -179,6 +179,9 @@ class ProdukController extends Controller
 
         $produk->save();
 
+        // Resolve or delete related 'stok_kurang' notifications when this product's shortage is addressed
+        $this->resolveStokKurangNotificationsForProduct($produk);
+
         // Create notification
         $perubahan = $produk->stok - $stokLama;
         $tipePerubahan = $perubahan > 0 ? 'Penambahan' : ($perubahan < 0 ? 'Pengurangan' : 'Penyesuaian');
@@ -267,7 +270,8 @@ class ProdukController extends Controller
     private function resolveStokKurangNotificationsForProduct(Produk $produk)
     {
         try {
-            $notifs = Notifikasi::where('tipe', 'stok_kurang')->whereNull('dibaca_at')->get();
+            // Get ALL stok_kurang notifications (both read and unread) to resolve them
+            $notifs = Notifikasi::where('tipe', 'stok_kurang')->get();
 
             foreach ($notifs as $notif) {
                 $data = $notif->data ?? [];
@@ -311,6 +315,7 @@ class ProdukController extends Controller
                 }
 
                 if (empty($updatedDetails)) {
+                    // Delete notification if all shortages are resolved
                     $notif->delete();
                     continue;
                 }

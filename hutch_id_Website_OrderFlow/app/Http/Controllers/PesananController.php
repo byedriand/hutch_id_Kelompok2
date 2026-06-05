@@ -83,6 +83,32 @@ class PesananController extends Controller
             }, '>=', 1);
         }
 
+        // If API request, return JSON without pagination
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $pesanan = $query->latest()->get();
+            
+            // Transform data for API response
+            $pesanan->transform(function ($po) {
+                return [
+                    'id' => $po->id,
+                    'no' => $po->nomor_po,
+                    'pelanggan' => $po->pelanggan->nama ?? 'Umum',
+                    'pelanggan_id' => $po->pelanggan_id,
+                    'tanggal' => $po->tanggal_pesanan->format('d M Y'),
+                    'status' => $po->status,
+                    'total_nilai' => (int) $po->total_nilai,
+                    'total_item' => $po->detailPesanan->count(),
+                    'deskripsi' => $po->detailPesanan->map(function ($d) {
+                        return ($d->jumlah ?? 0) . 'x ' . ($d->produk->nama ?? 'Produk');
+                    })->join(', '),
+                    'created_at' => $po->created_at,
+                    'updated_at' => $po->updated_at,
+                ];
+            });
+            
+            return response()->json($pesanan);
+        }
+
         $pesanan = $query->latest()->paginate(15);
 
         // Calculate shortage info for each paginated pesanan

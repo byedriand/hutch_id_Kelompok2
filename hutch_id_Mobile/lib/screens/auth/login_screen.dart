@@ -1,4 +1,6 @@
 import 'dart:ui';
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../main_home_screen.dart';
@@ -11,38 +13,41 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   late TextEditingController emailController;
   late TextEditingController passwordController;
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _selectedRole;
+  late AnimationController _logoController;
+  late AnimationController _cardController;
 
-  // Data user dummy untuk login
+  // Demo users dari database
   final List<User> users = [
     User(
       id: '1',
-      nama: 'Administrator',
-      role: 'Administrator',
-      deskripsi: 'Akses Penuh',
-      email: 'admin@hutchprestige.com',
-      password: 'admin123',
+      nama: 'Staf Penjualan',
+      role: 'staf_penjualan',
+      deskripsi: 'Sales & Penjualan',
+      email: 'staf@hutch.id',
+      password: 'password',
+    ),
+    User(
+      id: '2',
+      nama: 'Operator Gudang',
+      role: 'operator_gudang',
+      deskripsi: 'Manajemen Gudang',
+      email: 'gudang@hutch.id',
+      password: 'password',
     ),
     User(
       id: '3',
-      nama: 'Staf Penjualan',
-      role: 'Staf Penjualan',
-      deskripsi: 'Sales',
-      email: 'sales@hutchprestige.com',
-      password: 'sales123',
-    ),
-    User(
-      id: '4',
-      nama: 'Operator Gudang',
-      role: 'Operator Gudang',
-      deskripsi: 'Warehouse',
-      email: 'warehouse@hutchprestige.com',
-      password: 'warehouse123',
+      nama: 'Administrator',
+      role: 'administrator',
+      deskripsi: 'Akses Penuh Admin',
+      email: 'admin@hutch.id',
+      password: 'password',
     ),
   ];
 
@@ -51,17 +56,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     emailController = TextEditingController();
     passwordController = TextEditingController();
-    
-    // Default to Administrator
-    _selectedRole = 'Administrator';
-    emailController.text = users[0].email;
-    passwordController.text = users[0].password;
+
+    _selectedRole = 'Staf Penjualan';
+    emailController.text = users[0].email; // staf@hutch.id
+    passwordController.text = users[0].password; // password
+
+    _logoController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _cardController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    )..forward();
   }
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    _logoController.dispose();
+    _cardController.dispose();
     super.dispose();
   }
 
@@ -74,6 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SnackBar(
           content: Text('Email dan Password harus diisi'),
           behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.redAccent,
         ),
       );
       return;
@@ -83,14 +100,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     User? user;
 
-    // Coba login via API dulu
     try {
       user = await ApiService.login(email, password);
     } catch (_) {
       user = null;
     }
 
-    // Kalau API gagal/offline → fallback ke dummy data lokal
     if (user == null) {
       try {
         final matched = users.firstWhere(
@@ -108,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Selamat datang kembali, ${user.nama}!'),
+          content: Text('Selamat datang, ${user.nama}!'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: const Color(0xFF10B981),
         ),
@@ -122,18 +137,21 @@ class _LoginScreenState extends State<LoginScreen> {
             return FadeTransition(
               opacity: animation,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 0.05),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOutCubic,
-                )),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0.0, 0.1),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                 child: child,
               ),
             );
           },
-          transitionDuration: const Duration(milliseconds: 800),
+          transitionDuration: const Duration(milliseconds: 600),
         ),
       );
     } else {
@@ -150,68 +168,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isDesktop = size.width > 768;
-
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Slate 900
+      backgroundColor: const Color(0xFF0a2463),
       body: Stack(
         children: [
-          // Elegant minimal background accent
-          Positioned(
-            top: -200,
-            left: size.width * 0.1,
-            child: Container(
-              width: 500,
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF1E293B).withValues(alpha: 0.15),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.05),
-                    blurRadius: 200,
-                    spreadRadius: 50,
-                  ),
+          // Animated gradient background
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0a2463),
+                  Color(0xFF247ba0),
+                  Color(0xFF1b4965),
+                  Color(0xFF0f3460),
                 ],
+                stops: [0.0, 0.25, 0.5, 0.75],
               ),
             ),
           ),
-          Positioned(
-            bottom: -200,
-            right: size.width * 0.1,
-            child: Container(
-              width: 600,
-              height: 600,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF1E293B).withValues(alpha: 0.15),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6366F1).withValues(alpha: 0.04),
-                    blurRadius: 200,
-                    spreadRadius: 50,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          // Full-screen scrollable layout to prevent any height overflows
-          Center(
+
+          // Animated background shapes
+          _buildAnimatedShapes(),
+
+          // Main content
+          SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 450),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildBrandHeader(),
-                    const SizedBox(height: 32),
-                    _buildLoginCard(isDesktop),
-                  ],
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildAnimatedLogo(),
+                  const SizedBox(height: 30),
+                  _buildBrandText(),
+                  const SizedBox(height: 40),
+                  _buildLoginCard(),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
           ),
@@ -220,109 +216,240 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ─── BRAND HEADER ──────────────────────────────────────────────────────────
-  Widget _buildBrandHeader() {
-    return Column(
+  // ─── ANIMATED BACKGROUND SHAPES ────────────────────────────────────────────
+  Widget _buildAnimatedShapes() {
+    return Stack(
       children: [
-        // Minimalist geometric logo
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: Colors.white.withValues(alpha: 0.03),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.shopping_bag_outlined,
-              size: 34,
-              color: Colors.white,
-            ),
+        // Shape 1 - Top Left
+        Positioned(
+          top: -100,
+          left: -80,
+          child: _buildAnimatedShape(
+            size: 300,
+            color: const Color(0xFF2d7dd2),
+            delay: 0,
           ),
         ),
-        const SizedBox(height: 18),
-        const Text(
-          'HUTCHID',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 4,
+        // Shape 2 - Bottom Right
+        Positioned(
+          bottom: -100,
+          right: -80,
+          child: _buildAnimatedShape(
+            size: 350,
+            color: const Color(0xFF00d4ff),
+            delay: 2,
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          'BAG MANUFACTURING & IN-HOUSE BRAND',
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
-            color: Colors.white.withValues(alpha: 0.4),
-            letterSpacing: 1.5,
+        // Shape 3 - Center Left
+        Positioned(
+          top: MediaQuery.of(context).size.height * 0.4,
+          left: -50,
+          child: _buildAnimatedShape(
+            size: 200,
+            color: const Color(0xFF1e88e5),
+            delay: 4,
           ),
         ),
       ],
     );
   }
 
-  // ─── LOGIN CARD ────────────────────────────────────────────────────────────
-  Widget _buildLoginCard(bool isDesktop) {
+  Widget _buildAnimatedShape({
+    required double size,
+    required Color color,
+    required int delay,
+  }) {
     return Container(
-      width: double.infinity,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.08),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
+            color: color.withValues(alpha: 0.1),
+            blurRadius: 100,
+            spreadRadius: 50,
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Masuk Portal',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+    );
+  }
+
+  // ─── ANIMATED LOGO ─────────────────────────────────────────────────────────
+  Widget _buildAnimatedLogo() {
+    return ScaleTransition(
+      scale: Tween(begin: 0.8, end: 1.0).animate(
+        CurvedAnimation(parent: _cardController, curve: Curves.easeOutBack),
+      ),
+      child: Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF2575d7), Color(0xFF1e88e5)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2575d7).withValues(alpha: 0.3),
+              blurRadius: 30,
+              spreadRadius: 5,
+            ),
+          ],
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.2),
+            width: 2,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Shimmer effect
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.15),
+                      Colors.white.withValues(alpha: 0.0),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Pilih akun cepat atau masukkan email Anda',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+            // Logo icon with animation
+            Center(
+              child: AnimatedBuilder(
+                animation: _logoController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, sin(_logoController.value * 3.14) * 5),
+                    child: Transform.rotate(
+                      angle: _logoController.value * 0.5,
+                      child: const Icon(
+                        Icons.shopping_bag_rounded,
+                        size: 50,
+                        color: Colors.white,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── BRAND TEXT ────────────────────────────────────────────────────────────
+  Widget _buildBrandText() {
+    return FadeTransition(
+      opacity: _cardController,
+      child: Column(
+        children: [
+          const Text(
+            'hutch.id',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'BAG MANUFACTURING & IN-HOUSE BRAND',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.7),
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Order Flow Management System',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── LOGIN CARD ────────────────────────────────────────────────────────────
+  Widget _buildLoginCard() {
+    return SlideTransition(
+      position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+          .animate(
+            CurvedAnimation(
+              parent: _cardController,
+              curve: Curves.easeOutCubic,
+            ),
+          ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 40,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Masuk Portal',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Cupertino-style segmented control for quick role selection
-                _buildRoleSegmentedControl(),
-                
-                const SizedBox(height: 24),
-                
-                _buildEmailField(),
-                const SizedBox(height: 16),
-                _buildPasswordField(),
-                
-                const SizedBox(height: 24),
-                _buildLoginButton(),
-                
-                const SizedBox(height: 24),
-                _buildDemoCredentials(),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    'Pilih akun atau masukkan kredensial Anda',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildRoleSelection(),
+
+                  const SizedBox(height: 24),
+                  _buildEmailField(),
+                  const SizedBox(height: 14),
+                  _buildPasswordField(),
+
+                  const SizedBox(height: 24),
+                  _buildLoginButton(),
+                ],
+              ),
             ),
           ),
         ),
@@ -330,20 +457,25 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ─── SEGMENTED ROLE CONTROL ────────────────────────────────────────────────
-  Widget _buildRoleSegmentedControl() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Row(
-        children: users.map((user) {
-          final isSelected = _selectedRole == user.role;
-          return Expanded(
-            child: GestureDetector(
+  // ─── ROLE SELECTION CARDS ──────────────────────────────────────────────────
+  Widget _buildRoleSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pilih Akun',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.white.withValues(alpha: 0.7),
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Column(
+          children: users.map((user) {
+            final isSelected = _selectedRole == user.role;
+            return GestureDetector(
               onTap: () {
                 setState(() {
                   _selectedRole = user.role;
@@ -352,63 +484,128 @@ class _LoginScreenState extends State<LoginScreen> {
                 });
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white.withValues(alpha: 0.06) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: isSelected
+                      ? const LinearGradient(
+                          colors: [Color(0xFF2575d7), Color(0xFF1e88e5)],
+                        )
+                      : null,
+                  color: isSelected
+                      ? null
+                      : Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isSelected ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.1),
+                    width: 1.5,
                   ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF2575d7,
+                            ).withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                      : null,
                 ),
-                child: Center(
-                  child: Text(
-                    user.role == 'Administrator'
-                        ? 'Admin'
-                        : user.role == 'Staf Penjualan'
-                            ? 'Sales'
-                            : 'Gudang',
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.15),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Icon(
+                        user.role == 'Administrator'
+                            ? Icons.admin_panel_settings_rounded
+                            : user.role == 'Staf Penjualan'
+                            ? Icons.trending_up_rounded
+                            : Icons.warehouse_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.nama,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            user.deskripsi,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected)
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: Color(0xFF2575d7),
+                          size: 14,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ),
-          );
-        }).toList(),
-      ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
-  // ─── TEXT FIELDS ───────────────────────────────────────────────────────────
+  // ─── EMAIL FIELD ───────────────────────────────────────────────────────────
   Widget _buildEmailField() {
     return _buildGlassTextField(
       controller: emailController,
       label: 'Alamat Email',
-      hint: 'Masukkan alamat email Anda',
-      prefixIcon: Icons.email_outlined,
+      hint: 'Masukkan email',
+      icon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
     );
   }
 
+  // ─── PASSWORD FIELD ────────────────────────────────────────────────────────
   Widget _buildPasswordField() {
     return _buildGlassTextField(
       controller: passwordController,
       label: 'Kata Sandi',
-      hint: 'Masukkan kata sandi Anda',
-      prefixIcon: Icons.lock_outlined,
+      hint: 'Masukkan password',
+      icon: Icons.lock_outlined,
       obscureText: _obscurePassword,
-      suffixIcon: IconButton(
-        icon: Icon(
-          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-          color: Colors.white.withValues(alpha: 0.3),
-          size: 18,
-        ),
-        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-      ),
+      onToggleObscure: () =>
+          setState(() => _obscurePassword = !_obscurePassword),
     );
   }
 
@@ -416,31 +613,63 @@ class _LoginScreenState extends State<LoginScreen> {
     required TextEditingController controller,
     required String label,
     required String hint,
-    required IconData prefixIcon,
+    required IconData icon,
     bool obscureText = false,
-    Widget? suffixIcon,
+    VoidCallback? onToggleObscure,
     TextInputType? keyboardType,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
+        color: Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+        style: const TextStyle(
+          color: Color(0xFF0a2463),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
+          labelStyle: TextStyle(
+            color: const Color(0xFF0a2463).withValues(alpha: 0.6),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2), fontSize: 12),
-          prefixIcon: Icon(prefixIcon, color: Colors.white.withValues(alpha: 0.5), size: 18),
-          suffixIcon: suffixIcon,
+          hintStyle: TextStyle(
+            color: const Color(0xFF0a2463).withValues(alpha: 0.4),
+            fontSize: 12,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFF0a2463).withValues(alpha: 0.5),
+            size: 18,
+          ),
+          suffixIcon: obscureText != null
+              ? GestureDetector(
+                  onTap: onToggleObscure,
+                  child: Icon(
+                    obscureText
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: const Color(0xFF0a2463).withValues(alpha: 0.5),
+                    size: 18,
+                  ),
+                )
+              : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           floatingLabelBehavior: FloatingLabelBehavior.auto,
         ),
       ),
@@ -449,91 +678,48 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // ─── LOGIN BUTTON ──────────────────────────────────────────────────────────
   Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : login,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF3B82F6), // Royal Blue accent
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 0,
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : const Text(
-                'Masuk',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-      ),
-    );
-  }
-
-  // ─── DEMO CREDENTIALS ──────────────────────────────────────────────────────
-  Widget _buildDemoCredentials() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      height: 52,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.01),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2575d7), Color(0xFF1e88e5)],
+        ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline_rounded, size: 14, color: Colors.white.withValues(alpha: 0.4)),
-              const SizedBox(width: 8),
-              Text(
-                'Detail Akun Aktif:',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Email', style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 10)),
-                  Text(
-                    emailController.text.isNotEmpty ? emailController.text : 'Pilih role...',
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('Password', style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 10)),
-                  Text(
-                    passwordController.text.isNotEmpty ? passwordController.text : 'Pilih role...',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
-                  ),
-                ],
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2575d7).withValues(alpha: 0.4),
+            blurRadius: 20,
+            spreadRadius: 2,
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isLoading ? null : login,
+          borderRadius: BorderRadius.circular(14),
+          child: Center(
+            child: _isLoading
+                ? SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : const Text(
+                    'Masuk',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+          ),
+        ),
       ),
     );
   }

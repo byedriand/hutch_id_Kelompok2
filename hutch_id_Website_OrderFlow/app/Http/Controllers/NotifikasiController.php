@@ -187,4 +187,23 @@ class NotifikasiController extends Controller
             'created_by' => auth()->id(),
         ]);
     }
+
+    /**
+     * Get notifications for API
+     */
+    public function apiIndex(Request $request)
+    {
+        $query = Notifikasi::with('pesanan', 'creator')
+            ->whereJsonContains('untuk_roles', auth()->user()->role);
+
+        if ($request->filter === 'unread') {
+            $query->whereNull('dibaca_at');
+        }
+
+        $notifikasi = $query->orderBy('created_at', 'desc')
+            ->limit($request->limit ?? 50)
+            ->get();
+
+        return response()->json($notifikasi);
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Notifikasi extends Model
 {
@@ -25,6 +26,15 @@ class Notifikasi extends Model
         'untuk_roles' => 'array',
         'dibaca_at' => 'datetime',
     ];
+
+    // Accessor untuk convert created_at ke Jakarta timezone
+    public function getCreatedAtAttribute($value)
+    {
+        if ($value) {
+            return Carbon::parse($value, 'UTC')->setTimezone('Asia/Jakarta');
+        }
+        return $value;
+    }
 
     public function pesanan()
     {

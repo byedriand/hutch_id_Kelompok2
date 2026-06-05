@@ -79,4 +79,42 @@ class DashboardController extends Controller
             'pesananMenunggu', 'pesananProduksi'
         ));
     }
+
+    /**
+     * Get dashboard data for API
+     */
+    public function apiIndex()
+    {
+        $userRole = auth()->user()->role;
+        
+        // Base query with role-based filtering
+        $baseQuery = Pesanan::query();
+        if ($userRole === 'staf_penjualan') {
+            $baseQuery->where('created_by', auth()->id());
+        } elseif ($userRole === 'operator_gudang') {
+            $baseQuery->whereIn('status', ['dikonfirmasi', 'dalam_produksi', 'siap_kirim', 'selesai']);
+        }
+
+        $totalAktif = (clone $baseQuery)->whereNotIn('status', ['selesai', 'dibatalkan'])->count();
+        $totalMenunggu = (clone $baseQuery)->where('status', 'menunggu_konfirmasi')->count();
+        $totalSiapKirim = (clone $baseQuery)->where('status', 'siap_kirim')->count();
+        
+        $totalSelesaiBulanIni = (clone $baseQuery)->where('status', 'selesai')
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->count();
+        
+        $nilaiSelesaiBulanIni = (clone $baseQuery)->where('status', 'selesai')
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('total_nilai');
+
+        return response()->json([
+            'total_aktif' => $totalAktif,
+            'total_menunggu' => $totalMenunggu,
+            'total_siap_kirim' => $totalSiapKirim,
+            'total_selesai_bulan_ini' => $totalSelesaiBulanIni,
+            'nilai_selesai_bulan_ini' => intval($nilaiSelesaiBulanIni ?? 0),
+        ]);
+    }
 }
