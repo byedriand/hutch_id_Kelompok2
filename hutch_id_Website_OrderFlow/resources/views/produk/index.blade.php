@@ -1205,9 +1205,6 @@
                     <h1><i class="fas fa-warehouse"></i>Manajemen Stok Barang</h1>
                     <p class="stok-header-desc mb-0">Kelola stok produk dan pantau ketersediaan barang dengan mudah</p>
                 </div>
-                <button class="btn-add-stok" onclick="showAddStokModal()" title="Tambah Produk Baru">
-                    <i class="fas fa-plus"></i>Tambah Produk
-                </button>
             </div>
 
             <!-- STATS CARDS -->
@@ -1351,9 +1348,6 @@
                 <i class="fas fa-inbox" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
                 <h5 style="color: #64748b; font-weight: 700; margin-bottom: 0.5rem;">Tidak Ada Data Produk</h5>
                 <p style="color: #94a3b8; margin-bottom: 1.5rem;">Tidak ada produk yang dapat dikelola saat ini</p>
-                <button class="btn btn-add-stok" onclick="showAddStokModal()">
-                    <i class="fas fa-plus me-2"></i>Tambah Produk Pertama
-                </button>
             </div>
         @endif
     </div>

@@ -37,13 +37,48 @@ Sistem ini mengelola seluruh siklus pesanan pelanggan, mulai dari:
 
 ## 🔔 Perkembangan Terbaru (Progress)
 
-Versi saat ini menambahkan perbaikan pada alur stok dan notifikasi serta penyempurnaan tampilan:
+### Versi 1.3 — Update Juni 2026
 
-- Notifikasi `stok_kurang` kini menyimpan detail kekurangan per produk (`data.detail_kurang`) saat PO memiliki item melebihi stok.
-- Tombol "Aksi Cepat" pada daftar produk telah dihapus dari UI produk; quick-update stok tetap tersedia melalui modal notifikasi dan halaman edit produk.
-- Saat stok ditambahkan (quick-update), sistem otomatis mencoba menyelesaikan atau memperbarui notifikasi `stok_kurang` untuk produk terkait.
-- Form edit stok sekarang hanya menyediakan dua aksi: `Tambahkan Stok` dan `Kurangi Stok` (menghilangkan opsi "Set ke nilai baru").
-- Daftar Pesanan dan Dashboard menampilkan indikator "Kurang" beserta jumlah unit yang kurang untuk PO yang terkena efek kekurangan stok.
+#### Fitur Baru: Menu "Tambah Produk" untuk Staff Penjualan ✨
+
+- **Sidebar Menu**: Tambahkan menu "Tambah Produk" khusus untuk role `staf_penjualan`
+    - Icon: `fas fa-cube`
+    - Route: `/produk/staf/tambah`
+- **Form Produk**: Interface untuk menambah produk baru dengan:
+    - Input nama produk (dengan validasi unique)
+    - Input harga jual (formatting otomatis)
+    - Input stok awal
+    - Textarea untuk keterangan produk
+    - Upload foto produk dengan preview (max 5MB)
+- **Daftar Produk**: Grid display responsive dengan card design
+    - Foto produk dengan placeholder fallback
+    - Badge untuk stok produk
+    - Styling gradient dengan animasi hover
+- **Integration**:
+    - Notifikasi otomatis ke semua roles saat produk baru ditambahkan
+    - Audit logging untuk setiap penambahan produk
+    - Form validation dengan error handling
+
+#### Bug Fixes & Improvements (2026-06-05):
+
+- **Image Display Issue**: Fixed APP_URL mismatch (port 8000 vs 8082)
+    - Improved `getFotoUrlAttribute()` dengan direct path loading
+    - Images sekarang display dengan relative paths yang lebih reliable
+- **Photo Preview Enhancement**:
+    - Better visibility dengan background color dan border styling
+    - Success message "Foto siap untuk di-upload"
+    - Improved CSS animations (fadeInScale, slideInUp)
+    - Preview height increased to 300px untuk visibility lebih baik
+
+### Versi 1.2 — Update Sebelumnya
+
+Versi sebelumnya menambahkan perbaikan pada alur stok dan notifikasi:
+
+- Notifikasi `stok_kurang` menyimpan detail kekurangan per produk (`data.detail_kurang`)
+- Tombol "Aksi Cepat" dihapus dari UI; quick-update stok via modal notifikasi dan halaman edit
+- Auto-update notifikasi `stok_kurang` saat stok ditambahkan
+- Form edit stok hanya menyediakan: `Tambahkan Stok` dan `Kurangi Stok`
+- Dashboard menampilkan indikator "Kurang" dengan jumlah unit yang kurang
 
 Langkah-langkah ini memperbaiki konsistensi UI dan memastikan notifikasi selalu mencerminkan kondisi stok saat ini.
 
@@ -56,6 +91,7 @@ Langkah-langkah ini memperbaiki konsistensi UI dan memastikan notifikasi selalu 
 | 🔄 Manajemen Status Produksi | 6 status terstruktur dengan audit trail lengkap; rollback stok otomatis jika PO dibatalkan              |
 | 📄 Cetak Dokumen PO ke PDF   | Generate PDF dokumen PO resmi dalam ≤ 5 detik; link berbagi sementara valid 24 jam                      |
 | 👥 Manajemen Pelanggan       | CRUD data master pelanggan dengan autocomplete saat pembuatan PO                                        |
+| ✅ Tambah Produk (Staff)     | Interface khusus untuk staf penjualan menambah produk baru dengan upload foto & preview                 |
 | 🔔 Notifikasi Email          | Kirim email ke pemilik UMKM setiap PO baru masuk beserta link langsung ke detail PO                     |
 | 📊 Dashboard PO              | Ringkasan total PO aktif, menunggu konfirmasi, dan siap kirim secara real-time                          |
 | 📁 Arsip PO                  | Akses arsip PO yang telah selesai atau dibatalkan untuk Administrator dan Pemilik UMKM                  |
@@ -263,8 +299,8 @@ Catatan:
 
 ## 🔑 Akun Default (Seeder)
 
-| Role            | Email               | Password |
-| --------------- | ------------------- | -------- |
+| Role            | Email            | Password    |
+| --------------- | ---------------- | ----------- |
 | Administrator   | admin@hutch.id   | password123 |
 | Pemilik UMKM    | pemilik@hutch.id | password123 |
 | Staf Penjualan  | staf@hutch.id    | password123 |
@@ -277,19 +313,20 @@ Catatan:
 Base URL: `/`  
 Authentication: Laravel session-based
 
-| Method              | Route                  | Deskripsi              | Middleware               |
-| ------------------- | ---------------------- | ---------------------- | ------------------------ |
-| GET                 | `/dashboard`           | Dashboard utama        | auth                     |
-| GET/POST            | `/pesanan`             | List / buat PO baru    | auth, role               |
-| GET                 | `/pesanan/{id}`        | Detail PO              | auth, role               |
-| PUT                 | `/pesanan/{id}`        | Update PO              | auth, role               |
-| DELETE              | `/pesanan/{id}`        | Batalkan PO            | auth, role               |
-| PATCH               | `/pesanan/{id}/status` | Update status produksi | auth, role               |
-| GET                 | `/pesanan/{id}/pdf`    | Download PDF PO        | auth, role               |
-| POST                | `/pesanan/{id}/share`  | Generate link berbagi  | auth, role               |
-| GET/POST/PUT/DELETE | `/pelanggan`           | CRUD pelanggan         | auth, role               |
-| GET                 | `/arsip`               | Arsip PO               | auth, role               |
-| GET                 | `/admin/dashboard`     | Admin dashboard        | auth, role:administrator |
+| Method              | Route                  | Deskripsi              | Middleware                |
+| ------------------- | ---------------------- | ---------------------- | ------------------------- |
+| GET                 | `/dashboard`           | Dashboard utama        | auth                      |
+| GET/POST            | `/pesanan`             | List / buat PO baru    | auth, role                |
+| GET                 | `/pesanan/{id}`        | Detail PO              | auth, role                |
+| PUT                 | `/pesanan/{id}`        | Update PO              | auth, role                |
+| DELETE              | `/pesanan/{id}`        | Batalkan PO            | auth, role                |
+| PATCH               | `/pesanan/{id}/status` | Update status produksi | auth, role                |
+| GET                 | `/pesanan/{id}/pdf`    | Download PDF PO        | auth, role                |
+| POST                | `/pesanan/{id}/share`  | Generate link berbagi  | auth, role                |
+| GET/POST/PUT/DELETE | `/pelanggan`           | CRUD pelanggan         | auth, role                |
+| GET/POST            | `/produk/staf/tambah`  | Staff: tambah produk   | auth, role:staf_penjualan |
+| GET                 | `/arsip`               | Arsip PO               | auth, role                |
+| GET                 | `/admin/dashboard`     | Admin dashboard        | auth, role:administrator  |
 
 ---
 
@@ -364,9 +401,9 @@ Setiap dokumen PO yang di-generate memuat 8 elemen wajib:
 | Adrian Ronald Daga     | 20241320011 | Frontend/Backend Developer . (Website) |
 | Muhamad Alvin Ramadhan | 20241320035 | Frontend Developer · (Mobile)          |
 | Sopyan Rinaldhi        | 20241320028 | Backend Developer · (Mobile)           |
-| Eka Febryanto          | 20241320014 | Qa Tester (Website)                              |
+| Eka Febryanto          | 20241320014 | Qa Tester (Website)                    |
 | Julia Habibah          | 20241320020 | Sistem Analyst                         |
-| Akbar                  | 20241320017 | Qa Tester (Mobile)                            |
+| Akbar                  | 20241320017 | Qa Tester (Mobile)                     |
 
 ---
 
