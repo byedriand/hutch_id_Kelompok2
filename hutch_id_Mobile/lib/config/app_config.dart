@@ -12,7 +12,8 @@ class AppConfig {
       case Env.staging:
         return 'https://staging.hutchprestige.com/api';
       case Env.development:
-        return 'http://10.0.2.2:8000/api'; // For Android emulator (10.0.2.2 = localhost)
+        // 10.0.2.2 for Android emulator, localhost for Web/Windows
+        return 'http://localhost:8000/api';
     }
   }
 

@@ -2414,7 +2414,7 @@ class _DaftarPesananScreenContentState
                 const SizedBox(height: 12),
                 // Status filter
                 DropdownButtonFormField<String>(
-                  value: widget.filterStatus,
+                  initialValue: widget.filterStatus,
                   onChanged: widget.onFilterStatusChanged,
                   isExpanded: true,
                   decoration: InputDecoration(
@@ -2591,7 +2591,7 @@ class _DaftarPesananScreenContentState
                 ),
                 // Status filter
                 DropdownButtonFormField<String>(
-                  value: widget.filterStatus,
+                  initialValue: widget.filterStatus,
                   onChanged: widget.onFilterStatusChanged,
                   isExpanded: true,
                   decoration: InputDecoration(
@@ -3676,8 +3676,9 @@ class _DaftarPesananScreenContentState
                               );
                             }).toList(),
                         onChanged: (value) {
-                          if (value != null)
+                          if (value != null) {
                             setDialogState(() => currentStatus = value);
+                          }
                         },
                       ),
                       const SizedBox(height: 20),
@@ -4518,12 +4519,15 @@ class _BuatPoScreenContentState extends State<BuatPoScreenContent> {
     final String poPreview = _getPoPreview();
 
     Color previewStatusColor = const Color(0xFFF59E0B);
-    if (selectedStatus == 'Proses')
+    if (selectedStatus == 'Proses') {
       previewStatusColor = const Color(0xFF3B82F6);
-    if (selectedStatus == 'Selesai')
+    }
+    if (selectedStatus == 'Selesai') {
       previewStatusColor = const Color(0xFF10B981);
-    if (selectedStatus == 'Dalam Produksi')
+    }
+    if (selectedStatus == 'Dalam Produksi') {
       previewStatusColor = const Color(0xFF8B5CF6);
+    }
     if (selectedStatus == 'Draft') previewStatusColor = const Color(0xFF64748B);
 
     // ── Form widget ──────────────────────────────────────────────────────────

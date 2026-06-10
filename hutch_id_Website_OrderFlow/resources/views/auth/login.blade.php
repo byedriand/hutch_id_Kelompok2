@@ -1265,13 +1265,13 @@
             width: 80px;
             height: 80px;
             margin: 0 auto 1.5rem;
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 
-                0 10px 30px rgba(16, 185, 129, 0.3),
+                0 10px 30px rgba(59, 130, 246, 0.3),
                 inset 0 1px 2px rgba(255, 255, 255, 0.3);
             animation: iconBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
@@ -1283,7 +1283,7 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
             animation: iconPulse 2s ease-in-out infinite;
         }
 
@@ -1885,6 +1885,9 @@
                 const btnLogin = this.querySelector('.btn-login');
                 const role = document.getElementById('roleInput').value;
                 
+                // Store role in sessionStorage before submit
+                sessionStorage.setItem('pendingLoginRole', role);
+                
                 // Show loading state
                 if (btnLogin) {
                     btnLogin.style.opacity = '0.7';
@@ -1892,10 +1895,8 @@
                     const originalText = btnLogin.innerHTML;
                     btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
                     btnLogin._originalText = originalText;
+                    btnLogin._role = role;
                 }
-                
-                // Store role temporarily and submit form
-                sessionStorage.setItem('loginAttemptRole', role);
                 
                 // Submit the form using native submit
                 const formElement = this;
@@ -1907,50 +1908,45 @@
 
         // Check on page load to handle login response
         window.addEventListener('load', function() {
-            const loginAttemptRole = sessionStorage.getItem('loginAttemptRole');
+            // Check if there are error messages (login failed)
+            const errorMessages = document.querySelector('.error-message');
             
-            if (loginAttemptRole) {
-                // Check if there are error messages (login failed)
-                const errorMessages = document.querySelector('.error-message');
-                
-                if (errorMessages) {
-                    // Login failed - clear the flag
-                    sessionStorage.removeItem('loginAttemptRole');
-                    console.log('Login failed with errors');
-                } else {
-                    // No errors, but still on login page - check if user is authenticated
-                    // by making a quick check to a protected route
-                    fetch('{{ route("dashboard") }}', { 
-                        method: 'HEAD',
-                        credentials: 'same-origin'
-                    })
-                    .then(response => {
-                        if (response.status === 200) {
-                            // User is authenticated, show success and redirect
-                            showSuccessModal(loginAttemptRole);
-                            setTimeout(() => {
-                                sessionStorage.removeItem('loginAttemptRole');
-                                continuePage();
-                            }, 3000);
-                        } else {
-                            // User not authenticated
-                            sessionStorage.removeItem('loginAttemptRole');
-                        }
-                    })
-                    .catch(err => {
-                        // Error checking auth, clear flag
-                        sessionStorage.removeItem('loginAttemptRole');
-                    });
+            if (errorMessages) {
+                // Login failed - show errors and restore button
+                const loginBtn = document.querySelector('.btn-login');
+                if (loginBtn && loginBtn._originalText) {
+                    loginBtn.innerHTML = loginBtn._originalText;
+                    loginBtn.style.opacity = '1';
+                    loginBtn.style.pointerEvents = 'auto';
+                }
+                // Clear pending login role
+                sessionStorage.removeItem('pendingLoginRole');
+                console.log('Login failed with errors');
+            } else {
+                // Check if pending login role exists
+                const pendingRole = sessionStorage.getItem('pendingLoginRole');
+                if (pendingRole) {
+                    // Login successful - show modal and redirect
+                    showSuccessModal(pendingRole);
+                    
+                    // Redirect after showing modal
+                    setTimeout(() => {
+                        sessionStorage.removeItem('pendingLoginRole');
+                        window.location.href = '{{ route("dashboard") }}';
+                    }, 2500);
                 }
             }
+        });
 
+        // Check on page load for logout completion
+        window.addEventListener('load', function() {
             // Check if logout just completed
             const pendingLogout = sessionStorage.getItem('pendingLogout');
             if (pendingLogout) {
                 showLogoutModal();
                 setTimeout(() => {
                     redirectToLogin();
-                }, 5000);
+                }, 3000);
             }
         });
 

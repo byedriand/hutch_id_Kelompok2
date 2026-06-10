@@ -20,7 +20,7 @@ class _BuatPoScreenState extends State<BuatPoScreen> {
 
   Pelanggan? _selectedPelanggan;
   DateTime? _selectedDate;
-  List<Map<String, dynamic>> _items = [];
+  final List<Map<String, dynamic>> _items = [];
   List<Map<String, dynamic>> _produkList = [];
   bool _isLoadingProduk = false;
 
@@ -602,7 +602,7 @@ class _BuatPoScreenState extends State<BuatPoScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<int>(
-            value: item['produk_id'],
+            initialValue: item['produk_id'],
             onChanged: (value) => _updateItem(index, 'produk_id', value),
             decoration: InputDecoration(
               labelText: 'Nama Produk',

@@ -1786,55 +1786,107 @@
 const dataProduk = @json($dataProduk);
 const placeholderProductImage = 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'96\' height=\'96\'%3E%3Crect width=\'96\' height=\'96\' fill=\'%23eef2ff\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%2364748b\' font-size=\'12\' font-family=\'Arial, sans-serif\'%3ENo Image%3C/text%3E%3C/svg%3E';
 let itemCount = 1;
-
-const custDropdown = document.getElementById('cust-dropdown');
 let autocompleteTimeout;
 
-document.getElementById('cust-input').addEventListener('input', function() {
-    clearTimeout(autocompleteTimeout);
-    const q = this.value.trim();
-
-    if (q.length < 2) {
-        custDropdown.style.display = 'none';
+// Helper function to fetch and populate customer dropdown
+function fetchAndPopulatePelanggan(query = '') {
+    const custDropdown = document.getElementById('cust-dropdown');
+    if (!custDropdown) {
+        console.error('Customer dropdown element not found');
         return;
     }
 
-    autocompleteTimeout = setTimeout(() => {
-        fetch(`/api/pelanggan/search?q=${encodeURIComponent(q)}`)
-            .then(r => r.json())
-            .then(data => {
-                custDropdown.innerHTML = '';
-                custDropdown.style.maxHeight = '220px';
-                custDropdown.style.overflowY = 'auto';
+    const searchUrl = query ? `{{ route('pelanggan.index') }}?cari=${encodeURIComponent(query)}&json=1` : `{{ route('pelanggan.index') }}?json=1`;
+    fetch(searchUrl, {
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(r => r.json())
+        .then(data => {
+            custDropdown.innerHTML = '';
+            custDropdown.style.maxHeight = '220px';
+            custDropdown.style.overflowY = 'auto';
 
-                if (data.length === 0) {
-                    const div = document.createElement('div');
-                    div.className = 'text-muted p-3';
-                    div.textContent = 'Tidak ada pelanggan ditemukan';
-                    custDropdown.appendChild(div);
-                    custDropdown.style.display = 'block';
-                    return;
-                }
-
-                data.forEach(p => {
-                    const div = document.createElement('div');
-                    div.className = 'dropdown-item';
-                    div.style.cursor = 'pointer';
-                    div.innerHTML = `
-                        <span class="customer-name">${p.nama}</span>
-                        <span class="customer-meta">${p.telepon || '-'} · ${p.email || 'Email tidak tersedia'}</span>
-                    `;
-                    div.onclick = () => pilihPelanggan(p);
-                    custDropdown.appendChild(div);
-                });
-
+            if (!Array.isArray(data) || data.length === 0) {
+                const div = document.createElement('div');
+                div.className = 'text-muted p-3';
+                div.textContent = 'Tidak ada pelanggan ditemukan';
+                custDropdown.appendChild(div);
                 custDropdown.style.display = 'block';
-            })
-            .catch(() => {
-                custDropdown.style.display = 'none';
+                return;
+            }
+
+            data.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'dropdown-item';
+                div.style.cursor = 'pointer';
+                div.innerHTML = `
+                    <span class="customer-name">${p.nama}</span>
+                    <span class="customer-meta">${p.telepon || '-'} · ${p.email || 'Email tidak tersedia'}</span>
+                `;
+                div.onclick = () => pilihPelanggan(p);
+                custDropdown.appendChild(div);
             });
-    }, 250);
-});
+
+            custDropdown.style.display = 'block';
+        })
+        .catch(err => {
+            console.error('Error fetching customers:', err);
+            custDropdown.style.display = 'none';
+        });
+}
+
+// Initialize customer search listeners
+function initializeCustomerSearch() {
+    const custInput = document.getElementById('cust-input');
+    const custDropdown = document.getElementById('cust-dropdown');
+    if (!custInput) {
+        console.error('Customer input element not found');
+        return;
+    }
+
+    // Focus event: show all customers when field is focused and empty
+    custInput.addEventListener('focus', function() {
+        if (this.value.trim().length === 0) {
+            fetchAndPopulatePelanggan('');
+        }
+    });
+
+    // Input event: search as user types
+    custInput.addEventListener('input', function() {
+        clearTimeout(autocompleteTimeout);
+        const q = this.value.trim();
+
+        if (q.length === 0) {
+            if (custDropdown) custDropdown.style.display = 'none';
+            return;
+        }
+
+        if (q.length < 2) {
+            if (custDropdown) custDropdown.style.display = 'none';
+            return;
+        }
+
+        autocompleteTimeout = setTimeout(() => {
+            fetchAndPopulatePelanggan(q);
+        }, 250);
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!custInput.contains(e.target) && custDropdown && !custDropdown.contains(e.target)) {
+            custDropdown.style.display = 'none';
+        }
+    });
+}
+
+// Wait for DOM to be ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCustomerSearch);
+} else {
+    initializeCustomerSearch();
+}
 
 function pilihPelanggan(pelanggan) {
     document.getElementById('pelanggan_id').value = pelanggan.id;
@@ -1842,7 +1894,7 @@ function pilihPelanggan(pelanggan) {
     document.getElementById('cust-alamat').value = pelanggan.alamat;
     document.getElementById('cust-telepon').value = pelanggan.telepon;
     document.getElementById('cust-email').value = pelanggan.email;
-    custDropdown.style.display = 'none';
+    document.getElementById('cust-dropdown').style.display = 'none';
 }
 
 function updateHarga(select, id) {

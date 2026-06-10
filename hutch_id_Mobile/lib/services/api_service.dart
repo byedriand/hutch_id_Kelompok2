@@ -405,7 +405,7 @@ class ApiService {
               // ignore: use_null_aware_elements
               body: jsonEncode({
                 'status': status,
-                if (catatan != null) 'catatan': catatan,
+                'catatan': ?catatan,
               }),
             )
             .timeout(

@@ -653,8 +653,7 @@ class _LoginScreenState extends State<LoginScreen>
             color: const Color(0xFF0a2463).withValues(alpha: 0.5),
             size: 18,
           ),
-          suffixIcon: obscureText != null
-              ? GestureDetector(
+          suffixIcon: GestureDetector(
                   onTap: onToggleObscure,
                   child: Icon(
                     obscureText
@@ -663,8 +662,7 @@ class _LoginScreenState extends State<LoginScreen>
                     color: const Color(0xFF0a2463).withValues(alpha: 0.5),
                     size: 18,
                   ),
-                )
-              : null,
+                ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,

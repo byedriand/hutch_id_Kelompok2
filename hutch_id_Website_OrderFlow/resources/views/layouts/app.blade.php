@@ -1133,13 +1133,13 @@
             width: 80px;
             height: 80px;
             margin: 0 auto 1.5rem;
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 
-                0 10px 30px rgba(16, 185, 129, 0.3),
+                0 10px 30px rgba(59, 130, 246, 0.3),
                 inset 0 1px 2px rgba(255, 255, 255, 0.3);
             animation: iconBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
@@ -1151,7 +1151,7 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
             animation: iconPulse 2s ease-in-out infinite;
         }
 
@@ -1840,8 +1840,310 @@
                 });
             }
         });
+
+        // Handle login success modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const pendingRole = sessionStorage.getItem('pendingLoginRole');
+            if (pendingRole) {
+                const roleLabels = {
+                    'administrator': 'Administrator',
+                    'staf_penjualan': 'Staf Penjualan',
+                    'operator_gudang': 'Operator Gudang',
+                    'pemilik_umkm': 'Pemilik UMKM'
+                };
+
+                const roleIcons = {
+                    'administrator': 'fas fa-crown',
+                    'staf_penjualan': 'fas fa-user-tie',
+                    'operator_gudang': 'fas fa-warehouse',
+                    'pemilik_umkm': 'fas fa-briefcase'
+                };
+
+                // Show login success modal
+                const modalOverlay = document.getElementById('loginSuccessModalOverlay');
+                if (modalOverlay) {
+                    const roleIcon = document.getElementById('loginSuccessRoleIcon');
+                    const roleName = document.getElementById('loginSuccessRoleName');
+                    
+                    if (roleIcon) roleIcon.className = roleIcons[pendingRole] || 'fas fa-crown';
+                    if (roleName) roleName.textContent = roleLabels[pendingRole] || pendingRole;
+                    
+                    // Show modal with animation
+                    setTimeout(() => {
+                        modalOverlay.classList.add('show');
+                    }, 300);
+                    
+                    // Clear the flag
+                    sessionStorage.removeItem('pendingLoginRole');
+                }
+            }
+        });
     </script>
     @endauth
+
+    <!-- Login Success Modal -->
+    <div class="login-success-modal-overlay" id="loginSuccessModalOverlay">
+        <div class="login-success-modal">
+            <div class="login-success-icon-container">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="login-success-title">Login Berhasil!</h2>
+            <p class="login-success-message">Anda berhasil masuk ke sistem. Selamat datang di Hutch Prestige!</p>
+            
+            <div class="login-success-role-info">
+                <div class="login-success-role-label">Login Sebagai</div>
+                <div class="login-success-role-value">
+                    <i id="loginSuccessRoleIcon" class="fas fa-crown"></i>
+                    <span id="loginSuccessRoleName">Administrator</span>
+                </div>
+            </div>
+
+            <button class="login-success-continue-btn" onclick="closeLoginSuccessModal()">
+                <i class="fas fa-arrow-right"></i> Lanjutkan
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .login-success-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .login-success-modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .login-success-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 40px rgba(37, 117, 215, 0.15);
+            animation: loginSuccessModalPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-success-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            animation: loginSuccessSlideIn 0.6s ease-out;
+        }
+
+        @keyframes loginSuccessModalPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes loginSuccessSlideIn {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .login-success-icon-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 10px 30px rgba(16, 185, 129, 0.3),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            animation: loginSuccessIconBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .login-success-icon-container::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+            animation: loginSuccessIconPulse 2s ease-in-out infinite;
+        }
+
+        .login-success-icon-container i {
+            font-size: 2.5rem;
+            color: white;
+            position: relative;
+            z-index: 1;
+            animation: loginSuccessCheckmarkDraw 0.6s ease-out;
+        }
+
+        @keyframes loginSuccessIconBounce {
+            0% {
+                transform: scale(0) rotateZ(-45deg);
+            }
+            50% {
+                transform: scale(1.1) rotateZ(5deg);
+            }
+            100% {
+                transform: scale(1) rotateZ(0);
+            }
+        }
+
+        @keyframes loginSuccessIconPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes loginSuccessCheckmarkDraw {
+            from {
+                transform: scale(0) rotate(-45deg);
+            }
+            to {
+                transform: scale(1) rotate(0);
+            }
+        }
+
+        .login-success-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #1a3a52;
+            margin-bottom: 0.8rem;
+            letter-spacing: 0.5px;
+            animation: loginSuccessTextFadeIn 0.6s ease-out 0.2s both;
+            background: linear-gradient(135deg, #1a3a52, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-success-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            animation: loginSuccessTextFadeIn 0.6s ease-out 0.3s both;
+        }
+
+        .login-success-role-info {
+            background: #f0fdf4;
+            border: 1.5px solid #bbf7d0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            animation: loginSuccessTextFadeIn 0.6s ease-out 0.4s both;
+        }
+
+        .login-success-role-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #059669;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.6rem;
+        }
+
+        .login-success-role-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1a3a52;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .login-success-role-value i {
+            font-size: 1.5rem;
+            color: #10b981;
+        }
+
+        .login-success-continue-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.95rem 2.5rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+            animation: loginSuccessTextFadeIn 0.6s ease-out 0.5s both;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .login-success-continue-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+        }
+
+        .login-success-continue-btn:active {
+            transform: translateY(-1px);
+        }
+
+        @keyframes loginSuccessTextFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <script>
+        function closeLoginSuccessModal() {
+            const modalOverlay = document.getElementById('loginSuccessModalOverlay');
+            if (modalOverlay) {
+                modalOverlay.classList.remove('show');
+                setTimeout(() => {
+                    // Modal will stay hidden, user can close it by clicking outside
+                }, 300);
+            }
+        }
+    </script>
+
     @stack('scripts')
 </body>
 </html>

@@ -87,20 +87,46 @@ class PesananController extends Controller
         if ($request->expectsJson() || $request->is('api/*')) {
             $pesanan = $query->latest()->get();
             
-            // Transform data for API response
-            $pesanan->transform(function ($po) {
+            // Transform data for API response - return full details
+            $pesanan = $pesanan->map(function ($po) {
                 return [
                     'id' => $po->id,
-                    'no' => $po->nomor_po,
-                    'pelanggan' => $po->pelanggan->nama ?? 'Umum',
+                    'nomor_po' => $po->nomor_po,
+                    'tanggal_pesanan' => $po->tanggal_pesanan->format('Y-m-d'),
+                    'tanggal_pengiriman' => $po->tanggal_pengiriman->format('Y-m-d'),
+                    'tanggal_dikirim' => $po->tanggal_dikirim ? $po->tanggal_dikirim->format('Y-m-d') : null,
+                    'nomor_resi' => $po->nomor_resi,
                     'pelanggan_id' => $po->pelanggan_id,
-                    'tanggal' => $po->tanggal_pesanan->format('d M Y'),
+                    'pelanggan' => [
+                        'id' => $po->pelanggan?->id,
+                        'nama' => $po->pelanggan?->nama,
+                        'telepon' => $po->pelanggan?->telepon,
+                        'email' => $po->pelanggan?->email,
+                        'alamat' => $po->pelanggan?->alamat,
+                    ],
+                    'total_nilai' => (float) $po->total_nilai,
                     'status' => $po->status,
-                    'total_nilai' => (int) $po->total_nilai,
-                    'total_item' => $po->detailPesanan->count(),
-                    'deskripsi' => $po->detailPesanan->map(function ($d) {
-                        return ($d->jumlah ?? 0) . 'x ' . ($d->produk->nama ?? 'Produk');
-                    })->join(', '),
+                    'catatan' => $po->catatan,
+                    'alasan_pembatalan' => $po->alasan_pembatalan,
+                    'created_by' => $po->created_by,
+                    'detail_pesanan' => $po->detailPesanan->map(function ($detail) {
+                        return [
+                            'id' => $detail->id,
+                            'pesanan_id' => $detail->pesanan_id,
+                            'produk_id' => $detail->produk_id,
+                            'jumlah' => $detail->jumlah,
+                            'spesifikasi' => $detail->spesifikasi,
+                            'harga_satuan' => (float) $detail->harga_satuan,
+                            'produk' => [
+                                'id' => $detail->produk?->id,
+                                'nama' => $detail->produk?->nama,
+                                'foto' => $detail->produk?->foto,
+                                'harga_jual' => (float) $detail->produk?->harga_jual,
+                                'stok' => $detail->produk?->stok,
+                                'keterangan' => $detail->produk?->keterangan,
+                            ],
+                        ];
+                    }),
                     'created_at' => $po->created_at,
                     'updated_at' => $po->updated_at,
                 ];
@@ -297,6 +323,53 @@ class PesananController extends Controller
         $this->authorize('view', $pesanan);
 
         $pesanan->load('pelanggan', 'detailPesanan.produk', 'historiStatus.user', 'creator');
+
+        // If API request, return JSON
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'data' => [
+                    'id' => $pesanan->id,
+                    'nomor_po' => $pesanan->nomor_po,
+                    'tanggal_pesanan' => $pesanan->tanggal_pesanan->format('Y-m-d'),
+                    'tanggal_pengiriman' => $pesanan->tanggal_pengiriman->format('Y-m-d'),
+                    'tanggal_dikirim' => $pesanan->tanggal_dikirim ? $pesanan->tanggal_dikirim->format('Y-m-d') : null,
+                    'nomor_resi' => $pesanan->nomor_resi,
+                    'pelanggan_id' => $pesanan->pelanggan_id,
+                    'pelanggan' => [
+                        'id' => $pesanan->pelanggan?->id,
+                        'nama' => $pesanan->pelanggan?->nama,
+                        'telepon' => $pesanan->pelanggan?->telepon,
+                        'email' => $pesanan->pelanggan?->email,
+                        'alamat' => $pesanan->pelanggan?->alamat,
+                    ],
+                    'total_nilai' => (float) $pesanan->total_nilai,
+                    'status' => $pesanan->status,
+                    'catatan' => $pesanan->catatan,
+                    'alasan_pembatalan' => $pesanan->alasan_pembatalan,
+                    'created_by' => $pesanan->created_by,
+                    'detail_pesanan' => $pesanan->detailPesanan->map(function ($detail) {
+                        return [
+                            'id' => $detail->id,
+                            'pesanan_id' => $detail->pesanan_id,
+                            'produk_id' => $detail->produk_id,
+                            'jumlah' => $detail->jumlah,
+                            'spesifikasi' => $detail->spesifikasi,
+                            'harga_satuan' => (float) $detail->harga_satuan,
+                            'produk' => [
+                                'id' => $detail->produk?->id,
+                                'nama' => $detail->produk?->nama,
+                                'foto' => $detail->produk?->foto,
+                                'harga_jual' => (float) $detail->produk?->harga_jual,
+                                'stok' => $detail->produk?->stok,
+                                'keterangan' => $detail->produk?->keterangan,
+                            ],
+                        ];
+                    }),
+                    'created_at' => $pesanan->created_at,
+                    'updated_at' => $pesanan->updated_at,
+                ]
+            ]);
+        }
 
         // Calculate any stock shortages for display in the detail view
         $detail_kurang = [];
