@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/pesanan_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/custom_widgets.dart';
 
 class PesananDetailScreen extends StatefulWidget {
@@ -73,23 +74,33 @@ class _PesananDetailScreenState extends State<PesananDetailScreen> {
     }
   }
 
-  void _showStatusDialog() {
-    final statuses = [
-      'menunggu_konfirmasi',
-      'dikonfirmasi',
-      'dalam_produksi',
-      'siap_kirim',
-      'selesai',
-      'dibatalkan',
-    ];
-    final statusLabels = [
-      'Menunggu Konfirmasi',
-      'Dikonfirmasi',
-      'Dalam Produksi',
-      'Siap Kirim',
-      'Selesai',
-      'Dibatalkan',
-    ];
+  void _showStatusDialog(String userRole) {
+    List<String> statuses = [];
+    List<String> statusLabels = [];
+
+    if (userRole == 'administrator') {
+      statuses = [
+        'menunggu_konfirmasi',
+        'dikonfirmasi',
+        'dalam_produksi',
+        'siap_kirim',
+        'selesai',
+        'dibatalkan',
+      ];
+      statusLabels = [
+        'Menunggu Konfirmasi',
+        'Dikonfirmasi',
+        'Dalam Produksi',
+        'Siap Kirim',
+        'Selesai',
+        'Dibatalkan',
+      ];
+    } else if (userRole == 'operator_gudang') {
+      statuses = ['dalam_produksi'];
+      statusLabels = ['Dalam Produksi'];
+    }
+
+    if (statuses.isEmpty) return;
 
     showDialog(
       context: context,
@@ -153,6 +164,10 @@ class _PesananDetailScreenState extends State<PesananDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<AuthProvider>(context).user?.role ?? '';
+    final canUpdateStatus = userRole != 'staf_penjualan';
+    final canDelete = userRole == 'administrator';
+
     final formatter = NumberFormat('#,##0', 'id_ID');
     final dateFormat = DateFormat('dd MMM yyyy', 'id_ID');
     final size = MediaQuery.of(context).size;
@@ -223,18 +238,19 @@ class _PesananDetailScreenState extends State<PesananDetailScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        OutlinedButton.icon(
-                          onPressed: _showStatusDialog,
-                          icon: const Icon(Icons.edit, size: 16),
-                          label: const Text('Edit'),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Color(0xFFf97316),
-                              width: 1.5,
+                        if (canUpdateStatus)
+                          OutlinedButton.icon(
+                            onPressed: () => _showStatusDialog(userRole),
+                            icon: const Icon(Icons.edit, size: 16),
+                            label: const Text('Update Status'),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Color(0xFFf97316),
+                                width: 1.5,
+                              ),
+                              foregroundColor: const Color(0xFFf97316),
                             ),
-                            foregroundColor: const Color(0xFFf97316),
                           ),
-                        ),
                       ],
                     ),
                   ],
@@ -555,47 +571,49 @@ class _PesananDetailScreenState extends State<PesananDetailScreen> {
                 if (!_isUpdatingStatus)
                   Row(
                     children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Hapus Pesanan'),
-                                content: const Text(
-                                  'Apakah Anda yakin ingin menghapus pesanan ini?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Batal'),
+                      if (canDelete) ...[
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Hapus Pesanan'),
+                                  content: const Text(
+                                    'Apakah Anda yakin ingin menghapus pesanan ini?',
                                   ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _deletePesanan();
-                                    },
-                                    child: const Text(
-                                      'Hapus',
-                                      style: TextStyle(color: Colors.red),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Batal'),
                                     ),
-                                  ),
-                                ],
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _deletePesanan();
+                                      },
+                                      child: const Text(
+                                        'Hapus',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.delete_rounded, size: 16),
+                            label: const Text('Hapus'),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Color(0xFFef4444),
+                                width: 1.5,
                               ),
-                            );
-                          },
-                          icon: const Icon(Icons.delete_rounded, size: 16),
-                          label: const Text('Hapus'),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Color(0xFFef4444),
-                              width: 1.5,
+                              foregroundColor: const Color(0xFFef4444),
                             ),
-                            foregroundColor: const Color(0xFFef4444),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
+                        const SizedBox(width: 12),
+                      ],
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () => Navigator.pop(context),

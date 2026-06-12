@@ -62,143 +62,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Screens yang ada
     final dashboardScreen = const DashboardScreen();
-    final notifikasiScreen = const NotifikasiScreen();
     final pesananScreen = const PesananListScreen();
     final pelangganScreen = const PelangganListScreen();
     final produkScreen = const ProdukListScreen();
     final arsipScreen = const ArsipScreen();
 
+    // Helper untuk membuat NavigationDestination
+    NavigationDestination buildNavDest(IconData active, IconData inactive, String label) {
+      // Find index by label to determine if it's selected
+      // Actually, we can just use the properties directly
+      return NavigationDestination(
+        icon: Icon(inactive),
+        selectedIcon: Icon(active),
+        label: label,
+      );
+    }
+
     // Build navigation berdasarkan role
     if (userRole == 'operator_gudang') {
-      // Gudang: Dashboard, Notifikasi, Manajemen Stok
-      _screens = [
-        dashboardScreen,
-        notifikasiScreen,
-        produkScreen, // Untuk gudang ini adalah Manajemen Stok
-      ];
+      _screens = [dashboardScreen, pesananScreen, produkScreen];
       _navigationDestinations = [
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 0
-                ? Icons.dashboard_rounded
-                : Icons.dashboard_outlined,
-          ),
-          label: 'Dashboard',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 1
-                ? Icons.notifications_rounded
-                : Icons.notifications_outlined,
-          ),
-          label: 'Notifikasi',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 2
-                ? Icons.inventory_2_rounded
-                : Icons.inventory_2_outlined,
-          ),
-          label: 'Stok',
-        ),
+        buildNavDest(Icons.dashboard_rounded, Icons.dashboard_outlined, 'Dashboard'),
+        buildNavDest(Icons.shopping_bag_rounded, Icons.shopping_bag_outlined, 'Pesanan'),
+        buildNavDest(Icons.inventory_2_rounded, Icons.inventory_2_outlined, 'Stok'),
       ];
     } else if (userRole == 'staf_penjualan') {
-      // Staff: Dashboard, Notifikasi, Pesanan, Pelanggan, Produk
-      _screens = [
-        dashboardScreen,
-        notifikasiScreen,
-        pesananScreen,
-        pelangganScreen,
-        produkScreen,
-      ];
+      _screens = [dashboardScreen, pesananScreen, pelangganScreen, produkScreen];
       _navigationDestinations = [
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 0
-                ? Icons.dashboard_rounded
-                : Icons.dashboard_outlined,
-          ),
-          label: 'Dashboard',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 1
-                ? Icons.notifications_rounded
-                : Icons.notifications_outlined,
-          ),
-          label: 'Notifikasi',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 2
-                ? Icons.shopping_bag_rounded
-                : Icons.shopping_bag_outlined,
-          ),
-          label: 'Pesanan',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 3 ? Icons.person_rounded : Icons.person_outlined,
-          ),
-          label: 'Pelanggan',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 4
-                ? Icons.add_box_rounded
-                : Icons.add_box_outlined,
-          ),
-          label: 'Produk',
-        ),
+        buildNavDest(Icons.dashboard_rounded, Icons.dashboard_outlined, 'Dashboard'),
+        buildNavDest(Icons.shopping_bag_rounded, Icons.shopping_bag_outlined, 'Pesanan'),
+        buildNavDest(Icons.person_rounded, Icons.person_outlined, 'Pelanggan'),
+        buildNavDest(Icons.add_box_rounded, Icons.add_box_outlined, 'Produk'),
       ];
     } else {
-      // Admin/Default: Dashboard, Notifikasi, Pesanan, Pelanggan, Arsip PDF
-      _screens = [
-        dashboardScreen,
-        notifikasiScreen,
-        pesananScreen,
-        pelangganScreen,
-        arsipScreen,
-      ];
+      // administrator
+      _screens = [dashboardScreen, pesananScreen, pelangganScreen, produkScreen, arsipScreen];
       _navigationDestinations = [
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 0
-                ? Icons.dashboard_rounded
-                : Icons.dashboard_outlined,
-          ),
-          label: 'Dashboard',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 1
-                ? Icons.notifications_rounded
-                : Icons.notifications_outlined,
-          ),
-          label: 'Notifikasi',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 2
-                ? Icons.shopping_bag_rounded
-                : Icons.shopping_bag_outlined,
-          ),
-          label: 'Pesanan',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 3 ? Icons.person_rounded : Icons.person_outlined,
-          ),
-          label: 'Pelanggan',
-        ),
-        NavigationDestination(
-          icon: Icon(
-            _selectedIndex == 4
-                ? Icons.description_rounded
-                : Icons.description_outlined,
-          ),
-          label: 'Arsip',
-        ),
+        buildNavDest(Icons.dashboard_rounded, Icons.dashboard_outlined, 'Dashboard'),
+        buildNavDest(Icons.shopping_bag_rounded, Icons.shopping_bag_outlined, 'Pesanan'),
+        buildNavDest(Icons.person_rounded, Icons.person_outlined, 'Pelanggan'),
+        buildNavDest(Icons.inventory_2_rounded, Icons.inventory_2_outlined, 'Produk'),
+        buildNavDest(Icons.description_rounded, Icons.description_outlined, 'Arsip'),
       ];
     }
   }
@@ -305,6 +209,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined, color: Color(0xFF1e40af)),
+                  onPressed: () {
+                    // Navigate to NotifikasiScreen or open as modal
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const NotifikasiScreen()),
+                    );
+                  },
+                ),
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, _) {
                     final userName = authProvider.user?.name ?? 'User';

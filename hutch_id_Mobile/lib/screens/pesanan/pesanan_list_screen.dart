@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../providers/pesanan_provider.dart';
 import '../../widgets/custom_widgets.dart';
 
+import '../../providers/auth_provider.dart';
+
 class PesananListScreen extends StatefulWidget {
   const PesananListScreen({super.key});
 
@@ -26,6 +28,9 @@ class _PesananListScreenState extends State<PesananListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<AuthProvider>(context).user?.role ?? '';
+    final canAddPesanan = userRole != 'operator_gudang';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pesanan'),
@@ -183,13 +188,15 @@ class _PesananListScreenState extends State<PesananListScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/pesanan-form');
-        },
-        backgroundColor: const Color(0xFF1e40af),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      floatingActionButton: canAddPesanan
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/pesanan-form');
+              },
+              backgroundColor: const Color(0xFF1e40af),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/produk_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/custom_widgets.dart';
 import 'package:intl/intl.dart';
 
@@ -24,6 +25,9 @@ class _ProdukListScreenState extends State<ProdukListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<AuthProvider>(context).user?.role ?? '';
+    final canAddProduct = userRole == 'staf_penjualan' || userRole == 'administrator';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Produk'), elevation: 0),
       body: Consumer<ProdukProvider>(
@@ -71,6 +75,19 @@ class _ProdukListScreenState extends State<ProdukListScreen> {
           );
         },
       ),
+      floatingActionButton: canAddProduct
+          ? FloatingActionButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Fitur Tambah Produk dalam pengembangan (Mobile)'),
+                  ),
+                );
+              },
+              backgroundColor: const Color(0xFF1e40af),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 

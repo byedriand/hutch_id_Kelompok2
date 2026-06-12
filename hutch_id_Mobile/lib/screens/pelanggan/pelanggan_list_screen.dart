@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/pelanggan_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/custom_widgets.dart';
 
 class PelangganListScreen extends StatefulWidget {
@@ -37,6 +38,9 @@ class _PelangganListScreenState extends State<PelangganListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final userRole = Provider.of<AuthProvider>(context).user?.role ?? '';
+    final canManage = userRole != 'operator_gudang';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pelanggan'),
@@ -92,24 +96,26 @@ class _PelangganListScreenState extends State<PelangganListScreen>
                           ),
                         ),
                       ),
-                  child: _buildPelangganCard(context, pelanggan),
+                  child: _buildPelangganCard(context, pelanggan, canManage),
                 );
               },
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/pelanggan-form');
-        },
-        backgroundColor: const Color(0xFF1e40af),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      floatingActionButton: canManage
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/pelanggan-form');
+              },
+              backgroundColor: const Color(0xFF1e40af),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 
-  Widget _buildPelangganCard(BuildContext context, dynamic pelanggan) {
+  Widget _buildPelangganCard(BuildContext context, dynamic pelanggan, bool canManage) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -203,89 +209,90 @@ class _PelangganListScreenState extends State<PelangganListScreen>
             Container(height: 1, color: const Color(0xFFe5e7eb)),
             const SizedBox(height: 14),
             // Action buttons: Edit & Delete
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Navigate to edit pelanggan form
-                      Navigator.pushNamed(
-                        context,
-                        '/pelanggan-form',
-                        arguments: pelanggan.id,
-                      );
-                    },
-                    icon: const Icon(Icons.edit_rounded, size: 16),
-                    label: const Text('Edit'),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color(0xFF2563eb),
-                        width: 1.5,
-                      ),
-                      foregroundColor: const Color(0xFF2563eb),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+            if (canManage)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Navigate to edit pelanggan form
+                        Navigator.pushNamed(
+                          context,
+                          '/pelanggan-form',
+                          arguments: pelanggan.id,
+                        );
+                      },
+                      icon: const Icon(Icons.edit_rounded, size: 16),
+                      label: const Text('Edit'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Color(0xFF2563eb),
+                          width: 1.5,
+                        ),
+                        foregroundColor: const Color(0xFF2563eb),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Show delete confirmation dialog
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Hapus Pelanggan?'),
-                            content: Text(
-                              'Anda yakin ingin menghapus pelanggan ${pelanggan.nama}? Tindakan ini tidak dapat dibatalkan.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Batal'),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Show delete confirmation dialog
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Hapus Pelanggan?'),
+                              content: Text(
+                                'Anda yakin ingin menghapus pelanggan ${pelanggan.nama}? Tindakan ini tidak dapat dibatalkan.',
                               ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Pelanggan berhasil dihapus',
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: const Text(
-                                  'Hapus',
-                                  style: TextStyle(color: Colors.red),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Batal'),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    icon: const Icon(Icons.delete_rounded, size: 16),
-                    label: const Text('Hapus'),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color(0xFFef4444),
-                        width: 1.5,
-                      ),
-                      foregroundColor: const Color(0xFFef4444),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Pelanggan berhasil dihapus',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    'Hapus',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.delete_rounded, size: 16),
+                      label: const Text('Hapus'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Color(0xFFef4444),
+                          width: 1.5,
+                        ),
+                        foregroundColor: const Color(0xFFef4444),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),
