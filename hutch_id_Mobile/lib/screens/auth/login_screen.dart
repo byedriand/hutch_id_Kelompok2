@@ -1,10 +1,6 @@
-import 'dart:ui';
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
-import '../main_home_screen.dart';
-import '../../services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,202 +9,152 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+class _RoleData {
+  final String id;
+  final String name;
+  final String email;
+  final IconData icon;
+  final String subtitle;
+
+  _RoleData({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.icon,
+    required this.subtitle,
+  });
+}
+
 class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
-  late TextEditingController emailController;
-  late TextEditingController passwordController;
-  bool _obscurePassword = true;
-  bool _isLoading = false;
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  final _formKey = GlobalKey<FormState>();
+  bool _showPassword = false;
   String? _selectedRole;
-  late AnimationController _logoController;
-  late AnimationController _cardController;
+  late AnimationController _backgroundAnimationController;
+  late AnimationController _cardAnimationController;
 
-  // Demo users dari database
-  final List<User> users = [
-    User(
-      id: '1',
-      nama: 'Staf Penjualan',
-      role: 'staf_penjualan',
-      deskripsi: 'Sales & Penjualan',
-      email: 'staf@hutch.id',
-      password: 'password',
-    ),
-    User(
-      id: '2',
-      nama: 'Operator Gudang',
-      role: 'operator_gudang',
-      deskripsi: 'Manajemen Gudang',
-      email: 'gudang@hutch.id',
-      password: 'password',
-    ),
-    User(
-      id: '3',
-      nama: 'Administrator',
-      role: 'administrator',
-      deskripsi: 'Akses Penuh Admin',
+  final List<_RoleData> roles = [
+    _RoleData(
+      id: 'admin',
+      name: 'Administrator',
       email: 'admin@hutch.id',
-      password: 'password',
+      icon: Icons.admin_panel_settings_rounded,
+      subtitle: 'AKSES PENUH',
+    ),
+    _RoleData(
+      id: 'staff',
+      name: 'Staf Penjualan',
+      email: 'staf@hutch.id',
+      icon: Icons.person_outline_rounded,
+      subtitle: 'SALES',
+    ),
+    _RoleData(
+      id: 'warehouse',
+      name: 'Operator Gudang',
+      email: 'gudang@hutch.id',
+      icon: Icons.warehouse_rounded,
+      subtitle: 'WAREHOUSE',
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    emailController = TextEditingController();
-    passwordController = TextEditingController();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
 
-    _selectedRole = 'Staf Penjualan';
-    emailController.text = users[0].email; // staf@hutch.id
-    passwordController.text = users[0].password; // password
-
-    _logoController = AnimationController(
-      duration: const Duration(seconds: 3),
+    _backgroundAnimationController = AnimationController(
+      duration: const Duration(seconds: 8),
       vsync: this,
-    )..repeat(reverse: true);
+    )..repeat();
 
-    _cardController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+    _cardAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
-    )..forward();
+    );
+    _cardAnimationController.forward();
   }
 
   @override
   void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    _logoController.dispose();
-    _cardController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _backgroundAnimationController.dispose();
+    _cardAnimationController.dispose();
     super.dispose();
   }
 
-  Future<void> login() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text;
+  void _selectRole(String roleId) {
+    setState(() {
+      _selectedRole = roleId;
+      final role = roles.firstWhere((r) => r.id == roleId);
+      _emailController.text = role.email;
+      _passwordController.clear();
+    });
+  }
 
-    if (email.isEmpty || password.isEmpty) {
+  void _handleLogin(BuildContext context) async {
+    if (_selectedRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email dan Password harus diisi'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.redAccent,
-        ),
+        const SnackBar(content: Text('Pilih role terlebih dahulu')),
       );
       return;
     }
 
-    setState(() => _isLoading = true);
+    if (_formKey.currentState!.validate()) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.login(
+        _emailController.text,
+        _passwordController.text,
+      );
 
-    User? user;
+      if (success && context.mounted) {
+        // Get the role display name
+        final selectedRole = roles.firstWhere((r) => r.id == _selectedRole);
+        final roleDisplay = selectedRole.name;
 
-    try {
-      user = await ApiService.login(email, password);
-    } catch (_) {
-      user = null;
-    }
-
-    if (user == null) {
-      try {
-        final matched = users.firstWhere(
-          (u) => u.email == email && u.password == password,
+        // Show success notification
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Selamat datang, $roleDisplay! Login berhasil.'),
+            backgroundColor: Colors.green[600],
+            duration: const Duration(seconds: 2),
+            action: SnackBarAction(
+              label: 'Tutup',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
         );
-        user = matched;
-      } catch (_) {
-        user = null;
+
+        // Navigate to home after a short delay
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (context.mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        }
       }
-    }
-
-    setState(() => _isLoading = false);
-
-    if (user != null) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Selamat datang, ${user.nama}!'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFF10B981),
-        ),
-      );
-
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              MainHomeScreen(user: user!),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position:
-                    Tween<Offset>(
-                      begin: const Offset(0.0, 0.1),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                child: child,
-              ),
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 600),
-        ),
-      );
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email atau Password salah'),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isLargeScreen = size.width > 1000;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0a2463),
       body: Stack(
         children: [
-          // Animated gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0a2463),
-                  Color(0xFF247ba0),
-                  Color(0xFF1b4965),
-                  Color(0xFF0f3460),
-                ],
-                stops: [0.0, 0.25, 0.5, 0.75],
-              ),
-            ),
-          ),
+          // Animated Background
+          _buildAnimatedBackground(),
 
-          // Animated background shapes
-          _buildAnimatedShapes(),
-
-          // Main content
+          // Main Content
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildAnimatedLogo(),
-                  const SizedBox(height: 30),
-                  _buildBrandText(),
-                  const SizedBox(height: 40),
-                  _buildLoginCard(),
-                  const SizedBox(height: 20),
-                ],
-              ),
+            child: Center(
+              child: isLargeScreen
+                  ? _buildDesktopLayout()
+                  : _buildMobileLayout(),
             ),
           ),
         ],
@@ -216,129 +162,193 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ─── ANIMATED BACKGROUND SHAPES ────────────────────────────────────────────
-  Widget _buildAnimatedShapes() {
-    return Stack(
-      children: [
-        // Shape 1 - Top Left
-        Positioned(
-          top: -100,
-          left: -80,
-          child: _buildAnimatedShape(
-            size: 300,
-            color: const Color(0xFF2d7dd2),
-            delay: 0,
-          ),
-        ),
-        // Shape 2 - Bottom Right
-        Positioned(
-          bottom: -100,
-          right: -80,
-          child: _buildAnimatedShape(
-            size: 350,
-            color: const Color(0xFF00d4ff),
-            delay: 2,
-          ),
-        ),
-        // Shape 3 - Center Left
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.4,
-          left: -50,
-          child: _buildAnimatedShape(
-            size: 200,
-            color: const Color(0xFF1e88e5),
-            delay: 4,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAnimatedShape({
-    required double size,
-    required Color color,
-    required int delay,
-  }) {
+  Widget _buildAnimatedBackground() {
     return Container(
-      width: size,
-      height: size,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.08),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 100,
-            spreadRadius: 50,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue[900]!,
+            Colors.blue[800]!,
+            Colors.blue[700]!,
+            Colors.blue[900]!,
+          ],
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Animated Floating Shapes
+          Positioned(
+            top: -150,
+            left: -100,
+            child: AnimatedBuilder(
+              animation: _backgroundAnimationController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(
+                    30 * (_backgroundAnimationController.value - 0.5).abs() * 2,
+                    -50 *
+                        (_backgroundAnimationController.value - 0.5).abs() *
+                        2,
+                  ),
+                  child: Container(
+                    width: 400,
+                    height: 400,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.blue[400]!.withValues(alpha: 0.08),
+                    ),
+                    child: BackdropFilter(
+                      filter: const ColorFilter.mode(
+                        Colors.transparent,
+                        BlendMode.multiply,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Positioned(
+            bottom: -100,
+            right: -50,
+            child: AnimatedBuilder(
+              animation: _backgroundAnimationController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(
+                    -30 * _backgroundAnimationController.value * 2,
+                    30 * _backgroundAnimationController.value * 2,
+                  ),
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.cyan.withValues(alpha: 0.08),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ─── ANIMATED LOGO ─────────────────────────────────────────────────────────
-  Widget _buildAnimatedLogo() {
-    return ScaleTransition(
-      scale: Tween(begin: 0.8, end: 1.0).animate(
-        CurvedAnimation(parent: _cardController, curve: Curves.easeOutBack),
-      ),
-      child: Container(
-        width: 100,
-        height: 100,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF2575d7), Color(0xFF1e88e5)],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2575d7).withValues(alpha: 0.3),
-              blurRadius: 30,
-              spreadRadius: 5,
-            ),
-          ],
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 2,
-          ),
-        ),
-        child: Stack(
+  Widget _buildDesktopLayout() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Shimmer effect
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.15),
-                      Colors.white.withValues(alpha: 0.0),
+            // Left Side - Blue Section
+            Expanded(
+              flex: 45,
+              child: FadeTransition(
+                opacity: Tween<double>(begin: 0, end: 1).animate(
+                  CurvedAnimation(
+                    parent: _cardAnimationController,
+                    curve: const Interval(0, 0.5),
+                  ),
+                ),
+                child: SlideTransition(
+                  position:
+                      Tween<Offset>(
+                        begin: const Offset(-0.3, 0),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _cardAnimationController,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Logo Section
+                      _buildLogoSection(),
+                      const SizedBox(height: 48),
+                      // Divider
+                      Container(
+                        height: 2,
+                        width: 60,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0),
+                              Colors.white,
+                              Colors.white.withValues(alpha: 0),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      // Role Selection
+                      Text(
+                        'Pilih Role Anda',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ..._buildRoleCards(),
                     ],
                   ),
                 ),
               ),
             ),
-            // Logo icon with animation
-            Center(
-              child: AnimatedBuilder(
-                animation: _logoController,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, sin(_logoController.value * 3.14) * 5),
-                    child: Transform.rotate(
-                      angle: _logoController.value * 0.5,
-                      child: const Icon(
-                        Icons.shopping_bag_rounded,
-                        size: 50,
-                        color: Colors.white,
+            const SizedBox(width: 50),
+            // Right Side - White Form Section
+            Expanded(
+              flex: 55,
+              child: FadeTransition(
+                opacity: Tween<double>(begin: 0, end: 1).animate(
+                  CurvedAnimation(
+                    parent: _cardAnimationController,
+                    curve: const Interval(0.3, 1),
+                  ),
+                ),
+                child: SlideTransition(
+                  position:
+                      Tween<Offset>(
+                        begin: const Offset(0.3, 0),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _cardAnimationController,
+                          curve: Curves.easeOutCubic,
+                        ),
                       ),
+                  child: Container(
+                    padding: const EdgeInsets.all(48),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 40,
+                          offset: const Offset(0, 20),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 60,
+                          offset: const Offset(0, 40),
+                        ),
+                      ],
                     ),
-                  );
-                },
+                    child: _buildLoginForm(),
+                  ),
+                ),
               ),
             ),
           ],
@@ -347,377 +357,568 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ─── BRAND TEXT ────────────────────────────────────────────────────────────
-  Widget _buildBrandText() {
-    return FadeTransition(
-      opacity: _cardController,
+  Widget _buildMobileLayout() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Logo Section
+            FadeTransition(
+              opacity: Tween<double>(begin: 0, end: 1).animate(
+                CurvedAnimation(
+                  parent: _cardAnimationController,
+                  curve: Curves.easeInOut,
+                ),
+              ),
+              child: _buildLogoSection(),
+            ),
+            const SizedBox(height: 32),
+            // Role Selection Label
+            Text(
+              'Pilih Role Anda',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Role Cards
+            ..._buildRoleCards(),
+            const SizedBox(height: 32),
+            // Login Form Card
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: _buildLoginForm(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoSection() {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.15),
+            Colors.white.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          const Text(
-            'hutch.id',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              letterSpacing: 2,
+          // Logo Image
+          Container(
+            width: 100,
+            height: 100,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.2),
+                  Colors.white.withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue[400]!.withValues(alpha: 0.3),
+                  blurRadius: 25,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Image.asset(
+              'assets/images/hutch-logo.png',
+              fit: BoxFit.contain,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
+          // Company Name
           Text(
-            'BAG MANUFACTURING & IN-HOUSE BRAND',
+            'HUTCH PRESTIGE',
             style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
               letterSpacing: 1.2,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          // Tagline
           Text(
-            'Order Flow Management System',
+            'Bag Manufacturing & In-House Brand',
             style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.9),
+              letterSpacing: 0.3,
             ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          // System Name
+          Text(
+            'Sistem Manajemen Pesanan',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: Colors.white.withValues(alpha: 0.75),
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  // ─── LOGIN CARD ────────────────────────────────────────────────────────────
-  Widget _buildLoginCard() {
-    return SlideTransition(
-      position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-          .animate(
-            CurvedAnimation(
-              parent: _cardController,
-              curve: Curves.easeOutCubic,
+  List<Widget> _buildRoleCards() {
+    return roles.asMap().entries.map((entry) {
+      final index = entry.key;
+      final role = entry.value;
+      final isSelected = _selectedRole == role.id;
+
+      return ScaleTransition(
+        scale: Tween<double>(begin: 0.8, end: 1).animate(
+          CurvedAnimation(
+            parent: _cardAnimationController,
+            curve: Interval(
+              0.1 + (index * 0.1),
+              0.5 + (index * 0.1),
+              curve: Curves.elasticOut,
             ),
           ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 40,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: GestureDetector(
+          onTap: () => _selectRole(role.id),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.3),
+                        Colors.white.withValues(alpha: 0.15),
+                      ],
+                    )
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.12),
+                        Colors.white.withValues(alpha: 0.06),
+                      ],
+                    ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.25),
+                width: isSelected ? 2 : 1.5,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: Colors.blue[600]!.withValues(alpha: 0.4),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ]
+                  : [],
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+              child: Row(
                 children: [
-                  const Text(
-                    'Masuk Portal',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
+                  // Icon
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.25)
+                          : Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(role.icon, size: 28, color: Colors.white),
+                  ),
+                  const SizedBox(width: 16),
+                  // Text
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          role.name,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          role.subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Pilih akun atau masukkan kredensial Anda',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.6),
+                  // Check Icon
+                  if (isSelected)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  _buildRoleSelection(),
-
-                  const SizedBox(height: 24),
-                  _buildEmailField(),
-                  const SizedBox(height: 14),
-                  _buildPasswordField(),
-
-                  const SizedBox(height: 24),
-                  _buildLoginButton(),
                 ],
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    }).toList();
   }
 
-  // ─── ROLE SELECTION CARDS ──────────────────────────────────────────────────
-  Widget _buildRoleSelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Pilih Akun',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.7),
-            letterSpacing: 0.5,
+  Widget _buildLoginForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Text(
+            'MASUK',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Colors.blue[900],
+              letterSpacing: 0.5,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        Column(
-          children: users.map((user) {
-            final isSelected = _selectedRole == user.role;
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedRole = user.role;
-                  emailController.text = user.email;
-                  passwordController.text = user.password;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? const LinearGradient(
-                          colors: [Color(0xFF2575d7), Color(0xFF1e88e5)],
-                        )
-                      : null,
-                  color: isSelected
-                      ? null
-                      : Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isSelected
-                        ? Colors.white.withValues(alpha: 0.3)
-                        : Colors.white.withValues(alpha: 0.1),
-                    width: 1.5,
+          const SizedBox(height: 8),
+          Text(
+            _selectedRole != null
+                ? 'Masukkan password Anda untuk melanjutkan'
+                : 'Pilih role terlebih dahulu untuk login',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          // Error Message
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              if (authProvider.errorMessage != null) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.red[300]!, width: 1.5),
                   ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF2575d7,
-                            ).withValues(alpha: 0.3),
-                            blurRadius: 15,
-                            spreadRadius: 2,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        color: Colors.red[700],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          authProvider.errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red[700],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            height: 1.3,
                           ),
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.15),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Icon(
-                        user.role == 'Administrator'
-                            ? Icons.admin_panel_settings_rounded
-                            : user.role == 'Staf Penjualan'
-                            ? Icons.trending_up_rounded
-                            : Icons.warehouse_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.nama,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            user.deskripsi,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white.withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isSelected)
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                        child: const Icon(
-                          Icons.check,
-                          color: Color(0xFF2575d7),
-                          size: 14,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  // ─── EMAIL FIELD ───────────────────────────────────────────────────────────
-  Widget _buildEmailField() {
-    return _buildGlassTextField(
-      controller: emailController,
-      label: 'Alamat Email',
-      hint: 'Masukkan email',
-      icon: Icons.email_outlined,
-      keyboardType: TextInputType.emailAddress,
-    );
-  }
-
-  // ─── PASSWORD FIELD ────────────────────────────────────────────────────────
-  Widget _buildPasswordField() {
-    return _buildGlassTextField(
-      controller: passwordController,
-      label: 'Kata Sandi',
-      hint: 'Masukkan password',
-      icon: Icons.lock_outlined,
-      obscureText: _obscurePassword,
-      onToggleObscure: () =>
-          setState(() => _obscurePassword = !_obscurePassword),
-    );
-  }
-
-  Widget _buildGlassTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    bool obscureText = false,
-    VoidCallback? onToggleObscure,
-    TextInputType? keyboardType,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        style: const TextStyle(
-          color: Color(0xFF0a2463),
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(
-            color: const Color(0xFF0a2463).withValues(alpha: 0.6),
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
-          hintText: hint,
-          hintStyle: TextStyle(
-            color: const Color(0xFF0a2463).withValues(alpha: 0.4),
-            fontSize: 12,
-          ),
-          prefixIcon: Icon(
-            icon,
-            color: const Color(0xFF0a2463).withValues(alpha: 0.5),
-            size: 18,
-          ),
-          suffixIcon: GestureDetector(
-                  onTap: onToggleObscure,
-                  child: Icon(
-                    obscureText
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    color: const Color(0xFF0a2463).withValues(alpha: 0.5),
-                    size: 18,
+          // Email Field (Auto-filled based on selected role)
+          if (_selectedRole != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'EMAIL',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.blue[900],
+                    letterSpacing: 0.8,
                   ),
                 ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
-        ),
-      ),
-    );
-  }
-
-  // ─── LOGIN BUTTON ──────────────────────────────────────────────────────────
-  Widget _buildLoginButton() {
-    return Container(
-      width: double.infinity,
-      height: 52,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2575d7), Color(0xFF1e88e5)],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2575d7).withValues(alpha: 0.4),
-            blurRadius: 20,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _isLoading ? null : login,
-          borderRadius: BorderRadius.circular(14),
-          child: Center(
-            child: _isLoading
-                ? SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      strokeWidth: 2.5,
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.blue[200]!, width: 1.5),
+                  ),
+                  child: TextFormField(
+                    controller: _emailController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        color: Colors.blue[600],
+                        size: 20,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 14,
+                      ),
                     ),
-                  )
-                : const Text(
-                    'Masuk',
                     style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blue[900],
                     ),
                   ),
-          ),
-        ),
+                ),
+              ],
+            ),
+          if (_selectedRole != null) const SizedBox(height: 22),
+          // Password Field
+          if (_selectedRole != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'PASSWORD',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.blue[900],
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: !_showPassword,
+                  decoration: InputDecoration(
+                    hintText: 'Masukkan password Anda',
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                    prefixIcon: Icon(
+                      Icons.lock_outline_rounded,
+                      color: Colors.blue[600],
+                      size: 20,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showPassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: Colors.blue[600],
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _showPassword = !_showPassword;
+                        });
+                      },
+                      splashRadius: 20,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Colors.blue[200]!,
+                        width: 1.5,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Colors.blue[200]!,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Colors.blue[600]!,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.blue[50],
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.blue[900],
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Password harus diisi';
+                    }
+                    if (value.length < 6) {
+                      return 'Password minimal 6 karakter';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          if (_selectedRole != null) const SizedBox(height: 32),
+          // Login Button
+          if (_selectedRole != null)
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, _) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: authProvider.isLoading
+                        ? null
+                        : () => _handleLogin(context),
+                    icon: authProvider.isLoading
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : const Icon(Icons.login_rounded, size: 20),
+                    label: Text(
+                      authProvider.isLoading
+                          ? 'Sedang masuk...'
+                          : 'MASUK SEKARANG',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey[400],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 4,
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (_selectedRole == null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.blue[200]!, width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: Colors.blue[600],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Silahkan pilih role Anda di sebelah kiri terlebih dahulu',
+                      style: TextStyle(
+                        color: Colors.blue[600],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -1,29 +1,16 @@
-/// AppConfig - Environment Configuration
-/// Switch between development and production by changing [_env].
 class AppConfig {
-  // ── Change this to Env.production before deploying ──────────────────────
-  static const Env _env = Env.development;
-  // ────────────────────────────────────────────────────────────────────────
+  // API Configuration
+  static const String apiBaseUrl =
+      'http://127.0.0.1:8082/api'; // Chrome / Localhost - Website Backend
+  // Untuk Android emulator: 'http://10.0.2.2:8082/api'
+  // Untuk physical device: 'http://192.168.1.X:8082/api'
 
-  static String get baseUrl {
-    switch (_env) {
-      case Env.production:
-        return 'https://api.hutchprestige.com/api';
-      case Env.staging:
-        return 'https://staging.hutchprestige.com/api';
-      case Env.development:
-        // 10.0.2.2 for Android emulator, localhost for Web/Windows
-        return 'http://localhost:8000/api';
-    }
-  }
+  // App Information
+  static const String appName = 'Hutch ID Mobile';
+  static const String appVersion = '1.0.0';
 
-  static bool get isProduction => _env == Env.production;
-  static bool get isDebug => _env == Env.development;
-
-  static Duration get connectTimeout =>
-      Duration(seconds: isProduction ? 10 : 30);
-  static Duration get receiveTimeout =>
-      Duration(seconds: isProduction ? 15 : 60);
+  // Storage Keys
+  static const String tokenKey = 'auth_token';
+  static const String userKey = 'user_data';
+  static const String isLoggedInKey = 'is_logged_in';
 }
-
-enum Env { development, staging, production }

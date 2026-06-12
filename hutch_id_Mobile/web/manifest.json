@@ -1,6 +1,6 @@
 {
-    "name": "hutchid2",
-    "short_name": "hutchid2",
+    "name": "hutch_id_mobile_orderflow",
+    "short_name": "hutch_id_mobile_orderflow",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -3,8 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  printing
-  share_plus
+  file_selector_windows
   url_launcher_windows
 )
 

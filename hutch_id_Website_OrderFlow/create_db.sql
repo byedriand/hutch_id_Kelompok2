@@ -1,1 +1,0 @@
-CREATE DATABASE IF NOT EXISTS hutch_id_orderflow;
