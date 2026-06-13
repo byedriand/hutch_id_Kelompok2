@@ -8,6 +8,9 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProdukController;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +24,34 @@ use App\Http\Controllers\ProdukController;
 */
 
 Auth::routes();
+
+// Mobile Sync Route - Accept token from mobile and sync session
+Route::get('/auth/mobile-sync', function (Request $request) {
+    $token = $request->query('token');
+    
+    if (!$token) {
+        return redirect()->route('login')->with('error', 'Token tidak ditemukan');
+    }
+
+    try {
+        // Find user by Sanctum token
+        $personalAccessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+        
+        if (!$personalAccessToken) {
+            return redirect()->route('login')->with('error', 'Token tidak valid');
+        }
+
+        $user = $personalAccessToken->tokenable;
+        
+        // Log the user in using web session
+        Auth::login($user, remember: true);
+        
+        return redirect()->route('dashboard')->with('success', 'Sinkronisasi berhasil! Anda sudah login');
+    } catch (\Exception $e) {
+        \Log::error('Mobile sync error: ' . $e->getMessage());
+        return redirect()->route('login')->with('error', 'Terjadi kesalahan saat sinkronisasi');
+    }
+});
 
 Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
