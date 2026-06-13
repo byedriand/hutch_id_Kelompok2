@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hutch.id — Diagram Teknologi & Arsitektur</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:   #0F2744;
+  --accent: #2D7DD2;
+  --cyan:   #0891B2;
+  --green:  #059669;
+  --yellow: #D97706;
+  --orange: #EA580C;
+  --red:    #DC2626;
+  --purple: #7C3AED;
+  --pink:   #DB2777;
+  --gray:   #64748B;
+  --bg:     #F0F4FA;
+  --white:  #FFFFFF;
+  --border: #D1DCE8;
+  --text:   #0F2744;
+  --text2:  #475569;
+  --text3:  #94A3B8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+
+.topnav{position:sticky;top:0;z-index:100;background:var(--navy);border-bottom:1px solid rgba(255,255,255,.1);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px}
+.topnav-brand{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.topnav-brand span{color:#60A5FA}
+.topnav-tabs{display:flex;gap:4px}
+.tab-btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;background:rgba(255,255,255,.09);color:rgba(255,255,255,.55);transition:all .2s}
+.tab-btn:hover{background:rgba(255,255,255,.16);color:#fff}
+.tab-btn.active{background:var(--accent);color:#fff}
+.topnav-right{font-size:11px;color:rgba(255,255,255,.35);font-family:'Fira Code',monospace}
+
+.page{display:none;min-height:100vh;padding:32px 28px 60px;animation:fadeUp .3s ease both}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.page-title{font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--navy);margin-bottom:6px}
+.page-title span{color:var(--accent)}
+.page-sub{font-size:13px;color:var(--text2);line-height:1.7;max-width:640px;margin-bottom:36px}
+
+.section{margin-bottom:44px}
+.section-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-title{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:16px}
+
+/* STACK LAYERS */
+.stack-layers{display:flex;flex-direction:column;gap:6px;max-width:880px;margin:0 auto}
+.stack-layer{background:var(--white);border-radius:12px;padding:15px 20px;display:flex;align-items:center;gap:14px;border:1.5px solid var(--border);transition:all .2s;box-shadow:0 1px 3px rgba(15,39,68,.04)}
+.stack-layer:hover{box-shadow:0 4px 16px rgba(45,125,210,.09);transform:translateY(-1px)}
+.sl-label{width:130px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;flex-shrink:0}
+.sl-items{display:flex;flex-wrap:wrap;gap:7px;flex:1}
+.sl-chip{padding:4px 11px;border-radius:6px;font-size:11.5px;font-weight:600;border:1.5px solid;white-space:nowrap}
+.sl-note{font-size:10px;color:var(--text3);margin-left:auto;white-space:nowrap;font-family:'Fira Code',monospace}
+
+/* TECH CARDS */
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(198px,1fr));gap:12px}
+.tech-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:17px;transition:all .2s;box-shadow:0 1px 3px rgba(15,39,68,.04)}
+.tech-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 24px rgba(45,125,210,.11)}
+.tech-icon{font-size:26px;margin-bottom:9px;display:block}
+.tech-name{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px}
+.tech-version{font-size:11px;font-family:'Fira Code',monospace;color:var(--accent);margin-bottom:5px}
+.tech-role{font-size:11px;color:var(--text2);line-height:1.55}
+.tech-badge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:4px;margin-top:7px;text-transform:uppercase;letter-spacing:.5px}
+.tb-fe{background:#E0F2FE;color:#0369A1}
+.tb-be{background:#EDE9FE;color:#5B21B6}
+.tb-db{background:#D1FAE5;color:#065F46}
+.tb-infra{background:#FFEDD5;color:#C2410C}
+.tb-ext{background:#FEF3C7;color:#92400E}
+.tb-mobile{background:#FCE7F3;color:#9D174D}
+
+/* API TABLE */
+.card-wrap{background:var(--white);border:1.5px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(15,39,68,.05)}
+.conn-table{width:100%;border-collapse:collapse}
+.conn-table th{background:#F8FAFC;padding:9px 14px;font-size:11px;font-weight:700;text-align:left;color:var(--gray);letter-spacing:.5px;text-transform:uppercase;border-bottom:1.5px solid var(--border)}
+.conn-table td{padding:10px 14px;font-size:12px;border-bottom:1px solid #F1F5F9;color:var(--text);vertical-align:middle}
+.conn-table tr:last-child td{border-bottom:none}
+.conn-table tr:hover td{background:#F8FAFC}
+.method{font-family:'Fira Code',monospace;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:4px}
+.m-get{background:#D1FAE5;color:#065F46}
+.m-post{background:#DBEAFE;color:#1E40AF}
+.endpoint{font-family:'Fira Code',monospace;font-size:11.5px;color:var(--accent)}
+
+/* ARCH */
+.arch-wrap{background:var(--white);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(15,39,68,.06)}
+.arch-canvas{padding:22px;overflow-x:auto}
+
+.legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding:12px 16px;background:#F8FAFC;border-radius:10px;border:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2)}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* TIER */
+.tier-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;max-width:820px}
+.tier-box{padding:22px 20px}
+.tier-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+.tier-stack{background:#F8FAFC;border-radius:8px;padding:10px 13px;font-size:10.5px;color:var(--text2);line-height:1.85;margin-top:10px;border:1px solid var(--border)}
+
+/* DEPLOY */
+.deploy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(218px,1fr));gap:12px}
+.deploy-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:17px;box-shadow:0 1px 3px rgba(15,39,68,.04);transition:all .2s}
+.deploy-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(45,125,210,.09)}
+.deploy-icon{font-size:22px;margin-bottom:9px}
+.deploy-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.deploy-desc{font-size:11px;color:var(--text2);line-height:1.6}
+.deploy-ref{margin-top:9px;font-family:'Fira Code',monospace;font-size:10px;color:var(--text3)}
+
+@media(max-width:768px){
+  .topnav{padding:0 14px}
+  .page{padding:20px 14px 50px}
+  .tech-grid{grid-template-columns:1fr 1fr}
+  .topnav-right,.sl-note{display:none}
+  .tab-btn{padding:6px 10px;font-size:11px}
+  .tier-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-brand">hutch<span>.id</span></div>
+  <div class="topnav-tabs">
+    <button class="tab-btn active" onclick="show('tech')">🔧 Diagram Teknologi</button>
+    <button class="tab-btn" onclick="show('arch')">🏗 Diagram Arsitektur</button>
+  </div>
+  <div class="topnav-right">SRS Kelompok 2 · v1.2 · April 2026</div>
+</nav>
+
+<!-- ===================== TEKNOLOGI ===================== -->
+<div id="page-tech" class="page active">
+  <div class="page-title">Diagram <span>Teknologi</span></div>
+  <div class="page-sub">Stack teknologi Modul Manajemen Pesanan hutch.id — mobile, frontend, backend, database, infrastruktur, dan layanan eksternal. Sesuai BAB 2.4 Lingkungan Operasi dan BAB 3.3 SRS.</div>
+
+  <div class="section">
+    <div class="section-label">Lapisan Teknologi</div>
+    <div class="stack-layers">
+      <div class="stack-layer" style="border-left:4px solid #DB2777">
+        <div class="sl-label" style="color:#DB2777">📱 Mobile</div>
+        <div class="sl-items">
+          <span class="sl-chip" style="background:#FCE7F3;border-color:#F9A8D4;color:#9D174D">Flutter 3.x</span>
+          <span class="sl-chip" style="background:#FCE7F3;border-color:#F9A8D4;color:#9D174D">Dart 3.0+</span>
+          <span class="sl-chip" style="background:#FCE7F3;border-color:#F9A8D4;color:#9D174D">Material Design 3</span>
+          <span class="sl-chip" style="background:#FCE7F3;border-color:#F9A8D4;color:#9D174D">Google Fonts</span>
+        </div>
+        <div class="sl-note">Android · iOS</div>
+      </div>
+      <div class="stack-layer" style="border-left:4px solid #0891B2">
+        <div class="sl-label" style="color:#0891B2">🖥 Frontend Web</div>
+        <div class="sl-items">
+          <span class="sl-chip" style="background:#E0F2FE;border-color:#BAE6FD;color:#0369A1">HTML5</span>
+          <span class="sl-chip" style="background:#E0F2FE;border-color:#BAE6FD;color:#0369A1">CSS3</span>
+          <span class="sl-chip" style="background:#E0F2FE;border-color:#BAE6FD;color:#0369A1">JavaScript ES6+</span>
+          <span class="sl-chip" style="background:#E0F2FE;border-color:#BAE6FD;color:#0369A1">Blade (Laravel)</span>
+          <span class="sl-chip" style="background:#E0F2FE;border-color:#BAE6FD;color:#0369A1">Responsive 360px+</span>
+        </div>
+        <div class="sl-note">Chrome · Firefox · Edge · Safari</div>
+      </div>
+      <div class="stack-layer" style="border-left:4px solid #7C3AED">
+        <div class="sl-label" style="color:#7C3AED">⚙ Backend</div>
+        <div class="sl-items">
+          <span class="sl-chip" style="background:#EDE9FE;border-color:#C4B5FD;color:#5B21B6">PHP 8.1+</span>
+          <span class="sl-chip" style="background:#EDE9FE;border-color:#C4B5FD;color:#5B21B6">Laravel 10+</span>
+          <span class="sl-chip" style="background:#EDE9FE;border-color:#C4B5FD;color:#5B21B6">RESTful API</span>
+          <span class="sl-chip" style="background:#EDE9FE;border-color:#C4B5FD;color:#5B21B6">Eloquent ORM</span>
+          <span class="sl-chip" style="background:#EDE9FE;border-color:#C4B5FD;color:#5B21B6">Session Auth</span>
+          <span class="sl-chip" style="background:#EDE9FE;border-color:#C4B5FD;color:#5B21B6">Role Middleware</span>
+        </div>
+        <div class="sl-note">MVC · REQ-NFR-PO</div>
+      </div>
+      <div class="stack-layer" style="border-left:4px solid #EA580C">
+        <div class="sl-label" style="color:#EA580C">📄 PDF Engine</div>
+        <div class="sl-items">
+          <span class="sl-chip" style="background:#FFEDD5;border-color:#FDBA74;color:#C2410C">DomPDF (Laravel)</span>
+          <span class="sl-chip" style="background:#FFEDD5;border-color:#FDBA74;color:#C2410C">Blade Template</span>
+          <span class="sl-chip" style="background:#FFEDD5;border-color:#FDBA74;color:#C2410C">Signed URL 24 jam</span>
+        </div>
+        <div class="sl-note">REQ-PO-019 s/d 022</div>
+      </div>
+      <div class="stack-layer" style="border-left:4px solid #059669">
+        <div class="sl-label" style="color:#059669">🗄 Database</div>
+        <div class="sl-items">
+          <span class="sl-chip" style="background:#D1FAE5;border-color:#6EE7B7;color:#065F46">MySQL 8.0+</span>
+          <span class="sl-chip" style="background:#D1FAE5;border-color:#6EE7B7;color:#065F46">InnoDB Engine</span>
+          <span class="sl-chip" style="background:#D1FAE5;border-color:#6EE7B7;color:#065F46">Laravel Migration</span>
+          <span class="sl-chip" style="background:#D1FAE5;border-color:#6EE7B7;color:#065F46">FK Constraint</span>
+        </div>
+        <div class="sl-note">BAB 6 SRS · 5 Tabel</div>
+      </div>
+      <div class="stack-layer" style="border-left:4px solid #D97706">
+        <div class="sl-label" style="color:#D97706">🔗 Eksternal</div>
+        <div class="sl-items">
+          <span class="sl-chip" style="background:#FEF3C7;border-color:#FCD34D;color:#92400E">SMTP Email</span>
+          <span class="sl-chip" style="background:#FEF3C7;border-color:#FCD34D;color:#92400E">Modul Inventori API</span>
+          <span class="sl-chip" style="background:#FEF3C7;border-color:#FCD34D;color:#92400E">Modul HPP API</span>
+        </div>
+        <div class="sl-note">BAB 3.3 · API-01~06</div>
+      </div>
+      <div class="stack-layer" style="border-left:4px solid #2D7DD2">
+        <div class="sl-label" style="color:#2D7DD2">☁ Infrastruktur</div>
+        <div class="sl-items">
+          <span class="sl-chip" style="background:#DBEAFE;border-color:#93C5FD;color:#1E40AF">VPS / Cloud</span>
+          <span class="sl-chip" style="background:#DBEAFE;border-color:#93C5FD;color:#1E40AF">Nginx Web Server</span>
+          <span class="sl-chip" style="background:#DBEAFE;border-color:#93C5FD;color:#1E40AF">HTTPS · TLS 1.2+</span>
+          <span class="sl-chip" style="background:#DBEAFE;border-color:#93C5FD;color:#1E40AF">Docker (opsional)</span>
+        </div>
+        <div class="sl-note">BAB 2.4 · REQ-NFR-PO-009</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Detail Komponen</div>
+    <div class="tech-grid">
+      <div class="tech-card"><span class="tech-icon">🦋</span><div class="tech-name">Flutter</div><div class="tech-version">v3.x + Dart 3.0+</div><div class="tech-role">UI Mobile cross-platform Android & iOS. Material 3, Plus Jakarta Sans</div><span class="tech-badge tb-mobile">Mobile</span></div>
+      <div class="tech-card"><span class="tech-icon">🐘</span><div class="tech-name">PHP + Laravel</div><div class="tech-version">PHP 8.1+ · Laravel 10+</div><div class="tech-role">Backend MVC. Routing, Middleware auth, Eloquent ORM, Artisan CLI</div><span class="tech-badge tb-be">Backend</span></div>
+      <div class="tech-card"><span class="tech-icon">🌐</span><div class="tech-name">Blade + JavaScript</div><div class="tech-version">Laravel Blade · ES6+</div><div class="tech-role">Template engine web. Responsive 360px–1920px. Validasi sisi klien</div><span class="tech-badge tb-fe">Frontend</span></div>
+      <div class="tech-card"><span class="tech-icon">🐬</span><div class="tech-name">MySQL</div><div class="tech-version">MySQL 8.0+</div><div class="tech-role">RDBMS utama. 5 tabel: users, customers, purchase_orders, po_items, history</div><span class="tech-badge tb-db">Database</span></div>
+      <div class="tech-card"><span class="tech-icon">📨</span><div class="tech-name">SMTP Email</div><div class="tech-version">Laravel Mail · Mailtrap/SES</div><div class="tech-role">Notifikasi PO baru ke Pemilik UMKM. Retry 3× jika gagal. REQ-PO-025</div><span class="tech-badge tb-ext">Eksternal</span></div>
+      <div class="tech-card"><span class="tech-icon">📄</span><div class="tech-name">DomPDF</div><div class="tech-version">barryvdh/laravel-dompdf</div><div class="tech-role">Generate PDF dokumen PO. Signed URL 24 jam. REQ-PO-019–022</div><span class="tech-badge tb-be">PDF Engine</span></div>
+      <div class="tech-card"><span class="tech-icon">🔗</span><div class="tech-name">REST API Internal</div><div class="tech-version">JSON · HTTP/1.1</div><div class="tech-role">Integrasi ke Modul Inventori (stok) dan Modul HPP (harga produk)</div><span class="tech-badge tb-ext">API</span></div>
+      <div class="tech-card"><span class="tech-icon">🔒</span><div class="tech-name">Autentikasi</div><div class="tech-version">Session-based · bcrypt</div><div class="tech-role">Login sesi cookie. Hash bcrypt/Argon2. Timeout 8 jam. REQ-NFR-PO-010</div><span class="tech-badge tb-be">Security</span></div>
+      <div class="tech-card"><span class="tech-icon">🌿</span><div class="tech-name">Nginx</div><div class="tech-version">Nginx 1.24+</div><div class="tech-role">Web server reverse proxy. HTTPS termination. Static file serving. TLS 1.2+</div><span class="tech-badge tb-infra">Infra</span></div>
+      <div class="tech-card"><span class="tech-icon">🐳</span><div class="tech-name">Docker</div><div class="tech-version">Docker Compose (opsional)</div><div class="tech-role">Container php-fpm, nginx, mysql. Konsistensi environment dev & staging</div><span class="tech-badge tb-infra">Infra</span></div>
+      <div class="tech-card"><span class="tech-icon">🗺</span><div class="tech-name">Eloquent ORM</div><div class="tech-version">Laravel Eloquent</div><div class="tech-role">Model-based DB access. Migration, Seeder, Relationship (hasMany, belongsTo)</div><span class="tech-badge tb-be">ORM</span></div>
+      <div class="tech-card"><span class="tech-icon">📦</span><div class="tech-name">VPS Hosting</div><div class="tech-version">2 core · 2 GB RAM · 20 GB SSD</div><div class="tech-role">Spek minimum. Uptime 99% jam 08.00–22.00 WIB. REQ-NFR-PO-001</div><span class="tech-badge tb-infra">Infra</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Endpoint API Integrasi</div>
+    <div class="section-title">Antarmuka Perangkat Lunak — BAB 3.3 SRS</div>
+    <div class="card-wrap">
+      <table class="conn-table">
+        <thead><tr><th>Kode</th><th>Method</th><th>Endpoint</th><th>Fungsi</th><th>Arah</th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:'Fira Code',monospace;font-size:11px;color:var(--accent);font-weight:600">API-01</td><td><span class="method m-get">GET</span></td><td class="endpoint">/api/inventory/check</td><td>Verifikasi stok bahan baku berdasarkan BOM & jumlah pesanan</td><td style="font-size:11px;color:var(--text3)">PO → Inventori</td></tr>
+          <tr><td style="font-family:'Fira Code',monospace;font-size:11px;color:var(--accent);font-weight:600">API-02</td><td><span class="method m-post">POST</span></td><td class="endpoint">/api/inventory/deduct</td><td>Kurangi stok saat PO masuk status "Dalam Produksi"</td><td style="font-size:11px;color:var(--text3)">PO → Inventori</td></tr>
+          <tr><td style="font-family:'Fira Code',monospace;font-size:11px;color:var(--accent);font-weight:600">API-03</td><td><span class="method m-post">POST</span></td><td class="endpoint">/api/inventory/rollback</td><td>Kembalikan stok jika PO dibatalkan dari status "Dalam Produksi"</td><td style="font-size:11px;color:var(--text3)">PO → Inventori</td></tr>
+          <tr><td style="font-family:'Fira Code',monospace;font-size:11px;color:var(--accent);font-weight:600">API-04</td><td><span class="method m-get">GET</span></td><td class="endpoint">/api/products/{id}/price</td><td>Ambil harga jual produk dari Modul HPP sebagai dasar nilai PO</td><td style="font-size:11px;color:var(--text3)">PO → HPP</td></tr>
+          <tr><td style="font-family:'Fira Code',monospace;font-size:11px;color:var(--accent);font-weight:600">API-05</td><td><span class="method m-post">POST</span></td><td class="endpoint">SMTP (Laravel Mail)</td><td>Kirim notifikasi email PO baru ke Pemilik UMKM. Retry 3× jika gagal</td><td style="font-size:11px;color:var(--text3)">PO → Email</td></tr>
+          <tr><td style="font-family:'Fira Code',monospace;font-size:11px;color:var(--accent);font-weight:600">API-06</td><td><span class="method m-get">GET</span></td><td class="endpoint">/po/{token}/pdf</td><td>Generate & serve PDF via Signed URL yang valid 24 jam</td><td style="font-size:11px;color:var(--text3)">Client → Backend</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ARSITEKTUR ===================== -->
+<div id="page-arch" class="page">
+  <div class="page-title">Diagram <span>Arsitektur</span></div>
+  <div class="page-sub">Arsitektur sistem Modul PO hutch.id — lapisan client, server, database, dan integrasi antar modul. Sesuai BAB 2.1, 2.4, dan BAB 3 SRS Kelompok 2.</div>
+
+  <div class="section">
+    <div class="section-label">Arsitektur Sistem Keseluruhan</div>
+    <div class="arch-wrap">
+      <div class="arch-canvas">
+        <svg viewBox="0 0 960 660" width="100%" style="min-width:700px;font-family:'Plus Jakarta Sans',sans-serif">
+          <defs>
+            <marker id="a1" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#2D7DD2"/></marker>
+            <marker id="a2" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#059669"/></marker>
+            <marker id="a3" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#D97706"/></marker>
+            <marker id="a4" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#7C3AED"/></marker>
+          </defs>
+
+          <!-- Zone backgrounds -->
+          <rect x="8" y="8" width="202" height="640" rx="14" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="6,3"/>
+          <text x="109" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3B82F6" letter-spacing="1.5">CLIENT LAYER</text>
+
+          <rect x="228" y="8" width="348" height="640" rx="14" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1.5" stroke-dasharray="6,3"/>
+          <text x="402" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#7C3AED" letter-spacing="1.5">SERVER LAYER — hutch.id</text>
+
+          <rect x="596" y="8" width="183" height="348" rx="14" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" stroke-dasharray="6,3"/>
+          <text x="687" y="26" text-anchor="middle" font-size="9.5" font-weight="700" fill="#16A34A" letter-spacing="1.5">DATA LAYER</text>
+
+          <rect x="596" y="370" width="356" height="278" rx="14" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5" stroke-dasharray="6,3"/>
+          <text x="774" y="388" text-anchor="middle" font-size="9.5" font-weight="700" fill="#D97706" letter-spacing="1.5">EXTERNAL SERVICES</text>
+
+          <!-- Web Browser -->
+          <rect x="22" y="46" width="172" height="64" rx="10" fill="#2D7DD2" stroke="#1A5FAA" stroke-width="1.5"/>
+          <text x="108" y="67" text-anchor="middle" font-size="14">🌐</text>
+          <text x="108" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="white">Web Browser</text>
+          <text x="108" y="96" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)">Chrome · Firefox · Edge</text>
+
+          <!-- Flutter -->
+          <rect x="22" y="128" width="172" height="64" rx="10" fill="#DB2777" stroke="#BE185D" stroke-width="1.5"/>
+          <text x="108" y="149" text-anchor="middle" font-size="14">📱</text>
+          <text x="108" y="164" text-anchor="middle" font-size="11" font-weight="700" fill="white">Flutter App</text>
+          <text x="108" y="178" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)">Android · iOS · Material 3</text>
+
+          <!-- User roles -->
+          <rect x="22" y="216" width="80" height="56" rx="8" fill="white" stroke="#BFDBFE" stroke-width="1.5"/>
+          <text x="62" y="237" text-anchor="middle" font-size="13">👩‍💼</text>
+          <text x="62" y="251" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1E40AF">Staf</text>
+          <text x="62" y="263" text-anchor="middle" font-size="9" fill="#64748B">Penjualan</text>
+
+          <rect x="114" y="216" width="80" height="56" rx="8" fill="white" stroke="#BBF7D0" stroke-width="1.5"/>
+          <text x="154" y="237" text-anchor="middle" font-size="13">👔</text>
+          <text x="154" y="251" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">Pemilik</text>
+          <text x="154" y="263" text-anchor="middle" font-size="9" fill="#64748B">UMKM</text>
+
+          <rect x="22" y="288" width="80" height="56" rx="8" fill="white" stroke="#FDE68A" stroke-width="1.5"/>
+          <text x="62" y="309" text-anchor="middle" font-size="13">🏭</text>
+          <text x="62" y="323" text-anchor="middle" font-size="9.5" font-weight="700" fill="#92400E">Operator</text>
+          <text x="62" y="335" text-anchor="middle" font-size="9" fill="#64748B">Gudang</text>
+
+          <rect x="114" y="288" width="80" height="56" rx="8" fill="white" stroke="#FECACA" stroke-width="1.5"/>
+          <text x="154" y="309" text-anchor="middle" font-size="13">⚙️</text>
+          <text x="154" y="323" text-anchor="middle" font-size="9.5" font-weight="700" fill="#991B1B">Admin</text>
+          <text x="154" y="335" text-anchor="middle" font-size="9" fill="#64748B">istrator</text>
+
+          <!-- HTTPS labels -->
+          <line x1="194" y1="78" x2="240" y2="78" stroke="#2D7DD2" stroke-width="2" marker-end="url(#a1)"/>
+          <line x1="194" y1="160" x2="240" y2="160" stroke="#DB2777" stroke-width="2" marker-end="url(#a1)"/>
+          <rect x="194" y="67" width="46" height="16" rx="4" fill="#DBEAFE"/>
+          <text x="217" y="78" text-anchor="middle" font-size="8.5" font-weight="700" fill="#1E40AF">HTTPS</text>
+          <rect x="194" y="149" width="46" height="16" rx="4" fill="#FCE7F3"/>
+          <text x="217" y="160" text-anchor="middle" font-size="8.5" font-weight="700" fill="#9D174D">REST API</text>
+
+          <!-- Nginx -->
+          <rect x="244" y="46" width="148" height="52" rx="10" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+          <text x="318" y="67" text-anchor="middle" font-size="13">🌿</text>
+          <text x="318" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="#065F46">Nginx Web Server</text>
+          <text x="318" y="93" text-anchor="middle" font-size="9" fill="#059669">Reverse Proxy · TLS 1.2+</text>
+
+          <!-- Laravel App -->
+          <rect x="244" y="116" width="318" height="196" rx="12" fill="white" stroke="#C4B5FD" stroke-width="1.5"/>
+          <text x="403" y="133" text-anchor="middle" font-size="9.5" font-weight="700" fill="#7C3AED" letter-spacing="1">LARAVEL APPLICATION</text>
+
+          <rect x="256" y="141" width="90" height="40" rx="8" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1"/>
+          <text x="301" y="158" text-anchor="middle" font-size="9.5" font-weight="700" fill="#5B21B6">Router &</text>
+          <text x="301" y="172" text-anchor="middle" font-size="9.5" fill="#7C3AED">Middleware</text>
+
+          <rect x="358" y="141" width="90" height="40" rx="8" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1"/>
+          <text x="403" y="158" text-anchor="middle" font-size="9.5" font-weight="700" fill="#5B21B6">PO</text>
+          <text x="403" y="172" text-anchor="middle" font-size="9.5" fill="#7C3AED">Controller</text>
+
+          <rect x="460" y="141" width="90" height="40" rx="8" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1"/>
+          <text x="505" y="158" text-anchor="middle" font-size="9.5" font-weight="700" fill="#5B21B6">Eloquent</text>
+          <text x="505" y="172" text-anchor="middle" font-size="9.5" fill="#7C3AED">Models</text>
+
+          <rect x="256" y="193" width="130" height="40" rx="8" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+          <text x="321" y="210" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1E40AF">StockCheck</text>
+          <text x="321" y="224" text-anchor="middle" font-size="9" fill="#3B82F6">Service (API-01)</text>
+
+          <rect x="398" y="193" width="148" height="40" rx="8" fill="#FFEDD5" stroke="#FDBA74" stroke-width="1"/>
+          <text x="472" y="210" text-anchor="middle" font-size="9.5" font-weight="700" fill="#C2410C">PDF Generator</text>
+          <text x="472" y="224" text-anchor="middle" font-size="9" fill="#EA580C">DomPDF · Signed URL</text>
+
+          <line x1="318" y1="98" x2="318" y2="116" stroke="#059669" stroke-width="1.8" marker-end="url(#a2)"/>
+
+          <!-- Auth Module -->
+          <rect x="244" y="332" width="138" height="52" rx="10" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1.5"/>
+          <text x="313" y="353" text-anchor="middle" font-size="12">🔒</text>
+          <text x="313" y="367" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991B1B">Auth Module</text>
+          <text x="313" y="378" text-anchor="middle" font-size="8.5" fill="#EF4444">Session · bcrypt · Role</text>
+
+          <!-- Mail Service -->
+          <rect x="394" y="332" width="158" height="52" rx="10" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+          <text x="473" y="353" text-anchor="middle" font-size="12">📨</text>
+          <text x="473" y="367" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400E">Mail Service</text>
+          <text x="473" y="378" text-anchor="middle" font-size="8.5" fill="#D97706">Laravel Mail · SMTP · Retry 3×</text>
+
+          <!-- Audit Trail -->
+          <rect x="244" y="404" width="308" height="42" rx="10" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5"/>
+          <text x="398" y="423" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">📋 Log & Audit Trail</text>
+          <text x="398" y="437" text-anchor="middle" font-size="9" fill="#059669">po_status_history · REQ-PO-016 · activity_log</text>
+
+          <!-- MySQL -->
+          <rect x="610" y="46" width="155" height="64" rx="10" fill="#059669" stroke="#047857" stroke-width="1.5"/>
+          <text x="687" y="67" text-anchor="middle" font-size="14">🐬</text>
+          <text x="687" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="white">MySQL 8.0+</text>
+          <text x="687" y="96" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)">InnoDB · 5 Tabel Utama</text>
+
+          <!-- Tables -->
+          <rect x="610" y="126" width="155" height="196" rx="10" fill="white" stroke="#D1FAE5" stroke-width="1.5"/>
+          <text x="687" y="144" text-anchor="middle" font-size="9" font-weight="700" fill="#059669" letter-spacing="1">TABLES</text>
+          <text x="620" y="163" font-size="10" fill="#475569">📋  purchase_orders</text>
+          <text x="620" y="181" font-size="10" fill="#475569">📦  po_items</text>
+          <text x="620" y="199" font-size="10" fill="#475569">👥  customers</text>
+          <text x="620" y="217" font-size="10" fill="#475569">👤  users</text>
+          <text x="620" y="235" font-size="10" fill="#475569">🔄  po_status_history</text>
+          <line x1="620" y1="246" x2="754" y2="246" stroke="#E2E8F0" stroke-width="1"/>
+          <text x="620" y="262" font-size="9" fill="#94A3B8">BAB 6 SRS · Migration</text>
+          <text x="620" y="278" font-size="9" fill="#94A3B8">FK Constraint · InnoDB</text>
+          <text x="620" y="294" font-size="9" fill="#94A3B8">Backup harian · UTC+7</text>
+          <text x="620" y="310" font-size="9" fill="#94A3B8">Uptime 99% target</text>
+
+          <!-- External nodes -->
+          <rect x="610" y="404" width="150" height="62" rx="10" fill="#E0F2FE" stroke="#7DD3FC" stroke-width="1.5"/>
+          <text x="685" y="425" text-anchor="middle" font-size="13">📦</text>
+          <text x="685" y="440" text-anchor="middle" font-size="11" font-weight="700" fill="#0369A1">Modul Inventori</text>
+          <text x="685" y="453" text-anchor="middle" font-size="9" fill="#0891B2">Stok · BOM · API-01,02,03</text>
+
+          <rect x="610" y="488" width="150" height="62" rx="10" fill="#D1FAE5" stroke="#6EE7B7" stroke-width="1.5"/>
+          <text x="685" y="509" text-anchor="middle" font-size="13">💰</text>
+          <text x="685" y="524" text-anchor="middle" font-size="11" font-weight="700" fill="#065F46">Modul HPP</text>
+          <text x="685" y="537" text-anchor="middle" font-size="9" fill="#059669">Harga Jual · API-04</text>
+
+          <rect x="778" y="404" width="158" height="62" rx="10" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1.5"/>
+          <text x="857" y="425" text-anchor="middle" font-size="13">📨</text>
+          <text x="857" y="440" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">SMTP Server</text>
+          <text x="857" y="453" text-anchor="middle" font-size="9" fill="#D97706">Mailtrap / AWS SES · API-05</text>
+
+          <rect x="778" y="488" width="158" height="62" rx="10" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1.5"/>
+          <text x="857" y="509" text-anchor="middle" font-size="13">☁️</text>
+          <text x="857" y="524" text-anchor="middle" font-size="11" font-weight="700" fill="#5B21B6">File Storage</text>
+          <text x="857" y="537" text-anchor="middle" font-size="9" fill="#7C3AED">PDF · Local / S3 · API-06</text>
+
+          <!-- Connection lines -->
+          <line x1="552" y1="200" x2="610" y2="96" stroke="#059669" stroke-width="1.5" stroke-dasharray="5,2" marker-end="url(#a2)"/>
+          <rect x="557" y="144" width="50" height="15" rx="3" fill="#D1FAE5"/>
+          <text x="582" y="155" text-anchor="middle" font-size="8" font-weight="700" fill="#065F46">Eloquent</text>
+
+          <line x1="552" y1="225" x2="610" y2="430" stroke="#0891B2" stroke-width="1.5" stroke-dasharray="5,2" marker-end="url(#a1)"/>
+          <rect x="554" y="316" width="50" height="15" rx="3" fill="#E0F2FE"/>
+          <text x="579" y="327" text-anchor="middle" font-size="8" font-weight="700" fill="#0369A1">API-01~03</text>
+
+          <line x1="545" y1="248" x2="610" y2="512" stroke="#059669" stroke-width="1.5" stroke-dasharray="5,2" marker-end="url(#a2)"/>
+
+          <line x1="552" y1="357" x2="778" y2="430" stroke="#D97706" stroke-width="1.5" stroke-dasharray="5,2" marker-end="url(#a3)"/>
+          <rect x="617" y="384" width="40" height="15" rx="3" fill="#FEF3C7"/>
+          <text x="637" y="395" text-anchor="middle" font-size="8" font-weight="700" fill="#92400E">SMTP</text>
+
+          <line x1="546" y1="235" x2="778" y2="510" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="5,2" marker-end="url(#a4)"/>
+          <rect x="626" y="356" width="36" height="15" rx="3" fill="#EDE9FE"/>
+          <text x="644" y="367" text-anchor="middle" font-size="8" font-weight="700" fill="#5B21B6">PDF</text>
+        </svg>
+      </div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-item"><div class="ld" style="background:#2D7DD2"></div>Client Layer</div>
+      <div class="legend-item"><div class="ld" style="background:#7C3AED"></div>Laravel Server</div>
+      <div class="legend-item"><div class="ld" style="background:#059669"></div>MySQL Database</div>
+      <div class="legend-item"><div class="ld" style="background:#D97706"></div>External Services</div>
+      <div class="legend-item"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,2"/></svg>&nbsp;Komunikasi internal</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Pola Arsitektur</div>
+    <div class="section-title">Three-Tier Architecture</div>
+    <div class="tier-grid">
+      <div class="tier-box" style="background:white;border:1.5px solid #BFDBFE;border-radius:16px 4px 4px 16px">
+        <div class="tier-label" style="color:#2D7DD2">Tier 1 — Presentation</div>
+        <div style="font-size:20px;margin-bottom:8px">🌐 Web Browser</div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy)">HTML · CSS · JavaScript</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-top:4px">Laravel Blade template. Responsive 360px–1920px. Validasi sisi klien.</div>
+        <div style="font-size:20px;margin:12px 0 8px">📱 Flutter App</div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy)">Dart · Material 3</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-top:4px">UI Mobile Android & iOS. Bottom nav. 7 layar sesuai SRS.</div>
+      </div>
+      <div class="tier-box" style="background:white;border:1.5px solid #C4B5FD;border-radius:4px">
+        <div class="tier-label" style="color:#7C3AED">Tier 2 — Business Logic</div>
+        <div style="font-size:20px;margin-bottom:8px">⚙️ Laravel Backend</div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy)">PHP 8.1+ · MVC Pattern</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-top:4px;margin-bottom:10px">Controller, Service, Repository. RESTful routes. Role-based middleware.</div>
+        <div class="tier-stack">📋 PoController<br>🧵 StockCheckService<br>📄 PdfGeneratorService<br>📨 NotificationService<br>🔒 AuthMiddleware</div>
+      </div>
+      <div class="tier-box" style="background:white;border:1.5px solid #86EFAC;border-radius:4px 16px 16px 4px">
+        <div class="tier-label" style="color:#059669">Tier 3 — Data</div>
+        <div style="font-size:20px;margin-bottom:8px">🐬 MySQL Database</div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy)">MySQL 8.0+ · InnoDB</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-top:4px;margin-bottom:10px">5 tabel utama. FK constraint. Migration & Seeder Artisan.</div>
+        <div class="tier-stack">📋 purchase_orders<br>📦 po_items<br>👥 customers<br>👤 users<br>🔄 po_status_history</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Deployment</div>
+    <div class="section-title">Deployment Architecture</div>
+    <div class="deploy-grid">
+      <div class="deploy-card"><div class="deploy-icon">🖥</div><div class="deploy-title">VPS / Cloud Server</div><div class="deploy-desc">CPU: 2 core · RAM: 2 GB · Storage: 20 GB SSD · Jaringan: 10 Mbps</div><div class="deploy-ref">REQ-NFR-PO · BAB 3.2</div></div>
+      <div class="deploy-card"><div class="deploy-icon">🔒</div><div class="deploy-title">HTTPS / TLS 1.2+</div><div class="deploy-desc">Seluruh komunikasi client-server dienkripsi. SSL Certificate wajib aktif.</div><div class="deploy-ref">REQ-NFR-PO-009</div></div>
+      <div class="deploy-card"><div class="deploy-icon">🐳</div><div class="deploy-title">Docker (Opsional)</div><div class="deploy-desc">Container php-fpm, nginx, mysql. docker-compose.yml untuk dev & staging.</div><div class="deploy-ref">BAB 2.4 · TBD-PO-006</div></div>
+      <div class="deploy-card"><div class="deploy-icon">💾</div><div class="deploy-title">Backup Database</div><div class="deploy-desc">Otomatis setiap hari via cron. Retention minimum 7 hari backup.</div><div class="deploy-ref">BAB 6 · Kebutuhan Lainnya</div></div>
+      <div class="deploy-card"><div class="deploy-icon">📊</div><div class="deploy-title">Uptime Target</div><div class="deploy-desc">≥ 99% jam operasional 08.00–22.00 WIB. Error rate &lt; 1% per 1.000 transaksi.</div><div class="deploy-ref">REQ-NFR-PO-001</div></div>
+      <div class="deploy-card"><div class="deploy-icon">⚡</div><div class="deploy-title">Performa Target</div><div class="deploy-desc">Response ≤ 2 detik. PDF generate ≤ 5 detik. API stok timeout 5 detik.</div><div class="deploy-ref">REQ-NFR-PO-001 · BAB 5.1</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Integrasi Antar Modul</div>
+    <div class="section-title">Peta Integrasi Sistem hutch.id</div>
+    <div class="card-wrap">
+      <table class="conn-table">
+        <thead><tr><th>Modul Asal</th><th>Modul Tujuan</th><th>Endpoint</th><th>Trigger</th><th>Fallback</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700;color:var(--accent)">Modul PO</td><td style="color:var(--cyan);font-weight:600">Modul Inventori</td><td class="endpoint">GET /check</td><td style="font-size:11px;color:var(--text2)">Saat PO disimpan — auto-cek stok</td><td style="font-size:11px;color:var(--yellow)">Timeout 5s → PO tersimpan + warning</td></tr>
+          <tr><td style="font-weight:700;color:var(--accent)">Modul PO</td><td style="color:var(--cyan);font-weight:600">Modul Inventori</td><td class="endpoint">POST /deduct</td><td style="font-size:11px;color:var(--text2)">Status → "Dalam Produksi"</td><td style="font-size:11px;color:var(--red)">Gagal → rollback status ke Dikonfirmasi</td></tr>
+          <tr><td style="font-weight:700;color:var(--accent)">Modul PO</td><td style="color:var(--cyan);font-weight:600">Modul Inventori</td><td class="endpoint">POST /rollback</td><td style="font-size:11px;color:var(--text2)">PO dibatalkan dari Dalam Produksi</td><td style="font-size:11px;color:var(--red)">Gagal → catat manual di log Admin</td></tr>
+          <tr><td style="font-weight:700;color:var(--accent)">Modul PO</td><td style="color:var(--green);font-weight:600">Modul HPP</td><td class="endpoint">GET /products/{id}/price</td><td style="font-size:11px;color:var(--text2)">Saat input item di form PO baru</td><td style="font-size:11px;color:var(--yellow)">Gagal → input harga manual</td></tr>
+          <tr><td style="font-weight:700;color:var(--accent)">Modul PO</td><td style="color:var(--yellow);font-weight:600">SMTP Server</td><td class="endpoint">Laravel Mail</td><td style="font-size:11px;color:var(--text2)">Setelah PO baru tersimpan</td><td style="font-size:11px;color:var(--yellow)">Gagal → retry 3× · log kegagalan</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
