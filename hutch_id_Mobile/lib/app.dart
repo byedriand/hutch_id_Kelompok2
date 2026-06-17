@@ -10,6 +10,7 @@ import 'providers/produk_provider.dart';
 import 'providers/notifikasi_provider.dart';
 import 'providers/arsip_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/welcome_screen.dart';
 import 'screens/home/dashboard_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/pesanan/pesanan_list_screen.dart';
@@ -71,13 +72,19 @@ class HutchMobileApp extends StatelessWidget {
             if (authProvider.isLoggedIn) {
               return const HomeScreen();
             } else {
-              return const LoginScreen();
+              return const WelcomeScreen();
             }
           },
         ),
         routes: {
+          '/welcome': (context) => const WelcomeScreen(),
+          '/login': (context) => const LoginScreen(),
+          '/home': (context) => const HomeScreen(),
           '/dashboard': (context) => const DashboardScreen(),
-          '/pesanan': (context) => const PesananListScreen(),
+          '/pesanan': (context) {
+            final status = ModalRoute.of(context)?.settings.arguments as String?;
+            return PesananListScreen(initialStatus: status ?? '');
+          },
           '/pesanan-detail': (context) {
             final pesananId = ModalRoute.of(context)?.settings.arguments as int;
             return PesananDetailScreen(pesananId: pesananId);
