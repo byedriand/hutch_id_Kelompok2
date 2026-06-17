@@ -32,10 +32,23 @@ class _PelangganDetailScreenState extends State<PelangganDetailScreen> {
     final dateFormat = DateFormat('dd MMMM yyyy HH:mm', 'id_ID');
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text('Detail Pelanggan'),
+        title: const Text(
+          'Detail Pelanggan',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: const Color(0xFF0d1b2e),
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           PopupMenuButton(
+            iconColor: Colors.white,
             itemBuilder: (context) => [
               PopupMenuItem(
                 child: const Text('Edit'),

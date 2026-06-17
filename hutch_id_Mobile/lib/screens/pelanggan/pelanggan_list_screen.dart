@@ -42,11 +42,21 @@ class _PelangganListScreenState extends State<PelangganListScreen>
     final canManage = userRole != 'operator_gudang';
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text('Pelanggan'),
+        title: const Text(
+          'HUTCH PRESTIGE',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            letterSpacing: 0.4,
+          ),
+        ),
         elevation: 0,
-        backgroundColor: const Color(0xFF1e40af),
+        backgroundColor: const Color(0xFF0d1b2e),
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<PelangganProvider>(
         builder: (context, pelangganProvider, _) {
@@ -76,42 +86,119 @@ class _PelangganListScreenState extends State<PelangganListScreen>
 
           return RefreshIndicator(
             onRefresh: () => pelangganProvider.fetchPelanggan(),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: pelangganProvider.pelangganList.length,
-              itemBuilder: (context, index) {
-                final pelanggan = pelangganProvider.pelangganList[index];
-                return SlideTransition(
-                  position:
-                      Tween<Offset>(
-                        begin: const Offset(1.0, 0),
-                        end: Offset.zero,
-                      ).animate(
-                        CurvedAnimation(
-                          parent: _animationController,
-                          curve: Interval(
-                            index * 0.08,
-                            0.5 + (index * 0.08),
-                            curve: Curves.easeOut,
-                          ),
+            child: Column(
+              children: [
+                // Header Section - Blue Gradient
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF1e40af), Color(0xFF2563eb)],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.people_rounded,
+                          color: Colors.white,
+                          size: 26,
                         ),
                       ),
-                  child: _buildPelangganCard(context, pelanggan, canManage),
-                );
-              },
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Data Pelanggan',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Total ${pelangganProvider.pelangganList.length} pelanggan',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (canManage)
+                        GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/pelanggan-form'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.add_rounded, size: 18, color: Color(0xFF1e40af)),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Tambah',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1e40af),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: pelangganProvider.pelangganList.length,
+                    itemBuilder: (context, index) {
+                      final pelanggan = pelangganProvider.pelangganList[index];
+                      return SlideTransition(
+                        position:
+                            Tween<Offset>(
+                              begin: const Offset(1.0, 0),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: _animationController,
+                                curve: Interval(
+                                  index * 0.08,
+                                  0.5 + (index * 0.08),
+                                  curve: Curves.easeOut,
+                                ),
+                              ),
+                            ),
+                        child: _buildPelangganCard(context, pelanggan, canManage),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },
       ),
-      floatingActionButton: canManage
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/pelanggan-form');
-              },
-              backgroundColor: const Color(0xFF1e40af),
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
     );
   }
 

@@ -139,10 +139,20 @@ class _PelangganFormScreenState extends State<PelangganFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         title: Text(
           widget.pelangganId != null ? 'Edit Pelanggan' : 'Tambah Pelanggan',
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
         ),
+        elevation: 0,
+        backgroundColor: const Color(0xFF0d1b2e),
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<PelangganProvider>(
         builder: (context, pelangganProvider, _) {
