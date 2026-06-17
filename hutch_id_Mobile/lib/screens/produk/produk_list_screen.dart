@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/produk_provider.dart';
-import '../../providers/auth_provider.dart';
 import '../../widgets/custom_widgets.dart';
 import 'package:intl/intl.dart';
 
@@ -25,11 +24,24 @@ class _ProdukListScreenState extends State<ProdukListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userRole = Provider.of<AuthProvider>(context).user?.role ?? '';
-    final canAddProduct = userRole == 'staf_penjualan' || userRole == 'administrator';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Produk'), elevation: 0),
+      backgroundColor: const Color(0xFFF1F5F9),
+      appBar: AppBar(
+        title: const Text(
+          'HUTCH PRESTIGE',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            letterSpacing: 0.4,
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: const Color(0xFF0d1b2e),
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: Consumer<ProdukProvider>(
         builder: (context, produkProvider, _) {
           if (produkProvider.isLoading) {
@@ -58,36 +70,83 @@ class _ProdukListScreenState extends State<ProdukListScreen> {
 
           return RefreshIndicator(
             onRefresh: () => produkProvider.fetchProduk(),
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: produkProvider.produkList.length,
-              itemBuilder: (context, index) {
-                final produk = produkProvider.produkList[index];
-                return _buildProdukCard(context, produk);
-              },
+            child: Column(
+              children: [
+                // Header Section - Blue Gradient
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF1e40af), Color(0xFF2563eb)],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.inventory_2_rounded,
+                          color: Colors.white,
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Manajemen Produk',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Total ${produkProvider.produkList.length} produk terdaftar',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: produkProvider.produkList.length,
+                    itemBuilder: (context, index) {
+                      final produk = produkProvider.produkList[index];
+                      return _buildProdukCard(context, produk);
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },
       ),
-      floatingActionButton: canAddProduct
-          ? FloatingActionButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Fitur Tambah Produk dalam pengembangan (Mobile)'),
-                  ),
-                );
-              },
-              backgroundColor: const Color(0xFF1e40af),
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
     );
   }
 
