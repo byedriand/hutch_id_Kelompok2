@@ -23,7 +23,7 @@ class PelangganProvider extends ChangeNotifier {
   // Start auto-refresh polling (every 10 seconds)
   void startAutoRefresh() {
     _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       fetchPelanggan();
     });
   }
