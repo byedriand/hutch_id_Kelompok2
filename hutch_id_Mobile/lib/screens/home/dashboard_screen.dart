@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../providers/produk_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/produk.dart';
 import '../../widgets/custom_widgets.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -31,6 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     Future.microtask(() {
       if (mounted) {
         Provider.of<DashboardProvider>(context, listen: false).fetchDashboard();
+        Provider.of<ProdukProvider>(context, listen: false).fetchProduk();
       }
       _cardAnimationController.forward();
     });
@@ -44,6 +48,15 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final userRole = authProvider.user?.role ?? '';
+
+    if (userRole == 'operator_gudang') {
+      return Scaffold(
+        body: _buildWarehouseDashboard(context),
+      );
+    }
+
     return Scaffold(
       body: Consumer<DashboardProvider>(
         builder: (context, dashboardProvider, _) {
@@ -217,6 +230,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 const Color(0xFF3b82f6),
                                 const Color(0xFF1e40af),
                               ],
+                              onTap: () => Navigator.pushNamed(context, '/pesanan', arguments: ''),
                             ),
                             _buildAnimatedStatCard(
                               index: 1,
@@ -228,6 +242,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 const Color(0xFF2563eb),
                                 const Color(0xFF1e3a8a),
                               ],
+                              onTap: () => Navigator.pushNamed(context, '/pesanan', arguments: 'menunggu_konfirmasi'),
                             ),
                             _buildAnimatedStatCard(
                               index: 2,
@@ -239,6 +254,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 const Color(0xFF0284c7),
                                 const Color(0xFF0c4a6e),
                               ],
+                              onTap: () => Navigator.pushNamed(context, '/pesanan', arguments: 'siap_kirim'),
                             ),
                             _buildAnimatedStatCard(
                               index: 3,
@@ -251,6 +267,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 const Color(0xFF1e40af),
                                 const Color(0xFF0f2942),
                               ],
+                              onTap: () => Navigator.pushNamed(context, '/pesanan', arguments: 'selesai'),
                             ),
                           ],
                         ),
@@ -397,6 +414,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   value:
                                       '${dashboard.totalAktif + dashboard.totalMenunggu}',
                                   color: const Color(0xFF2563eb),
+                                  onTap: () => Navigator.pushNamed(context, '/pesanan', arguments: ''),
                                 ),
                                 const SizedBox(height: 12),
                                 _buildStatItem(
@@ -404,6 +422,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   label: 'Siap Dikirim',
                                   value: dashboard.totalSiapKirim.toString(),
                                   color: const Color(0xFF0284c7),
+                                  onTap: () => Navigator.pushNamed(context, '/pesanan', arguments: 'siap_kirim'),
                                 ),
                                 const SizedBox(height: 12),
                                 _buildStatItem(
@@ -412,6 +431,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   value: dashboard.totalSelesaiBulanIni
                                       .toString(),
                                   color: const Color(0xFF1e40af),
+                                  onTap: () => Navigator.pushNamed(context, '/pesanan', arguments: 'selesai'),
                                 ),
                               ],
                             ),
@@ -436,6 +456,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     required String subtitle,
     required IconData icon,
     required List<Color> gradient,
+    VoidCallback? onTap,
   }) {
     return ScaleTransition(
       scale: Tween<double>(begin: 0.8, end: 1.0).animate(
@@ -448,66 +469,69 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         ),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradient,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: gradient.first.withValues(alpha: 0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: gradient,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: gradient.first.withValues(alpha: 0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-              child: Icon(icon, color: Colors.white, size: 24),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.95),
+                child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white.withValues(alpha: 0.75),
+                  const SizedBox(height: 6),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white.withValues(alpha: 0.95),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.75),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -518,44 +542,48 @@ class _DashboardScreenState extends State<DashboardScreen>
     required String label,
     required String value,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 20),
             ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
               ),
             ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: color,
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -608,5 +636,456 @@ class _DashboardScreenState extends State<DashboardScreen>
       final second = now.second.toString().padLeft(2, '0');
       return '$hour:$minute:$second';
     }
+  }
+
+  Widget _buildWarehouseDashboard(BuildContext context) {
+    return Consumer<ProdukProvider>(
+      builder: (context, produkProvider, _) {
+        if (produkProvider.isLoading) {
+          return const LoadingWidget(message: 'Memuat data stok...');
+        }
+
+        if (produkProvider.errorMessage != null) {
+          return Center(
+            child: EmptyStateWidget(
+              message: produkProvider.errorMessage!,
+              onRetry: () {
+                produkProvider.fetchProduk();
+              },
+            ),
+          );
+        }
+
+        final produkList = produkProvider.produkList;
+        
+        // Calculate statistics
+        int totalStok = 0;
+        int produkTerdaftar = produkList.length;
+        int stokRendah = 0;
+        
+        for (var p in produkList) {
+          final s = p.stok ?? 0;
+          totalStok += s;
+          if (s <= 10) {
+            stokRendah++;
+          }
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => produkProvider.fetchProduk(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Card containing title and stat cards in a row
+                _buildWarehouseHeaderCard(context, totalStok, produkTerdaftar, stokRendah),
+                
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Grid of Products
+                      _buildWarehouseProductGrid(produkList),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildWarehouseHeaderCard(BuildContext context, int totalStok, int produkTerdaftar, int stokRendah) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0A192F), // Dark slate
+            Color(0xFF1E3A8A), // Dark blue
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0A192F).withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warehouse_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Manajemen Stok Barang',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Kelola stok produk dan pantau ketersediaan barang dengan mudah',
+                      style: TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+          
+          // Horizontal Stat Cards Row (scrollable on narrow screens)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                _buildWarehouseStatCard(
+                  title: 'TOTAL STOK',
+                  value: totalStok.toString(),
+                  subtitle: 'Unit tersedia di gudang',
+                  icon: Icons.inventory_2_rounded,
+                  iconColor: const Color(0xFF2563EB),
+                  iconBgColor: const Color(0xFFEFF6FF),
+                ),
+                const SizedBox(width: 16),
+                _buildWarehouseStatCard(
+                  title: 'PRODUK TERDAFTAR',
+                  value: produkTerdaftar.toString(),
+                  subtitle: 'Jenis produk aktif',
+                  icon: Icons.grid_view_rounded,
+                  iconColor: const Color(0xFF16A34A),
+                  iconBgColor: const Color(0xFFF0FDF4),
+                ),
+                const SizedBox(width: 16),
+                _buildWarehouseStatCard(
+                  title: 'STOK RENDAH',
+                  value: stokRendah.toString(),
+                  subtitle: 'Produk memerlukan pengisian',
+                  icon: Icons.warning_amber_rounded,
+                  iconColor: const Color(0xFFDC2626),
+                  iconBgColor: const Color(0xFFFEF2F2),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWarehouseStatCard({
+    required String title,
+    required String value,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+  }) {
+    return Container(
+      width: 240,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.grey[500],
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey[500],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWarehouseProductGrid(List<Produk> produkList) {
+    if (produkList.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: const Center(
+          child: Column(
+            children: [
+              Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
+              SizedBox(height: 12),
+              Text(
+                'Tidak ada produk terdaftar',
+                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final formatter = NumberFormat('#,##0', 'id_ID');
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: produkList.length,
+      itemBuilder: (context, index) {
+        final produk = produkList[index];
+        final stock = produk.stok ?? 0;
+        final hasStock = stock > 0;
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.grey[200]!,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image container
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                    child: produk.foto != null
+                        ? Image.network(
+                            produk.foto!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.image_not_supported_rounded,
+                                color: Colors.grey[300],
+                                size: 36,
+                              );
+                            },
+                          )
+                        : Icon(
+                            Icons.shopping_bag_rounded,
+                            color: Colors.blue[300],
+                            size: 40,
+                          ),
+                  ),
+                ),
+              ),
+              
+              // Product details below image
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Badge circle ID and Status chip row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Circle Badge ID
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF2563EB),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${produk.id ?? (index + 1)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Status chip
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: hasStock ? const Color(0xFFDCFCE7) : const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: hasStock ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                hasStock ? 'TERSEDIA' : 'KOSONG',
+                                style: TextStyle(
+                                  color: hasStock ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // Product Name
+                    Text(
+                      produk.nama,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        color: Color(0xFF0F172A),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    // Price Row "HARGA JUAL Rp X.XXX.XXX"
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          'HARGA JUAL  ',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Rp ${formatter.format(produk.hargaJual ?? 0)}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2563EB),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
