@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../providers/pesanan_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_widgets.dart';
+import '../../config/app_config.dart';
 
 class PesananDetailScreen extends StatefulWidget {
   final int pesananId;
@@ -50,7 +51,8 @@ class _PesananDetailScreenState extends State<PesananDetailScreen> {
 
   void _downloadPDF(int pesananId, String nomorPo) async {
     try {
-      final pdfUrl = Uri.parse('http://localhost:8082/pesanan/$pesananId/pdf');
+      final baseUrl = AppConfig.apiBaseUrl.replaceAll('/api', '');
+      final pdfUrl = Uri.parse('$baseUrl/pesanan/$pesananId/pdf');
       if (await canLaunchUrl(pdfUrl)) {
         await launchUrl(pdfUrl, mode: LaunchMode.externalApplication);
         if (mounted) {
@@ -174,10 +176,20 @@ class _PesananDetailScreenState extends State<PesananDetailScreen> {
     final isLargeScreen = size.width > 1200;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text('Detail Pesanan'),
+        title: const Text(
+          'Detail Pesanan',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
         elevation: 0,
-        backgroundColor: const Color(0xFF1e40af),
+        backgroundColor: const Color(0xFF0d1b2e),
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<PesananProvider>(
         builder: (context, pesananProvider, _) {

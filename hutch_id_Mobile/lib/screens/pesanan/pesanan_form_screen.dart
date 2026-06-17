@@ -227,14 +227,17 @@ class _PesananFormScreenState extends State<PesananFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2563eb),
+        backgroundColor: const Color(0xFF0d1b2e),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           widget.pesananId != null ? 'Edit Pesanan' : 'Buat Pesanan Baru',
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
+            fontSize: 15,
           ),
         ),
       ),

@@ -7,18 +7,21 @@ import '../../widgets/custom_widgets.dart';
 import '../../providers/auth_provider.dart';
 
 class PesananListScreen extends StatefulWidget {
-  const PesananListScreen({super.key});
+  final String initialStatus;
+
+  const PesananListScreen({super.key, this.initialStatus = ''});
 
   @override
   State<PesananListScreen> createState() => _PesananListScreenState();
 }
 
 class _PesananListScreenState extends State<PesananListScreen> {
-  String _selectedStatus = '';
+  late String _selectedStatus;
 
   @override
   void initState() {
     super.initState();
+    _selectedStatus = widget.initialStatus;
     Future.microtask(() {
       if (mounted) {
         Provider.of<PesananProvider>(context, listen: false).fetchPesanan();
@@ -32,11 +35,21 @@ class _PesananListScreenState extends State<PesananListScreen> {
     final canAddPesanan = userRole != 'operator_gudang';
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text('Pesanan'),
+        title: const Text(
+          'HUTCH PRESTIGE',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            letterSpacing: 0.4,
+          ),
+        ),
         elevation: 0,
-        backgroundColor: const Color(0xFF1e40af),
+        backgroundColor: const Color(0xFF0d1b2e),
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Consumer<PesananProvider>(
         builder: (context, pesananProvider, _) {
@@ -61,19 +74,106 @@ class _PesananListScreenState extends State<PesananListScreen> {
                     .where((p) => p.status == _selectedStatus)
                     .toList();
 
-          if (pesananList.isEmpty) {
-            return Center(
-              child: EmptyStateWidget(
-                message: _selectedStatus.isEmpty
-                    ? 'Belum ada pesanan'
-                    : 'Tidak ada pesanan dengan status ini',
-                icon: Icons.shopping_bag_outlined,
-              ),
-            );
-          }
-
           return Column(
             children: [
+              // Header Section - Blue Gradient
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF1e40af), Color(0xFF2563eb)],
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.list_alt_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Daftar Pesanan',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Total ${pesananProvider.pesananList.length} pesanan',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (canAddPesanan)
+                          GestureDetector(
+                            onTap: () => Navigator.pushNamed(context, '/pesanan-form'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.add_rounded, size: 18, color: Color(0xFF1e40af)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Buat PO',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF1e40af),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              if (pesananList.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: EmptyStateWidget(
+                      message: _selectedStatus.isEmpty
+                          ? 'Belum ada pesanan'
+                          : 'Tidak ada pesanan dengan status ini',
+                      icon: Icons.shopping_bag_outlined,
+                    ),
+                  ),
+                )
+              else ...[
               // Filter Buttons - Enhanced
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -184,19 +284,11 @@ class _PesananListScreenState extends State<PesananListScreen> {
                   ),
                 ),
               ),
+              ],
             ],
           );
         },
       ),
-      floatingActionButton: canAddPesanan
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/pesanan-form');
-              },
-              backgroundColor: const Color(0xFF1e40af),
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
     );
   }
 
