@@ -41,6 +41,19 @@ class Pesanan extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * Display name for "Disimpan oleh" on the PO detail page.
+     *
+     * Always reflects whoever actually created the PO: shows their name if
+     * set, otherwise falls back to their role label (e.g. "Staf Penjualan"
+     * for staff, "Admin" for administrators). Only falls back to "Sistem"
+     * when there is genuinely no creator on record.
+     */
+    public function getCreatorLabelAttribute(): string
+    {
+        return $this->creator?->display_name ?? 'Sistem';
+    }
+
     public function getStokCukupAttribute()
     {
         foreach ($this->detailPesanan as $detail) {

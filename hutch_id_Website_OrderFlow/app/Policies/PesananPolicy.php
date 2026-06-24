@@ -22,14 +22,14 @@ class PesananPolicy
             return true;
         }
 
-        // Operator Gudang can view confirmed POs only
+        // Operator Gudang can view all POs (semua staf bisa melihat detail pesanan)
         if ($user->role === 'operator_gudang') {
-            return in_array($pesanan->status, ['dikonfirmasi', 'dalam_produksi', 'siap_kirim', 'selesai']);
+            return true;
         }
 
-        // Staf Penjualan can only view their own POs
+        // Staf Penjualan can view all POs (semua staf bisa melihat detail pesanan)
         if ($user->role === 'staf_penjualan') {
-            return $pesanan->created_by === $user->id;
+            return true;
         }
 
         return false;
@@ -73,13 +73,13 @@ class PesananPolicy
         }
 
         if ($user->role === 'operator_gudang') {
-            // Can only change status for confirmed POs
-            return in_array($pesanan->status, ['dikonfirmasi', 'dalam_produksi', 'siap_kirim']);
+            // Staf hanya bisa membatalkan, controller yang membatasi status tujuan
+            return !in_array($pesanan->status, ['selesai', 'dibatalkan']);
         }
 
         if ($user->role === 'staf_penjualan') {
-            // Staf Penjualan dapat membatalkan PO yang mereka buat sebelum dikonfirmasi
-            return $pesanan->created_by === $user->id && $pesanan->status === 'menunggu_konfirmasi';
+            // Staf hanya bisa membatalkan, controller yang membatasi status tujuan
+            return !in_array($pesanan->status, ['selesai', 'dibatalkan']);
         }
 
         return false;

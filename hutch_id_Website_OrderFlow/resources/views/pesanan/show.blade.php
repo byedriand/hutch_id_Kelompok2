@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+@endpush
 <div class="container-fluid">
     @php
         $statusClasses = [
@@ -447,45 +451,23 @@
             <p class="text-muted mb-0">{{ $pesanan->nomor_po }}</p>
         </div>
         <div class="btn-toolbar gap-2">
+            <a href="{{ route('pesanan.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Kembali
+            </a>
             <a href="{{ route('pesanan.pdf', $pesanan) }}" class="btn btn-outline-secondary">
                 <i class="fas fa-file-pdf me-1"></i>Unduh PDF
             </a>
-            <form action="{{ route('pesanan.shareLink', $pesanan) }}" method="POST" class="d-inline">
-                @csrf
-                <button type="submit" class="btn btn-outline-primary">
-                    <i class="fas fa-share-alt me-1"></i>Bagikan
-                </button>
-            </form>
             @if(auth()->user()->role !== 'operator_gudang')
                 <a href="{{ route('pesanan.edit', $pesanan) }}" class="btn btn-warning text-white">
                     <i class="fas fa-edit me-1"></i>Edit
-
-            @push('scripts')
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const statusSelect = document.querySelector('form[action*="updateStatus"] select[name="status"]');
-                    const siapKirimFields = document.getElementById('siap-kirim-fields');
-
-                    if (!statusSelect) return;
-
-                    function toggleSiapKirim() {
-                        if (statusSelect.value === 'siap_kirim') {
-                            siapKirimFields.style.display = '';
-                        } else {
-                            siapKirimFields.style.display = 'none';
-                        }
-                    }
-
-                    statusSelect.addEventListener('change', toggleSiapKirim);
-                    // initial
-                    toggleSiapKirim();
-                });
-            </script>
-            @endpush
                 </a>
             @endif
         </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    @endpush
 
     @if(!empty($detail_kurang))
         <div class="alert alert-warning rounded-4 mb-4">
@@ -506,14 +488,31 @@
     @endif
 
     @if(session('share_link'))
-        <div class="alert alert-success rounded-4">Link share siap: <a href="{{ session('share_link') }}" target="_blank">{{ session('share_link') }}</a></div>
+        <div class="alert alert-info rounded-4">Link share siap: <a href="{{ session('share_link') }}" target="_blank">{{ session('share_link') }}</a></div>
     @endif
 
-    @foreach(['success','error','info'] as $msg)
+    @foreach(['error','info'] as $msg)
         @if(session($msg))
             <div class="alert alert-{{ $msg === 'error' ? 'danger' : $msg }} rounded-4">{{ session($msg) }}</div>
         @endif
     @endforeach
+
+    @if(session('success'))
+        @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Berhasil',
+                    html: '<div style="text-align: left;">' + @json(session('success')).split('\n').join('<br>') + '</div>',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#2d7dd2',
+                    iconColor: '#2d7dd2'
+                });
+            });
+        </script>
+        @endpush
+    @endif
 
     <div class="row g-4">
         <div class="col-lg-8">
@@ -616,7 +615,7 @@
                                 </div>
                             </div>
                             <p class="mb-1 text-muted">{{ $history->keterangan }}</p>
-                            <small class="text-muted">oleh {{ $history->user->name ?? 'Sistem' }}</small>
+                            <small class="text-muted">oleh {{ $history->user->display_name ?? 'Sistem' }}</small>
                         </div>
                     @empty
                         <div class="text-muted">Belum ada histori status.</div>
@@ -643,7 +642,7 @@
                         </div>
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                             <span>Disimpan oleh</span>
-                            <strong>{{ $pesanan->creator->name ?? 'System' }}</strong>
+                            <strong>{{ $pesanan->creator_label }}</strong>
                         </div>
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                             <span>PO dibuat</span>
@@ -665,7 +664,7 @@
                 </div>
             </div>
 
-            @if(auth()->user()->role === 'administrator' || auth()->user()->role === 'pemilik_umkm')
+            @if((auth()->user()->role === 'administrator' || auth()->user()->role === 'pemilik_umkm') && !in_array($pesanan->status, ['selesai', 'dibatalkan']))
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-body">
                         <h5 class="mb-3">Batalkan Pesanan</h5>
@@ -681,7 +680,7 @@
                     <h5 class="mb-3">Ubah Status</h5>
 
                     @if(count($statusOptions) > 0)
-                        <form action="{{ route('pesanan.updateStatus', $pesanan) }}" method="POST">
+                        <form id="formUbahStatus" action="{{ route('pesanan.updateStatus', $pesanan) }}" method="POST">
                             @csrf
                             @method('PATCH')
                             <div class="mb-3">
@@ -696,17 +695,44 @@
                                 <label class="form-label">Keterangan</label>
                                 <textarea class="form-control" name="keterangan" rows="3" placeholder="Keterangan singkat..."></textarea>
                             </div>
-                            <div id="siap-kirim-fields" class="mb-3" style="display: none;">
-                                <label class="form-label">Detail Pengiriman</label>
-                                <div class="mb-2">
-                                    <input type="date" class="form-control" name="tanggal_dikirim" placeholder="Tanggal pengiriman">
-                                </div>
-                                <div>
-                                    <input type="text" class="form-control" name="nomor_resi" placeholder="Nomor resi / tracking (opsional)">
+                            <button type="button" id="btnSimpanStatus" class="btn btn-primary w-100 rounded-pill">Simpan Status</button>
+                        </form>
+
+                        <!-- Modal Konfirmasi Pembatalan (untuk staf via ubah status) -->
+                        <div class="modal fade" id="modalKonfirmasiUbahBatal" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 rounded-4">
+                                    <div class="modal-header bg-danger text-white rounded-top-4">
+                                        <h5 class="modal-title fw-bold">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>Konfirmasi Pembatalan
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="text-muted mb-3">
+                                            Anda akan membatalkan pesanan <strong>{{ $pesanan->nomor_po }}</strong>.
+                                            Mohon jelaskan alasan pembatalan ini.
+                                        </p>
+                                        <div class="mb-0">
+                                            <label class="form-label fw-bold">Alasan Pembatalan <span class="text-danger">*</span></label>
+                                            <textarea
+                                                class="form-control rounded-3"
+                                                id="alasanUbahBatal"
+                                                rows="4"
+                                                placeholder="Jelaskan alasan pembatalan pesanan ini (minimal 5 karakter)..."
+                                            ></textarea>
+                                            <div id="alasanError" class="text-danger small mt-1 d-none">Alasan pembatalan wajib diisi (minimal 5 karakter).</div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-top pt-3">
+                                        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Kembali</button>
+                                        <button type="button" id="btnKonfirmasiUbahBatal" class="btn btn-danger rounded-pill">
+                                            <i class="fas fa-check me-2"></i>Ya, Batalkan Pesanan
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100 rounded-pill">Simpan Status</button>
-                        </form>
+                        </div>
                     @else
                         <div class="alert alert-secondary mb-0">
                             Status pesanan tidak dapat diubah lagi karena sudah selesai, dibatalkan, atau Anda tidak memiliki izin untuk mengubah status di tahapan ini.
@@ -764,3 +790,134 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+// ===== LOGIKA PEMBATALAN STAF =====
+document.addEventListener('DOMContentLoaded', function() {
+    const btnSimpan = document.getElementById('btnSimpanStatus');
+    const updateStatusForm = document.getElementById('formUbahStatus');
+
+    // Kirim form Ubah Status via AJAX dan tampilkan hasilnya lewat popup SweetAlert bertema biru
+    function submitUpdateStatusForm() {
+        const originalText = btnSimpan.innerHTML;
+        btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+        btnSimpan.disabled = true;
+
+        const formData = new FormData(updateStatusForm);
+
+        fetch(updateStatusForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            btnSimpan.innerHTML = originalText;
+            btnSimpan.disabled = false;
+
+            if (ok && data.success) {
+                let alertMessage = data.message || 'Status pesanan berhasil diperbarui.';
+                if (data.whatsapp_message) {
+                    alertMessage += '\n\n' + data.whatsapp_message;
+                }
+
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Status Diperbarui',
+                    html: '<div style="text-align: left;">' + alertMessage.split('\n').join('<br>') + '</div>',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#2d7dd2',
+                    iconColor: '#2d7dd2'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: (data && data.message) || 'Terjadi kesalahan saat mengubah status.',
+                    confirmButtonColor: '#2d7dd2',
+                    iconColor: '#ef4444'
+                });
+            }
+        })
+        .catch(error => {
+            btnSimpan.innerHTML = originalText;
+            btnSimpan.disabled = false;
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Terjadi kesalahan saat mengirim request.',
+                confirmButtonColor: '#2d7dd2',
+                iconColor: '#ef4444'
+            });
+        });
+    }
+
+    if (btnSimpan && updateStatusForm) {
+        btnSimpan.addEventListener('click', function () {
+            const statusSelect = updateStatusForm.querySelector('select[name="status"]');
+            const selectedStatus = statusSelect ? statusSelect.value : '';
+
+            if (selectedStatus === 'dibatalkan') {
+                // Tampilkan modal konfirmasi alasan
+                const modal = new bootstrap.Modal(document.getElementById('modalKonfirmasiUbahBatal'));
+                // Reset field alasan
+                document.getElementById('alasanUbahBatal').value = '';
+                document.getElementById('alasanError').classList.add('d-none');
+                modal.show();
+            } else {
+                // Kirim via AJAX, hasil ditampilkan lewat popup
+                submitUpdateStatusForm();
+            }
+        });
+    }
+
+    // Tombol konfirmasi di dalam modal
+    const btnKonfirmasi = document.getElementById('btnKonfirmasiUbahBatal');
+    if (btnKonfirmasi && updateStatusForm) {
+        btnKonfirmasi.addEventListener('click', function () {
+            const alasan = document.getElementById('alasanUbahBatal').value.trim();
+            const alasanError = document.getElementById('alasanError');
+
+            if (alasan.length < 5) {
+                alasanError.classList.remove('d-none');
+                return;
+            }
+            alasanError.classList.add('d-none');
+
+            // Sisipkan alasan ke hidden input di form
+            let hiddenInput = updateStatusForm.querySelector('input[name="alasan_pembatalan"]');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'alasan_pembatalan';
+                updateStatusForm.appendChild(hiddenInput);
+            }
+            hiddenInput.value = alasan;
+
+            // Sisipkan juga ke keterangan jika kosong
+            const keteranganField = updateStatusForm.querySelector('textarea[name="keterangan"]');
+            if (keteranganField && keteranganField.value.trim() === '') {
+                keteranganField.value = alasan;
+            }
+
+            // Tutup modal lalu submit via AJAX setelah modal tertutup
+            const modalEl = document.getElementById('modalKonfirmasiUbahBatal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                submitUpdateStatusForm();
+            }, { once: true });
+        });
+    }
+});
+// ===== END LOGIKA PEMBATALAN STAF =====
+</script>
+@endpush

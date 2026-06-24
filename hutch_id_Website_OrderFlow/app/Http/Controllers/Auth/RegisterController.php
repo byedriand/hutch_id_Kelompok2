@@ -28,7 +28,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/login';
 
     /**
      * Create a new controller instance.
@@ -41,6 +41,16 @@ class RegisterController extends Controller
     }
 
     /**
+     * Show the application registration form.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+    /**
      * Get a validator for an incoming registration request.
      *
      * @return \Illuminate\Contracts\Validation\Validator
@@ -48,9 +58,17 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8'],
+            'role' => ['required', 'string', 'in:administrator,staf_penjualan,operator_gudang'],
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 8 karakter.',
+            'role.required' => 'Role wajib dipilih.',
+            'role.in' => 'Role tidak valid.',
         ]);
     }
 
@@ -61,10 +79,43 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        // Check if role already has 3 accounts
+        $roleCount = User::where('role', $data['role'])->count();
+        
+        if ($roleCount >= 3) {
+            throw new \Exception('Maksimal akun untuk role ini telah tercapai.');
+        }
+
+        // Get the next account number for this role
+        $nextAccountNumber = $roleCount + 1;
+
         return User::create([
-            'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'role' => $data['role'],
+            'account_number' => $nextAccountNumber,
         ]);
     }
+
+    /**
+     * Handle a registration request for the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function register(\Illuminate\Http\Request $request)
+    {
+        $this->validator($request->all())->validate();
+
+        try {
+            $this->create($request->all());
+            return redirect($this->redirectPath())
+                ->with('success', 'Akun berhasil dibuat.');
+        } catch (\Exception $e) {
+            return back()
+                ->with('error', $e->getMessage())
+                ->withInput();
+        }
+    }
 }
+

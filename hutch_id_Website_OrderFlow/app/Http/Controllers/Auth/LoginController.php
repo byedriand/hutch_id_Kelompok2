@@ -31,6 +31,13 @@ class LoginController extends Controller
     protected $redirectTo = '/dashboard';
 
     /**
+     * Where to redirect users after logout.
+     *
+     * @var string
+     */
+    protected $redirectAfterLogout = '/login';
+
+    /**
      * Create a new controller instance.
      *
      * @return void
@@ -105,5 +112,29 @@ class LoginController extends Controller
         ];
         
         return $labels[$role] ?? $role;
+    }
+
+    /**
+     * The user has been authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        return redirect()->route('dashboard');
+    }
+
+    /**
+     * The user has logged out of the application.
+     * Redirect to login page after logout.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return mixed
+     */
+    protected function loggedOut(Request $request)
+    {
+        return redirect()->route('login');
     }
 }

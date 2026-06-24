@@ -17,3 +17,16 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Flutter specific
+/build/
+/dist/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/coverage/
+lib/generated_plugin_registrant.dart
+.fvm/flutter_sdk

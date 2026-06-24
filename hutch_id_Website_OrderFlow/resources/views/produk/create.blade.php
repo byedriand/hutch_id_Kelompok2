@@ -187,7 +187,7 @@
                                         <input type="file" id="foto" name="foto" accept="image/*" style="display: none;">
                                         <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: #3b82f6; margin-bottom: 0.5rem; display: block;"></i>
                                         <p style="color: #475569; margin: 0.5rem 0; font-weight: 600;">Klik atau drag gambar ke sini</p>
-                                        <small style="color: #64748b;">Format: JPG, PNG, GIF | Max: 5MB</small>
+                                        <small style="color: #64748b;">Format: JPG, PNG, GIF | Max: 10MB</small>
                                     </div>
                                     @error('foto')
                                         <div style="color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem;">{{ $message }}</div>
@@ -257,8 +257,8 @@
                 alert('Silakan pilih file gambar');
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Ukuran file terlalu besar (max 5MB)');
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Ukuran file terlalu besar (max 10MB)');
                 return;
             }
 

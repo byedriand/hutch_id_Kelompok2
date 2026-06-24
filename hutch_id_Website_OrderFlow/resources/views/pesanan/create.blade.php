@@ -1698,9 +1698,12 @@
                             </table>
                         </div>
                         <div id="stok-warning" class="alert alert-danger mt-3 d-none" role="alert"></div>
-                        <div class="mt-3">
+                        <div class="mt-3 d-flex gap-2 flex-wrap">
                             <button type="button" id="btn-notify-stok-kurang" class="btn btn-warning d-none" onclick="notifyStockShortage()">
                                 <i class="fas fa-bell me-1"></i>Kirim Notifikasi Stok Kurang ke Operator Gudang
+                            </button>
+                            <button type="button" id="btn-notify-whatsapp" class="btn d-none" style="background-color: #25D366; color: white; border: none;" onclick="notifyCustomerViWhatsApp()" title="Informasikan ke Pelanggan">
+                                <i class="fab fa-whatsapp me-1"></i>Informasikan ke Pelanggan
                             </button>
                         </div>
                     </div>
@@ -2227,6 +2230,81 @@ async function notifyStockShortage() {
         showPopupAlert(
             'Terjadi Kesalahan',
             'Terjadi kesalahan saat mengirim notifikasi. Silakan coba lagi.',
+            'error'
+        );
+    }
+}
+
+async function notifyCustomerViWhatsApp() {
+    const pelangganSelect = document.getElementById('pelanggan_id');
+    const pelangganId = pelangganSelect ? pelangganSelect.value : null;
+    const nomorPo = document.getElementById('nomor_po') ? document.getElementById('nomor_po').value : null;
+    
+    if (!pelangganId) {
+        showPopupAlert(
+            'Pelanggan Belum Dipilih',
+            'Silakan pilih pelanggan terlebih dahulu.',
+            'warning'
+        );
+        return;
+    }
+
+    const details = getShortageDetails();
+    if (!details.length) {
+        showPopupAlert(
+            'Tidak Ada Kekurangan',
+            'Tidak ada kekurangan stok yang terdeteksi.',
+            'info'
+        );
+        return;
+    }
+
+    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrf = tokenMeta ? tokenMeta.getAttribute('content') : '';
+
+    try {
+        const res = await fetch('{{ route('pesanan.notifyCustomerStockShortage') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ 
+                pelanggan_id: pelangganId, 
+                nomor_po: nomorPo, 
+                detail_kurang: details 
+            })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.success) {
+            showPopupAlert(
+                'Berhasil!',
+                json.message || 'Notifikasi stok kurang berhasil dikirim ke pelanggan via WhatsApp.',
+                'success',
+                [{
+                    text: 'OK',
+                    class: 'popup-btn-success',
+                    icon: 'fas fa-check',
+                    callback: () => {
+                        const btn = document.getElementById('btn-notify-whatsapp');
+                        if (btn) btn.classList.add('d-none');
+                    }
+                }]
+            );
+        } else {
+            showPopupAlert(
+                'Gagal Mengirim',
+                json.message || 'Gagal mengirim notifikasi WhatsApp ke pelanggan.',
+                'error'
+            );
+        }
+    } catch (err) {
+        console.error(err);
+        showPopupAlert(
+            'Terjadi Kesalahan',
+            'Terjadi kesalahan saat mengirim notifikasi WhatsApp: ' + err.message,
             'error'
         );
     }

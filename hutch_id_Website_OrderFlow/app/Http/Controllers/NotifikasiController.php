@@ -206,4 +206,44 @@ class NotifikasiController extends Controller
 
         return response()->json($notifikasi);
     }
+
+    /**
+     * API - Mark notification as read
+     */
+    public function apiMarkAsRead($id)
+    {
+        $notifikasi = Notifikasi::find($id);
+
+        if (!$notifikasi) {
+            return response()->json(['message' => 'Notifikasi tidak ditemukan'], 404);
+        }
+
+        // Check authorization
+        if (!in_array(auth()->user()->role, $notifikasi->untuk_roles ?? [])) {
+            return response()->json(['message' => 'Akses ditolak'], 403);
+        }
+
+        $notifikasi->update(['dibaca_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifikasi berhasil ditandai sudah dibaca',
+            'notifikasi' => $notifikasi,
+        ]);
+    }
+
+    /**
+     * API - Mark all notifications as read
+     */
+    public function apiMarkAllAsRead()
+    {
+        Notifikasi::whereJsonContains('untuk_roles', auth()->user()->role)
+            ->whereNull('dibaca_at')
+            ->update(['dibaca_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Semua notifikasi berhasil ditandai sudah dibaca',
+        ]);
+    }
 }

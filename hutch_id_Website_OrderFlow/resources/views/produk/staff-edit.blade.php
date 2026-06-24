@@ -115,7 +115,7 @@
                                 <div class="photo-placeholder">
                                     <i class="fas fa-cloud-upload-alt"></i>
                                     <p class="mb-1">Klik atau drag foto di sini</p>
-                                    <small>JPG, PNG, GIF (Max 5MB)</small>
+                                    <small>JPG, PNG, GIF (Max 10MB)</small>
                                 </div>
                                 <div id="foto-preview" class="mt-3 p-3 bg-light rounded" style="display: none; border: 2px solid #3b82f6;">
                                     <div class="mb-3">
@@ -141,6 +141,9 @@
                             </a>
                             <button type="submit" class="btn btn-primary btn-lg submit-btn">
                                 <i class="fas fa-save me-2"></i>Simpan Perubahan
+                            </button>
+                            <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="fas fa-trash-alt me-2"></i>Hapus Produk
                             </button>
                         </div>
                     </form>
@@ -304,11 +307,14 @@
     .photo-upload-area {
         position: relative;
         border-radius: 12px;
-        overflow: hidden;
+        overflow: visible;
         background: linear-gradient(135deg, #f0f7ff 0%, #f7fbff 100%);
         border: 2px dashed #3b82f6;
         cursor: pointer;
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .photo-upload-area:hover {
@@ -317,13 +323,40 @@
     }
 
     .photo-input {
-        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 10;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+
+    @media (max-width: 768px) {
+        .photo-input {
+            display: block !important;
+            position: static;
+            opacity: 0.001 !important;
+            width: 100% !important;
+            height: 100% !important;
+            padding: 8rem 1rem !important;
+            z-index: 100 !important;
+        }
     }
 
     .photo-placeholder {
-        padding: 3rem 1rem;
+        padding: 2rem 1rem;
         text-align: center;
         color: #3b82f6;
+        width: 100%;
+        pointer-events: none;
     }
 
     .photo-placeholder i {
@@ -490,11 +523,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Event listeners
-    photoArea.addEventListener('click', () => photoInput.click());
+    // Event listeners for desktop
+    photoArea.addEventListener('click', function(e) {
+        if (e.target !== photoInput) {
+            photoInput.click();
+        }
+    });
+
+    // Touch support for mobile
+    photoArea.addEventListener('touchstart', function(e) {
+        photoInput.click();
+    });
 
     photoArea.addEventListener('dragover', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         photoArea.style.borderColor = '#2563eb';
         photoArea.style.background = 'linear-gradient(135deg, #e6f2ff 0%, #f0f7ff 100%)';
     });
@@ -506,12 +549,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     photoArea.addEventListener('drop', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         photoArea.style.borderColor = '#3b82f6';
         photoInput.files = e.dataTransfer.files;
         handlePhotoSelect();
     });
 
     photoInput.addEventListener('change', handlePhotoSelect);
+    photoInput.addEventListener('touchend', function(e) {
+        e.preventDefault();
+    });
 
     if (removePhotoBtn) {
         removePhotoBtn.addEventListener('click', () => {
@@ -531,6 +578,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    console.log('✅ Photo upload handler initialized for mobile and desktop');
 });
 </script>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title fw-bold" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Hapus Produk
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-3">Apakah Anda yakin ingin menghapus produk <strong>{{ $produk->nama }}</strong>?</p>
+                <div class="alert alert-warning mb-0" role="alert">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>Perhatian:</strong> Tindakan ini tidak dapat dibatalkan. Produk akan dihapus secara permanen dari sistem.
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Batal
+                </button>
+                <form action="{{ route('produk.staff.destroy', $produk->id) }}" method="POST" style="display: inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-2"></i>Ya, Hapus Produk
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection

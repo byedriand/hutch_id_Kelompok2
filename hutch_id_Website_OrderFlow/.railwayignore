@@ -1,0 +1,23 @@
+# Railway ignore file
+node_modules/
+vendor/
+storage/logs/*
+.env.local
+.env.*.local
+bootstrap/cache/*
+build/
+dist/
+.git/
+.gitignore
+.DS_Store
+*.log
+.idea/
+.vscode/
+workspace_backup_*/
+hutch_id_Website_OrderFlow_backup/
+env/
+n8n/
+docker/
+tests/
+*.md
+phpunit.xml

@@ -4,15 +4,6 @@
 <div>
     @push('styles')
     <style>
-        /* ===== SIDEBAR CONSISTENCY FIX ===== */
-        #sidebar {
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 1030;
-        }
-
         .sidebar-inner {
             display: flex;
             flex-direction: column;
@@ -1220,30 +1211,66 @@
         .form-control.form-control-sm { border-radius: 0 12px 12px 0; }
         .form-select.form-select-sm { border-radius: 0 12px 12px 0; }
 
-        /* Masonry layout (JS) - items set to percentage width */
-        .masonry { position: relative; }
-        .masonry-item {
-            width: 48%;
-            margin-bottom: 1.5rem;
-            display: block;
-            opacity: 0;
-            transform: translateY(24px) scale(0.92);
-            transition: opacity 600ms cubic-bezier(.2, .8, .2, 1), transform 600ms cubic-bezier(.2, .8, .2, 1);
+        /* ===================================================== */
+        /* GRID LAYOUT - CSS GRID MURNI, TANPA JS ABSOLUTE-POSITION */
+        /* (Library Masonry.js sengaja TIDAK dipakai lagi karena      */
+        /*  meng-absolute-position setiap card berdasar lebar layar  */
+        /*  saat itu; jika WebView Flutter melaporkan innerWidth     */
+        /*  yang keliru saat render pertama, posisi & tinggi         */
+        /*  container jadi salah hitung dan konten di bawah hilang   */
+        /*  serta tidak bisa di-scroll. CSS Grid tidak punya masalah */
+        /*  ini sama sekali karena tinggi dihitung native oleh       */
+        /*  browser/WebView, bukan oleh JS.)                         */
+        /* ===================================================== */
+        .masonry {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            align-items: start;
         }
 
-        .masonry-item:nth-child(2) { transition-delay: 60ms; }
-        .masonry-item:nth-child(3) { transition-delay: 120ms; }
-        .masonry-item:nth-child(4) { transition-delay: 180ms; }
-        .masonry-item:nth-child(5) { transition-delay: 240ms; }
-        .masonry-sizer { width: 48%; }
+        .masonry-sizer { display: none; }
 
-        @media (max-width: 1199px) { .masonry-item, .masonry-sizer { width: 48%; } }
-        @media (max-width: 991px) { .masonry-item, .masonry-sizer { width: 100%; } }
+        .masonry-item {
+            width: 100%;
+            margin-bottom: 0;
+            display: block;
+            visibility: visible;
+            opacity: 1;
+            transform: none;
+        }
 
-        /* Reveal state for staggered animation */
-        .masonry-item.show { 
-            opacity: 1; 
-            transform: none; 
+        @media (max-width: 991px) {
+            .masonry {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+        }
+
+        /* MOBILE PORTRAIT FIX - jaminan eksplisit tetap terlihat & bisa di-scroll */
+        @media (max-width: 576px) {
+            .masonry,
+            .pesanan-grid {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: auto !important;
+                overflow: visible !important;
+                position: relative !important;
+            }
+
+            .masonry-item {
+                width: 100% !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                transform: none !important;
+                margin-bottom: 0 !important;
+                height: auto !important;
+            }
         }
 
         /* Skeleton loader styles */
@@ -1762,37 +1789,23 @@
     });
 </script>
 <script>
-    // Simple skeleton toggle: show skeleton for a short moment then reveal content
+    // Skeleton toggle - CSS Grid sudah menangani layout & visibility sepenuhnya,
+    // jadi JS di sini hanya menyembunyikan skeleton, tidak ada lagi
+    // perhitungan posisi/tinggi lewat library pihak ketiga (Masonry.js)
+    // yang sebelumnya bisa salah hitung di WebView Flutter dan membuat
+    // konten di bawah area awal layar tidak terlihat/tidak bisa di-scroll.
     document.addEventListener('DOMContentLoaded', function () {
         const skeleton = document.getElementById('skeleton');
         const list = document.getElementById('pesananList');
-        // show skeleton at first, then replace quickly
-        setTimeout(() => {
-            if (skeleton) skeleton.style.display = 'none';
-            if (list) {
-                list.style.display = '';
-                // initialize masonry after revealing content
-                if (typeof imagesLoaded !== 'undefined' && typeof Masonry !== 'undefined') {
-                    imagesLoaded(list, function() {
-                        var msnry = new Masonry(list, {
-                            itemSelector: '.masonry-item',
-                            columnWidth: '.masonry-sizer',
-                            percentPosition: true,
-                            gutter: 16
-                        });
-                        // staggered reveal after layout
-                        var items = list.querySelectorAll('.masonry-item');
-                        items.forEach(function(it, idx){
-                            setTimeout(function(){ it.classList.add('show'); msnry.layout(); }, idx * 80);
-                        });
-                    });
-                }
-            }
-        }, 350);
+
+        if (skeleton) {
+            skeleton.style.display = 'none';
+        }
+
+        if (list) {
+            list.style.display = '';
+        }
     });
 </script>
-<!-- Load imagesLoaded and Masonry from CDN for better masonry layout -->
-<script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
-<script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
 @endpush
 @endsection

@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- CACHE BUSTER - Force mobile to load latest version -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <title>hutch.id OrderFlow</title>
 
     <!-- Fonts -->
@@ -357,6 +363,33 @@
             transform: translateY(-1px);
         }
 
+        /* Profile Dropdown Styles */
+        .profile-dropdown .dropdown-toggle::after {
+            display: none;
+        }
+
+        .profile-dropdown-menu {
+            margin-top: 0.5rem !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+            padding: 0.5rem 0 !important;
+        }
+
+        .profile-dropdown-menu .dropdown-item {
+            padding: 0.8rem 1rem !important;
+            transition: all 0.25s ease;
+            border-radius: 8px;
+            margin: 0.3rem 0.5rem;
+        }
+
+        .profile-dropdown-menu .dropdown-item:hover {
+            background: rgba(255,255,255,0.12) !important;
+            transform: translateX(4px);
+        }
+
+        .profile-dropdown-menu .dropdown-divider {
+            margin: 0.3rem 0 !important;
+        }
+
         #sidebar .border-bottom,
         #sidebar .border-top {
             border-color: rgba(255,255,255,0.12) !important;
@@ -499,45 +532,25 @@
             background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
             border: 3px solid #fff;
             border-radius: 50%;
+            /* box-shadow dibuat statis (tidak dianimasikan) supaya tidak
+               memicu repaint berulang setiap frame - ini sumber utama
+               app terasa berat/patah-patah terus-menerus di WebView Android. */
             box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2),
                         0 0 0 2px rgba(16, 185, 129, 0.12),
-                        0 0 6px rgba(16, 185, 129, 0.85),
-                        0 0 12px rgba(16, 185, 129, 0.6),
-                        0 0 18px rgba(16, 185, 129, 0.4),
+                        0 0 8px rgba(16, 185, 129, 0.85),
                         inset -1px -1px 2px rgba(0, 0, 0, 0.2),
                         inset 1px 1px 2px rgba(255, 255, 255, 0.35);
-            animation: onlineStatusPulse 2.2s ease-in-out infinite, onlineStatusGlow 1.4s ease-in-out infinite;
+            animation: onlineStatusPulse 2.2s ease-in-out infinite;
         }
 
         @keyframes onlineStatusPulse {
             0%, 100% {
                 transform: scale(1);
-                box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2),
-                           0 0 0 2px rgba(16, 185, 129, 0.12),
-                           0 0 6px rgba(16, 185, 129, 0.85),
-                           0 0 12px rgba(16, 185, 129, 0.6),
-                           0 0 18px rgba(16, 185, 129, 0.4),
-                           inset -1px -1px 2px rgba(0, 0, 0, 0.2),
-                           inset 1px 1px 2px rgba(255, 255, 255, 0.35);
-            }
-            50% {
-                transform: scale(1.2);
-                box-shadow: 0 0 0 1.5px rgba(16, 185, 129, 0.3),
-                           0 0 0 3px rgba(16, 185, 129, 0.15),
-                           0 0 8px rgba(16, 185, 129, 0.95),
-                           0 0 16px rgba(16, 185, 129, 0.7),
-                           0 0 24px rgba(16, 185, 129, 0.5),
-                           inset -1px -1px 2px rgba(0, 0, 0, 0.2),
-                           inset 1px 1px 2px rgba(255, 255, 255, 0.35);
-            }
-        }
-
-        @keyframes onlineStatusGlow {
-            0%, 100% {
                 opacity: 1;
             }
             50% {
-                opacity: 0.8;
+                transform: scale(1.15);
+                opacity: 0.85;
             }
         }
 
@@ -980,10 +993,10 @@
 
         @keyframes activePulse {
             0%, 100% {
-                box-shadow: 0 0 8px rgba(112, 183, 255, 0.4);
+                opacity: 0.6;
             }
             50% {
-                box-shadow: 0 0 16px rgba(112, 183, 255, 0.8);
+                opacity: 1;
             }
         }
 
@@ -1561,6 +1574,435 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* ===== CHATBOT BUTTON STYLES ===== */
+        .chatbot-btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.1rem;
+            background: linear-gradient(135deg, #00d4ff 0%, #2d7dd2 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(0, 212, 255, 0.35), inset 0 1px 2px rgba(255,255,255,0.3);
+            backdrop-filter: blur(4px);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .chatbot-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .chatbot-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .chatbot-btn:hover::before {
+            opacity: 0.15;
+        }
+
+        .chatbot-btn:hover {
+            background: linear-gradient(135deg, #00e6ff 0%, #3a8fe1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 212, 255, 0.45), inset 0 1px 2px rgba(255,255,255,0.35);
+        }
+
+        .chatbot-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.25), 0 8px 24px rgba(0, 212, 255, 0.35);
+        }
+
+        .chatbot-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.35), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .chatbot-btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Chatbot Modal */
+        .chatbot-modal {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 420px;
+            height: 650px;
+            background: #ffffff;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 40px rgba(15, 64, 124, 0.25), 0 0 1px rgba(0,0,0,0.1);
+            display: none;
+            flex-direction: column;
+            z-index: 2000;
+            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: bottom right;
+            border: 1px solid rgba(45, 125, 210, 0.1);
+        }
+
+        .chatbot-modal.show {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        .chatbot-modal.hide {
+            animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #2d7dd2 0%, #00d4ff 100%);
+            padding: 1.5rem;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+            box-shadow: 0 4px 16px rgba(45, 125, 210, 0.2);
+        }
+
+        .chatbot-header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            letter-spacing: 0.3px;
+        }
+
+        .chatbot-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .chatbot-header-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-header-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .chatbot-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: linear-gradient(to bottom, #f9fbff, #f3f8ff);
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .chatbot-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chatbot-body::-webkit-scrollbar-track {
+            background: #eef4fb;
+        }
+
+        .chatbot-body::-webkit-scrollbar-thumb {
+            background: #2d7dd2;
+            border-radius: 3px;
+        }
+
+        .chatbot-body::-webkit-scrollbar-thumb:hover {
+            background: #1f6bb8;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 0.6rem;
+            animation: slideInMessage 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .chat-message.bot {
+            justify-content: flex-start;
+        }
+
+        .chat-message.user {
+            justify-content: flex-end;
+        }
+
+        .chat-message.bot .message-content {
+            background: #ffffff;
+            border: 1px solid #e5ecf4;
+            border-radius: 14px;
+            padding: 0.95rem 1.2rem;
+            max-width: 75%;
+            color: #17233d;
+            line-height: 1.6;
+            box-shadow: 0 2px 10px rgba(45, 125, 210, 0.08);
+            word-wrap: break-word;
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .chat-message.user .message-content {
+            background: linear-gradient(135deg, #2d7dd2 0%, #1f6bb8 100%);
+            color: #ffffff;
+            border-radius: 14px;
+            padding: 0.95rem 1.2rem;
+            max-width: 75%;
+            line-height: 1.6;
+            box-shadow: 0 4px 14px rgba(45, 125, 210, 0.4);
+            word-wrap: break-word;
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .chat-input {
+            padding: 1rem;
+            border-top: 1px solid #e5ecf4;
+            background: #ffffff;
+            display: flex;
+            gap: 0.6rem;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            border: 1px solid #dbe5f1;
+            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            background: #f9fbff;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #2d7dd2;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.12);
+        }
+
+        .chat-input button {
+            background: linear-gradient(135deg, #2d7dd2, #1f6bb8);
+            border: none;
+            color: #ffffff;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(45, 125, 210, 0.2);
+        }
+
+        .chat-input button:hover {
+            background: linear-gradient(135deg, #3a8fe1, #2968c5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(45, 125, 210, 0.3);
+        }
+
+        .chat-input button:active {
+            transform: translateY(0);
+        }
+
+        .chat-typing {
+            display: flex;
+            gap: 0.4rem;
+            padding: 0.8rem 1rem;
+            background: #ffffff;
+            border: 1px solid #dbe5f1;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(15, 64, 124, 0.06);
+            width: fit-content;
+        }
+
+        .chat-typing span {
+            width: 6px;
+            height: 6px;
+            background: #2d7dd2;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .chat-typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .chat-typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.5;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-8px);
+            }
+        }
+
+        @keyframes slideInMessage {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Typing Indicator Animation */
+        .chat-typing {
+            display: flex;
+            gap: 4px;
+            padding: 0.8rem 1rem;
+        }
+
+        .chat-typing span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2d7dd2;
+            animation: typing 1.4s infinite;
+        }
+
+        .chat-typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .chat-typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.5;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Smooth slide in for chat messages */
+        @keyframes slideInMessage {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .chatbot-modal {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .chat-message.bot .message-content,
+            .chat-message.user .message-content {
+                max-width: 85%;
+            }
+        }
     </style>
     @stack('styles')
 </head>
@@ -1633,34 +2075,38 @@
                         </div>
 
                         <div class="sidebar-footer">
-                            <div class="sidebar-user">
+                            <a href="{{ route('profile') }}" class="sidebar-user" style="text-decoration: none; cursor: pointer;">
                                 <div class="avatar-circle">
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="user-info">
-                                    <div class="fw-bold">{{ auth()->user()->name }}</div>
+                                    <div class="fw-bold">{{ auth()->user()->email }}</div>
                                     <div class="text-muted" style="font-size: 0.75rem;">
+                                        Masuk sebagai: 
                                         @switch(auth()->user()->role)
                                             @case('staf_penjualan')
                                                 Staf Penjualan
-                                                @break
-                                            @case('pemilik_umkm')
-                                                Pemilik UMKM
                                                 @break
                                             @case('operator_gudang')
                                                 Operator Gudang
                                                 @break
                                             @case('administrator')
-                                                Admin
+                                                Administrator
                                                 @break
                                         @endswitch
+                                        {{ auth()->user()->account_number }}
                                     </div>
                                 </div>
-                            </div>
-                            <form method="POST" action="{{ route('logout') }}" class="logout-form">
+                            </a>
+
+                            <button class="chatbot-btn" onclick="toggleChatbot()" title="Chat dengan AI Assistant">
+                                <i class="fas fa-comments me-2"></i>ChatBot AI
+                            </button>
+
+                            <form method="POST" action="{{ route('logout') }}" class="logout-form mt-2">
                                 @csrf
-                                <button type="submit" class="btn logout-btn w-100" id="logoutBtn">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Keluar
+                                <button type="submit" class="logout-btn w-100 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-sign-out-alt me-2" style="color: #ff6b6b;"></i>Logout
                                 </button>
                             </form>
                         </div>
@@ -1737,6 +2183,34 @@
         </div>
     </div>
 
+    <!-- Mobile Cache Refresh Script -->
+    <script>
+        // Force mobile WebView to load fresh content
+        window.addEventListener('load', () => {
+            console.log('✅ Page loaded - version: ' + new Date().toLocaleTimeString());
+            
+            // Clear any stale cache on mobile
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                    });
+                    console.log('✅ Mobile cache cleared');
+                });
+            }
+        });
+
+        // Detect and log if running in mobile/Flutter WebView
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            console.log('📱 Mobile device detected - version: ' + new Date().getTime());
+        }
+
+        // Check for JavaScript errors and log them
+        window.addEventListener('error', (event) => {
+            console.error('❌ JS Error:', event.message, event.filename, event.lineno);
+        });
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @auth
     <script>
@@ -1786,18 +2260,17 @@
             window.location.href = '{{ route("login") }}';
         }
 
-        // Check if login just completed
+        // Check if logout just completed (only if this is NOT a fresh login load,
+        // which is handled separately below for the login success modal)
         window.addEventListener('load', function() {
             const pendingRole = sessionStorage.getItem('pendingLoginRole');
             if (pendingRole) {
-                showSuccessModal(pendingRole);
-                // Auto-close after 4 seconds
-                setTimeout(() => {
-                    closeSuccessModal();
-                }, 4000);
+                // A fresh login just happened - clear any leftover logout flag
+                // so the logout modal doesn't pop up right after logging in.
+                sessionStorage.removeItem('pendingLogout');
+                return;
             }
 
-            // Check if logout just completed
             const pendingLogout = sessionStorage.getItem('pendingLogout');
             if (pendingLogout) {
                 showLogoutModal();
@@ -1873,8 +2346,11 @@
                         modalOverlay.classList.add('show');
                     }, 300);
                     
-                    // Clear the flag
+                    // Clear the flags - a fresh login always takes priority over
+                    // any leftover logout flag, so it must be cleared too to
+                    // prevent the logout modal from popping up after login.
                     sessionStorage.removeItem('pendingLoginRole');
+                    sessionStorage.removeItem('pendingLogout');
                 }
             }
         });
@@ -2142,6 +2618,230 @@
                 }, 300);
             }
         }
+    </script>
+
+    <!-- Chatbot Modal -->
+    <div id="chatbotModal" class="chatbot-modal">
+        <div class="chatbot-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                <h3 style="margin: 0;">
+                    <i class="fas fa-robot"></i> Hutch AI Assistant
+                </h3>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="chatbot-header-btn" onclick="clearChatHistory()" title="Hapus chat">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <button class="chatbot-close" onclick="closeChatbot()" title="Tutup">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="chatbot-body" id="chatbotBody">
+            <div class="chat-message bot">
+                <div class="message-content">
+                    👋 Halo! Saya adalah AI Assistant Hutch. Bagaimana saya bisa membantu Anda hari ini?
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input 
+                type="text" 
+                id="chatInput" 
+                placeholder="Ketik pesan Anda..." 
+                onkeypress="handleChatKeyPress(event)"
+                autocomplete="off"
+            >
+            <button onclick="sendChatMessage()" title="Kirim pesan (Enter)">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global variable untuk selected AI model
+        // N8N adalah satu-satunya model yang digunakan
+        let selectedAIModel = 'n8n';
+
+        // Chatbot Functions
+        function selectModel(model) {
+            selectedAIModel = model;
+            
+            // Update UI
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                btn.classList.remove('model-btn-active');
+            });
+            document.querySelector(`[data-model="${model}"]`).classList.add('model-btn-active');
+            
+            // N8N is the only model available, no need for notification
+            
+            // Auto scroll
+            const chatBody = document.getElementById('chatbotBody');
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function toggleChatbot() {
+            const modal = document.getElementById('chatbotModal');
+            if (modal.classList.contains('show')) {
+                closeChatbot();
+            } else {
+                openChatbot();
+            }
+        }
+
+        function openChatbot() {
+            const modal = document.getElementById('chatbotModal');
+            modal.classList.remove('hide');
+            modal.classList.add('show');
+            document.getElementById('chatInput').focus();
+        }
+
+        function closeChatbot() {
+            const modal = document.getElementById('chatbotModal');
+            modal.classList.add('hide');
+            setTimeout(() => {
+                modal.classList.remove('show', 'hide');
+            }, 300);
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addChatMessage('user', message);
+            input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Send message to backend via AJAX with selected model
+            fetch('{{ route("api.chatbot.message") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ 
+                    message: message,
+                    model: selectedAIModel
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                removeTypingIndicator();
+                if (data.reply) {
+                    addChatMessage('bot', data.reply);
+                } else {
+                    addChatMessage('bot', 'Maaf, saya tidak dapat memproses pesan Anda saat ini. Silakan coba lagi.');
+                }
+                // Auto scroll to bottom
+                const chatBody = document.getElementById('chatbotBody');
+                chatBody.scrollTop = chatBody.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                removeTypingIndicator();
+                addChatMessage('bot', '❌ Terjadi kesalahan. Silakan coba lagi.');
+            });
+        }
+
+        function addChatMessage(sender, text) {
+            const chatBody = document.getElementById('chatbotBody');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ' + sender;
+            
+            // Format text dengan markdown-like support
+            const formattedText = formatChatMessage(text);
+            messageDiv.innerHTML = '<div class="message-content">' + formattedText + '</div>';
+            
+            chatBody.appendChild(messageDiv);
+            
+            // Auto scroll ke bottom dengan smooth animation
+            setTimeout(() => {
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }, 100);
+        }
+
+        function formatChatMessage(text) {
+            // Escape HTML
+            let formatted = escapeHtml(text);
+            
+            // Convert newlines to <br>
+            formatted = formatted.replace(/\n/g, '<br>');
+            
+            // Bold text dengan **text**
+            formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong style="color: #2d7dd2; font-weight: 700;">$1</strong>');
+            
+            // Convert bullet points
+            formatted = formatted.replace(/^(\d+\.|\•|✓|✓|○|•)/gm, '<span style="color: #2d7dd2; font-weight: 600;">$1</span>');
+            formatted = formatted.replace(/^(📦|📊|👥|📈|🤖|🔒|✨|📋|1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|✅|🔔|💡|❓|❌|⚠️|📞|📧|🌐|💰|🎯|📘|🤔|🆘|📑|📥|🔐|🔑|👤|🌐|🎯|🎯)/gm, '<span style="font-size: 1.1em; margin-right: 0.3em;">$1</span>');
+            
+            // Links
+            formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" style="color: #2d7dd2; text-decoration: underline;">$1</a>');
+            
+            return formatted;
+        }
+
+        function showTypingIndicator() {
+            const chatBody = document.getElementById('chatbotBody');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-message bot';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
+            chatBody.appendChild(typingDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearChatHistory() {
+            // Ask for confirmation
+            if (confirm('Hapus Riwayat Chat?')) {
+                const chatBody = document.getElementById('chatbotBody');
+                chatBody.innerHTML = '';
+                
+                // Add initial greeting
+                const initialMsg = document.createElement('div');
+                initialMsg.className = 'chat-message bot';
+                initialMsg.innerHTML = '<div class="message-content">👋 Chat telah dihapus. Bagaimana saya bisa membantu Anda sekarang?</div>';
+                chatBody.appendChild(initialMsg);
+                
+                // Auto scroll
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+        }
+
+        // Close chatbot when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('chatbotModal');
+            const chatbotBtn = document.querySelector('.chatbot-btn');
+            if (!modal.contains(event.target) && !chatbotBtn.contains(event.target)) {
+                if (modal.classList.contains('show')) {
+                    closeChatbot();
+                }
+            }
+        });
     </script>
 
     @stack('scripts')

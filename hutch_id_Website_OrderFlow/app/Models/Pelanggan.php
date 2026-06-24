@@ -10,7 +10,7 @@ class Pelanggan extends Model
     use HasFactory;
 
     protected $table = 'pelanggan';
-    protected $fillable = ['nama', 'alamat', 'telepon', 'email'];
+    protected $fillable = ['nama', 'alamat', 'telepon', 'email', 'nomor_whatsapp', 'catatan'];
 
     public function pesanan()
     {

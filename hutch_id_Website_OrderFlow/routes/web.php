@@ -8,6 +8,8 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProdukController;
+use App\Http\Controllers\Api\ChatbotController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -53,26 +55,39 @@ Route::get('/auth/mobile-sync', function (Request $request) {
     }
 });
 
+// Landing page as home page
+Route::get('/landing', function () {
+    return view('landing');
+})->name('landing');
+
+// Root route - always show landing page
 Route::get('/', function () {
-    return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
+    return redirect()->route('landing');
 });
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
+    
+    // User Profile Routes
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::delete('/profile', [UserController::class, 'destroy'])->name('user.destroy');
     // PO Creation - Staf Penjualan, Pemilik UMKM, Administrator
     Route::middleware(['role:staf_penjualan,pemilik_umkm,administrator'])->group(function () {
         Route::get('/pesanan/create', [PesananController::class, 'create'])->name('pesanan.create');
         Route::post('/pesanan', [PesananController::class, 'store'])->name('pesanan.store');
+        Route::post('/pesanan/notify-customer-stock-shortage', [PesananController::class, 'notifyCustomerStockShortage'])->name('pesanan.notifyCustomerStockShortage');
     });
+
+    // Chatbot API Route (requires auth)
+    Route::post('/api/chatbot/message', [ChatbotController::class, 'sendMessage'])->name('api.chatbot.message')->middleware('auth');
 
     // PO Confirmation - Pemilik UMKM, Administrator
     Route::middleware(['role:pemilik_umkm,administrator'])->group(function () {
         Route::post('/pesanan/{pesanan}/confirm', [PesananController::class, 'confirm'])->name('pesanan.confirm');
     });
 
-    // PO Status Update - Pemilik UMKM, Operator Gudang, Administrator
-    Route::middleware(['role:pemilik_umkm,operator_gudang,administrator'])->group(function () {
+    // PO Status Update - Staf Penjualan, Pemilik UMKM, Operator Gudang, Administrator
+    Route::middleware(['role:staf_penjualan,pemilik_umkm,operator_gudang,administrator'])->group(function () {
         Route::patch('/pesanan/{pesanan}/status', [PesananController::class, 'updateStatus'])->name('pesanan.updateStatus');
     });
 
@@ -139,6 +154,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/produk/staf/tambah', [ProdukController::class, 'staffStore'])->name('produk.staff.store');
         Route::get('/produk/staf/{produk}/edit', [ProdukController::class, 'staffEdit'])->name('produk.staff.edit');
         Route::put('/produk/staf/{produk}', [ProdukController::class, 'staffUpdate'])->name('produk.staff.update');
+        Route::delete('/produk/staf/{produk}', [ProdukController::class, 'staffDestroy'])->name('produk.staff.destroy');
     });
 });
 

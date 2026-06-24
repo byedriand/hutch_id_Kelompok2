@@ -712,6 +712,35 @@
             border-color: rgba(245, 158, 11, 0.2);
         }
 
+        .success-message-alert {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            color: #16a34a;
+            padding: 1rem 1.1rem;
+            border-radius: 9px;
+            margin-bottom: 1.2rem;
+            font-size: 0.9rem;
+            border-left: 4px solid #16a34a;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideInDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
+            border: 1px solid rgba(22, 163, 74, 0.2);
+            font-weight: 600;
+        }
+
+        .success-message-alert i {
+            flex-shrink: 0;
+            font-size: 1.1rem;
+            animation: successPulse 0.6s ease-out;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
         /* Footer */
         .login-footer {
             margin-top: 0.8rem;
@@ -745,6 +774,50 @@
         .footer-badge:hover {
             background: linear-gradient(135deg, #dbeafe, #e0e7ff);
             transform: scale(1.05);
+        }
+
+        /* Back to Landing Button */
+        .btn-back-to-landing {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 1.2rem;
+            background: linear-gradient(135deg, rgba(45, 125, 210, 0.1), rgba(0, 212, 255, 0.1));
+            border: 1px solid rgba(45, 125, 210, 0.3);
+            border-radius: 10px;
+            color: #2d7dd2;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .btn-back-to-landing:hover {
+            background: linear-gradient(135deg, rgba(45, 125, 210, 0.2), rgba(0, 212, 255, 0.15));
+            border-color: rgba(45, 125, 210, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 125, 210, 0.15);
+            color: #1e5fa5;
+        }
+
+        .btn-back-to-landing i {
+            font-size: 0.9rem;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Responsive */
@@ -1761,6 +1834,12 @@
                         <span>{{ session('warning') }}</span>
                     </div>
                 @endif
+                @if(session('success'))
+                    <div class="success-message-alert">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                @endif
 
                 <form method="POST" action="{{ route('login') }}" id="loginForm">
                     @csrf
@@ -1786,6 +1865,12 @@
                         <!-- <span class="footer-badge"><i class="fas fa-lock-open"></i> Aman</span> -->
                         <!-- <span class="footer-badge"><i class="fas fa-cookie"></i> Cookies</span> -->
                         <!-- <span class="footer-badge"><i class="fas fa-shield-alt"></i> HTTPS</span> -->
+                        <div style="margin-top: 1rem; text-align: center;">
+                            <a href="{{ route('landing') }}" class="btn-back-to-landing">
+                                <i class="fas fa-arrow-left"></i>
+                                Kembali ke Halaman Utama
+                            </a>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -1876,6 +1961,622 @@
             window.location.href = '{{ route("login") }}';
         }
 
+        // Function to show account creation success popup (Green)
+        function showAccountCreationSuccessPopup(message) {
+            // Create overlay with sophisticated blur
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+                backdrop-filter: blur(8px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                animation: backdropFadeIn 0.4s ease-out;
+            `;
+
+            // Create popup wrapper for better shadow depth
+            const popupWrapper = document.createElement('div');
+            popupWrapper.style.cssText = `
+                position: relative;
+                max-width: 540px;
+                width: 90%;
+            `;
+
+            // Create popup with premium design
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #dbeafe 100%);
+                border-radius: 24px;
+                padding: 2.5rem 2rem;
+                box-shadow: 
+                    0 30px 80px rgba(22, 163, 74, 0.2),
+                    0 15px 40px rgba(22, 163, 74, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                border: 2px solid rgba(22, 163, 74, 0.3);
+                text-align: center;
+                animation: popupBounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                position: relative;
+                overflow: hidden;
+            `;
+
+            // Add shimmer effect background
+            const shimmer = document.createElement('div');
+            shimmer.style.cssText = `
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+                animation: shimmerEffect 3s infinite;
+                pointer-events: none;
+            `;
+            popup.appendChild(shimmer);
+
+            // Create icon container with glow
+            const iconContainer = document.createElement('div');
+            iconContainer.style.cssText = `
+                position: relative;
+                width: 100px;
+                height: 100px;
+                margin: 0 auto 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+
+            // Create glow effect
+            const glow = document.createElement('div');
+            glow.style.cssText = `
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle, rgba(22, 163, 74, 0.4), transparent 70%);
+                border-radius: 50%;
+                animation: glowPulse 2s ease-in-out infinite;
+            `;
+            iconContainer.appendChild(glow);
+
+            // Create icon
+            const icon = document.createElement('div');
+            icon.style.cssText = `
+                width: 100px;
+                height: 100px;
+                background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                animation: iconBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+                box-shadow: 0 8px 20px rgba(22, 163, 74, 0.4);
+                position: relative;
+                z-index: 1;
+            `;
+            icon.innerHTML = '<i class="fas fa-check" style="color: white; font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>';
+            iconContainer.appendChild(icon);
+
+            // Create title with gradient
+            const title = document.createElement('h2');
+            title.style.cssText = `
+                background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-size: 1.75rem;
+                font-weight: 800;
+                margin: 0 0 0.5rem;
+                letter-spacing: -1px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                animation: titleFadeIn 0.8s ease-out 0.2s both;
+            `;
+            title.textContent = 'Akun Berhasil Dibuat! 🎉';
+
+            // Create subtitle
+            const subtitle = document.createElement('div');
+            subtitle.style.cssText = `
+                font-size: 0.85rem;
+                color: #22c55e;
+                font-weight: 600;
+                margin-bottom: 1rem;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                animation: subtitleFadeIn 0.8s ease-out 0.3s both;
+            `;
+            subtitle.textContent = '✓ Akun Siap Digunakan';
+
+            // Create message
+            const msgElement = document.createElement('p');
+            msgElement.style.cssText = `
+                color: #059669;
+                font-size: 0.95rem;
+                line-height: 1.7;
+                margin: 0 0 2rem;
+                font-weight: 500;
+                animation: messageFadeIn 0.8s ease-out 0.4s both;
+            `;
+            msgElement.textContent = message.replace(/✓\s*/, '');
+
+            // Create close button with premium styling
+            const closeBtn = document.createElement('button');
+            closeBtn.style.cssText = `
+                background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+                color: white;
+                border: none;
+                padding: 0.9rem 2.5rem;
+                border-radius: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                box-shadow: 
+                    0 8px 20px rgba(22, 163, 74, 0.3),
+                    0 0 0 0 rgba(22, 163, 74, 0.4);
+                position: relative;
+                overflow: hidden;
+                animation: buttonFadeIn 0.8s ease-out 0.5s both;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                font-size: 0.9rem;
+            `;
+            closeBtn.textContent = '→ Lanjutkan ke Login';
+            
+            // Add ripple effect on click
+            closeBtn.onclick = (e) => {
+                const ripple = document.createElement('span');
+                const rect = closeBtn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: rgba(255, 255, 255, 0.6);
+                    border-radius: 50%;
+                    left: ${x}px;
+                    top: ${y}px;
+                    animation: rippleEffect 0.6s ease-out;
+                    pointer-events: none;
+                `;
+                closeBtn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+                setTimeout(() => overlay.remove(), 300);
+            };
+            
+            closeBtn.onmouseover = () => {
+                closeBtn.style.transform = 'translateY(-4px) scale(1.05)';
+                closeBtn.style.boxShadow = '0 12px 30px rgba(22, 163, 74, 0.4), 0 0 20px rgba(22, 163, 74, 0.3)';
+            };
+            closeBtn.onmouseout = () => {
+                closeBtn.style.transform = 'translateY(0) scale(1)';
+                closeBtn.style.boxShadow = '0 8px 20px rgba(22, 163, 74, 0.3), 0 0 0 0 rgba(22, 163, 74, 0.4)';
+            };
+
+            // Add animation keyframes
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes backdropFadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes popupBounceIn {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.7) translateY(-50px);
+                    }
+                    60% {
+                        opacity: 1;
+                        transform: scale(1.02) translateY(5px);
+                    }
+                    100% {
+                        transform: scale(1) translateY(0);
+                    }
+                }
+                @keyframes iconBounce {
+                    0% {
+                        transform: scale(0) rotate(-180deg);
+                    }
+                    70% {
+                        transform: scale(1.1) rotate(20deg);
+                    }
+                    100% {
+                        transform: scale(1) rotate(0deg);
+                    }
+                }
+                @keyframes glowPulse {
+                    0%, 100% { transform: scale(1); opacity: 0.6; }
+                    50% { transform: scale(1.2); opacity: 0.3; }
+                }
+                @keyframes shimmerEffect {
+                    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+                    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+                }
+                @keyframes titleFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes subtitleFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                @keyframes messageFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes buttonFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes rippleEffect {
+                    0% {
+                        transform: scale(0);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: scale(4);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Assemble popup
+            popup.appendChild(iconContainer);
+            popup.appendChild(title);
+            popup.appendChild(subtitle);
+            popup.appendChild(msgElement);
+            popup.appendChild(closeBtn);
+            popupWrapper.appendChild(popup);
+            overlay.appendChild(popupWrapper);
+            document.body.appendChild(overlay);
+
+            // Close on overlay click
+            overlay.onclick = (e) => {
+                if (e.target === overlay || e.target === popupWrapper) {
+                    overlay.remove();
+                }
+            };
+        }
+
+        // Function to show account deletion success popup (Red)
+        function showAccountDeletionSuccessPopup(message) {
+            // Create overlay with sophisticated blur
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+                backdrop-filter: blur(8px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                animation: backdropFadeIn 0.4s ease-out;
+            `;
+
+            // Create popup wrapper for better shadow depth
+            const popupWrapper = document.createElement('div');
+            popupWrapper.style.cssText = `
+                position: relative;
+                max-width: 540px;
+                width: 90%;
+            `;
+
+            // Create popup with premium design
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                background: linear-gradient(135deg, #fef2f2 0%, #fcedec 50%, #fecaca 100%);
+                border-radius: 24px;
+                padding: 2.5rem 2rem;
+                box-shadow: 
+                    0 30px 80px rgba(220, 38, 38, 0.2),
+                    0 15px 40px rgba(220, 38, 38, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                border: 2px solid rgba(220, 38, 38, 0.3);
+                text-align: center;
+                animation: popupBounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                position: relative;
+                overflow: hidden;
+            `;
+
+            // Add shimmer effect background
+            const shimmer = document.createElement('div');
+            shimmer.style.cssText = `
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+                animation: shimmerEffect 3s infinite;
+                pointer-events: none;
+            `;
+            popup.appendChild(shimmer);
+
+            // Create icon container with glow
+            const iconContainer = document.createElement('div');
+            iconContainer.style.cssText = `
+                position: relative;
+                width: 100px;
+                height: 100px;
+                margin: 0 auto 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+
+            // Create glow effect
+            const glow = document.createElement('div');
+            glow.style.cssText = `
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle, rgba(220, 38, 38, 0.4), transparent 70%);
+                border-radius: 50%;
+                animation: glowPulse 2s ease-in-out infinite;
+            `;
+            iconContainer.appendChild(glow);
+
+            // Create icon
+            const icon = document.createElement('div');
+            icon.style.cssText = `
+                width: 100px;
+                height: 100px;
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                animation: iconBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+                box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+                position: relative;
+                z-index: 1;
+            `;
+            icon.innerHTML = '<i class="fas fa-check" style="color: white; font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>';
+            iconContainer.appendChild(icon);
+
+            // Create title with gradient
+            const title = document.createElement('h2');
+            title.style.cssText = `
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-size: 1.75rem;
+                font-weight: 800;
+                margin: 0 0 0.5rem;
+                letter-spacing: -1px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                animation: titleFadeIn 0.8s ease-out 0.2s both;
+            `;
+            title.textContent = 'Akun Berhasil Dihapus!';
+
+            // Create subtitle
+            const subtitle = document.createElement('div');
+            subtitle.style.cssText = `
+                font-size: 0.85rem;
+                color: #ef4444;
+                font-weight: 600;
+                margin-bottom: 1rem;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                animation: subtitleFadeIn 0.8s ease-out 0.3s both;
+            `;
+            subtitle.textContent = '✓ Akun Telah Dihapus dari Sistem';
+
+            // Create message
+            const msgElement = document.createElement('p');
+            msgElement.style.cssText = `
+                color: #b91c1c;
+                font-size: 0.95rem;
+                line-height: 1.7;
+                margin: 0 0 2rem;
+                font-weight: 500;
+                animation: messageFadeIn 0.8s ease-out 0.4s both;
+            `;
+            msgElement.textContent = message.replace(/✓\s*/, '');
+
+            // Create close button with premium styling
+            const closeBtn = document.createElement('button');
+            closeBtn.style.cssText = `
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                color: white;
+                border: none;
+                padding: 0.9rem 2.5rem;
+                border-radius: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                box-shadow: 
+                    0 8px 20px rgba(220, 38, 38, 0.3),
+                    0 0 0 0 rgba(220, 38, 38, 0.4);
+                position: relative;
+                overflow: hidden;
+                animation: buttonFadeIn 0.8s ease-out 0.5s both;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                font-size: 0.9rem;
+            `;
+            closeBtn.textContent = '→ Kembali ke Login';
+            
+            // Add ripple effect on click
+            closeBtn.onclick = (e) => {
+                const ripple = document.createElement('span');
+                const rect = closeBtn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: rgba(255, 255, 255, 0.6);
+                    border-radius: 50%;
+                    left: ${x}px;
+                    top: ${y}px;
+                    animation: rippleEffect 0.6s ease-out;
+                    pointer-events: none;
+                `;
+                closeBtn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+                setTimeout(() => overlay.remove(), 300);
+            };
+            
+            closeBtn.onmouseover = () => {
+                closeBtn.style.transform = 'translateY(-4px) scale(1.05)';
+                closeBtn.style.boxShadow = '0 12px 30px rgba(220, 38, 38, 0.4), 0 0 20px rgba(220, 38, 38, 0.3)';
+            };
+            closeBtn.onmouseout = () => {
+                closeBtn.style.transform = 'translateY(0) scale(1)';
+                closeBtn.style.boxShadow = '0 8px 20px rgba(220, 38, 38, 0.3), 0 0 0 0 rgba(220, 38, 38, 0.4)';
+            };
+
+            // Add animation keyframes
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes backdropFadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes popupBounceIn {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.7) translateY(-50px);
+                    }
+                    60% {
+                        opacity: 1;
+                        transform: scale(1.02) translateY(5px);
+                    }
+                    100% {
+                        transform: scale(1) translateY(0);
+                    }
+                }
+                @keyframes iconBounce {
+                    0% {
+                        transform: scale(0) rotate(-180deg);
+                    }
+                    70% {
+                        transform: scale(1.1) rotate(20deg);
+                    }
+                    100% {
+                        transform: scale(1) rotate(0deg);
+                    }
+                }
+                @keyframes glowPulse {
+                    0%, 100% { transform: scale(1); opacity: 0.6; }
+                    50% { transform: scale(1.2); opacity: 0.3; }
+                }
+                @keyframes shimmerEffect {
+                    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+                    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+                }
+                @keyframes titleFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes subtitleFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                @keyframes messageFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes buttonFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes rippleEffect {
+                    0% {
+                        transform: scale(0);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: scale(4);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Assemble popup
+            popup.appendChild(iconContainer);
+            popup.appendChild(title);
+            popup.appendChild(subtitle);
+            popup.appendChild(msgElement);
+            popup.appendChild(closeBtn);
+            popupWrapper.appendChild(popup);
+            overlay.appendChild(popupWrapper);
+            document.body.appendChild(overlay);
+
+            // Close on overlay click
+            overlay.onclick = (e) => {
+                if (e.target === overlay || e.target === popupWrapper) {
+                    overlay.remove();
+                }
+            };
+        }
+
         // Intercept form submission to store role and show loading state
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
@@ -1934,6 +2635,21 @@
                         sessionStorage.removeItem('pendingLoginRole');
                         window.location.href = '{{ route("dashboard") }}';
                     }, 2500);
+                }
+            }
+
+            // Check for account creation or deletion success message
+            const successAlert = document.querySelector('.success-message-alert');
+            if (successAlert) {
+                const message = successAlert.textContent.trim();
+                
+                // Determine if it's account creation or deletion based on message
+                if (message.includes('dihapus')) {
+                    // Show red popup for account deletion
+                    showAccountDeletionSuccessPopup(message);
+                } else {
+                    // Show green popup for account creation
+                    showAccountCreationSuccessPopup(message);
                 }
             }
         });

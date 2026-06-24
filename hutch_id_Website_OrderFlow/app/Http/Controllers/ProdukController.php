@@ -86,7 +86,7 @@ class ProdukController extends Controller
             'harga_jual' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0|max:999999',
             'keterangan' => 'nullable|string|max:500',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ], [
             'nama.required' => 'Nama produk harus diisi.',
             'nama.unique' => 'Nama produk sudah terdaftar dalam sistem.',
@@ -169,7 +169,7 @@ class ProdukController extends Controller
                 'nullable', 'integer', 'min:0'
             ],
             'keterangan' => 'nullable|string|max:500',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ], [
             'stok.required' => 'Jumlah stok harus diisi ketika memilih "Set Ke Nilai Baru".',
             'stok.integer' => 'Jumlah stok harus berupa angka.',
@@ -463,7 +463,7 @@ class ProdukController extends Controller
             'nama' => 'required|string|max:255|unique:produk,nama',
             'harga_jual' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string|max:1000',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ], [
             'nama.required' => 'Nama produk harus diisi.',
             'nama.unique' => 'Nama produk sudah terdaftar dalam sistem.',
@@ -540,7 +540,7 @@ class ProdukController extends Controller
             'nama' => 'required|string|max:255|unique:produk,nama,' . $produk->id,
             'harga_jual' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string|max:1000',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ], [
             'nama.required' => 'Nama produk harus diisi.',
             'nama.unique' => 'Nama produk sudah terdaftar dalam sistem.',
@@ -585,6 +585,290 @@ class ProdukController extends Controller
 
         return redirect()->route('produk.staff')
             ->with('success', "Produk '{$produk->nama}' berhasil diperbarui.");
+    }
+
+    /**
+     * API - Store a new product (for mobile/staff)
+     */
+    public function apiStore(Request $request)
+    {
+        // Only Staf Penjualan and higher roles can create products
+        if (!in_array(auth()->user()->role, ['staf_penjualan', 'administrator', 'pemilik_umkm'])) {
+            return response()->json(['message' => 'Akses ditolak'], 403);
+        }
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255|unique:produks,nama',
+            'harga_jual' => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+        ]);
+
+        try {
+            $produk = new Produk();
+            $produk->nama = $validated['nama'];
+            $produk->harga_jual = $validated['harga_jual'];
+            $produk->keterangan = $validated['keterangan'] ?? '';
+            $produk->stok = 0; // Default stok 0, akan diatur oleh operator gudang
+            $produk->created_by = auth()->id();
+
+            // Handle foto upload
+            if ($request->hasFile('foto')) {
+                $produk->foto = $this->storeProductPhoto($request->file('foto'));
+            }
+
+            $produk->save();
+
+            // Create notification
+            Notifikasi::create([
+                'judul' => "Produk Baru: '{$produk->nama}'",
+                'pesan' => "Produk baru '{$produk->nama}' telah ditambahkan oleh " . auth()->user()->name . " (Staf Penjualan).",
+                'data' => [
+                    'produk_id' => $produk->id,
+                    'nama_produk' => $produk->nama,
+                    'harga_jual' => $produk->harga_jual,
+                    'action' => 'create',
+                    'created_by' => auth()->user()->name,
+                ],
+                'untuk_roles' => ['administrator', 'pemilik_umkm', 'operator_gudang'],
+                'created_by' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil ditambahkan',
+                'produk' => $produk,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat produk: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * API - Update product (for mobile/staff)
+     */
+    public function apiUpdate(Request $request, Produk $produk)
+    {
+        // Only Staf Penjualan and higher roles can update products
+        if (!in_array(auth()->user()->role, ['staf_penjualan', 'administrator', 'pemilik_umkm'])) {
+            return response()->json(['message' => 'Akses ditolak'], 403);
+        }
+
+        $validated = $request->validate([
+            'nama' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('produks')->ignore($produk->id)],
+            'harga_jual' => 'sometimes|required|numeric|min:0',
+            'keterangan' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+        ]);
+
+        try {
+            if (isset($validated['nama'])) {
+                $produk->nama = $validated['nama'];
+            }
+            if (isset($validated['harga_jual'])) {
+                $produk->harga_jual = $validated['harga_jual'];
+            }
+            if (isset($validated['keterangan'])) {
+                $produk->keterangan = $validated['keterangan'];
+            }
+
+            // Handle foto upload
+            if ($request->hasFile('foto')) {
+                if ($produk->foto) {
+                    $this->deleteProductPhoto($produk->foto);
+                }
+                $produk->foto = $this->storeProductPhoto($request->file('foto'));
+            }
+
+            $produk->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil diperbarui',
+                'produk' => $produk,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update produk: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * API - Update stock (for operator gudang)
+     */
+    public function apiUpdateStok(Request $request, Produk $produk)
+    {
+        // Only Operator Gudang and higher can update stock
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator', 'pemilik_umkm'])) {
+            return response()->json(['message' => 'Akses ditolak'], 403);
+        }
+
+        $validated = $request->validate([
+            'stok' => 'required|integer|min:0',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        try {
+            $oldStok = $produk->stok;
+            $produk->stok = $validated['stok'];
+            $produk->save();
+
+            // Create notification if stock decreased significantly
+            if ($produk->stok < 20) {
+                $this->resolveStokKurangNotificationsForProduct($produk);
+                
+                Notifikasi::create([
+                    'judul' => "Stok Kurang: '{$produk->nama}'",
+                    'pesan' => "Produk '{$produk->nama}' memiliki stok yang kurang (Stok: {$produk->stok}).",
+                    'data' => [
+                        'produk_id' => $produk->id,
+                        'nama_produk' => $produk->nama,
+                        'stok' => $produk->stok,
+                        'action' => 'stok_kurang',
+                    ],
+                    'untuk_roles' => ['administrator', 'pemilik_umkm', 'staf_penjualan'],
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stok berhasil diperbarui',
+                'produk' => $produk,
+                'old_stok' => $oldStok,
+                'new_stok' => $produk->stok,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update stok: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * API - Quick update stock (for mobile quick update)
+     */
+    public function apiQuickUpdateStok(Request $request, Produk $produk)
+    {
+        // Only Operator Gudang and higher can update stock
+        if (!in_array(auth()->user()->role, ['operator_gudang', 'administrator', 'pemilik_umkm'])) {
+            return response()->json(['message' => 'Akses ditolak'], 403);
+        }
+
+        $validated = $request->validate([
+            'stok' => 'required|integer|min:0',
+        ]);
+
+        try {
+            $oldStok = $produk->stok;
+            $produk->stok = $validated['stok'];
+            $produk->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stok berhasil diperbarui',
+                'produk' => $produk,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update stok: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Get all products for public API (for mobile app product picker)
+     * Public endpoint - no authentication required
+     */
+    public function apiIndex()
+    {
+        try {
+            $produk = Produk::orderBy('nama')->get();
+
+            return response()->json($produk, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data produk: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Get single product detail for public API
+     * Public endpoint - no authentication required
+     */
+    public function apiShow($id)
+    {
+        try {
+            $produk = Produk::find($id);
+
+            if (!$produk) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Produk tidak ditemukan',
+                ], 404);
+            }
+
+            return response()->json($produk, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil detail produk: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Delete a product (only staff can delete their own products).
+     */
+    public function staffDestroy(Produk $produk)
+    {
+        // Only Staf Penjualan and higher roles can delete products
+        if (!in_array(auth()->user()->role, ['staf_penjualan', 'administrator', 'pemilik_umkm'])) {
+            return redirect()->back()->withErrors(['error' => 'Anda tidak memiliki akses untuk menghapus produk.']);
+        }
+
+        try {
+            $produkNama = $produk->nama;
+            
+            // Delete photo if exists
+            if ($produk->foto) {
+                $this->deleteProductPhoto($produk->foto);
+            }
+
+            // Delete product
+            $produk->delete();
+
+            // Create notification for product deletion
+            Notifikasi::create([
+                'pesanan_id' => null,
+                'tipe' => 'produk_dihapus',
+                'judul' => "Produk '{$produkNama}' Dihapus",
+                'pesan' => "Produk '{$produkNama}' telah dihapus dari sistem oleh " . auth()->user()->name . ".",
+                'data' => [
+                    'nama_produk' => $produkNama,
+                ],
+                'untuk_roles' => ['administrator', 'pemilik_umkm', 'staf_penjualan', 'operator_gudang'],
+                'created_by' => auth()->id(),
+            ]);
+
+            // Log the action
+            \Log::info("Produk '{$produkNama}' dihapus oleh " . auth()->user()->name);
+
+            return redirect()->route('produk.staff')
+                ->with('success', "Produk '{$produkNama}' berhasil dihapus dari sistem.");
+        } catch (\Exception $e) {
+            \Log::error('Error deleting product: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Gagal menghapus produk: ' . $e->getMessage()]);
+        }
     }
 }
 

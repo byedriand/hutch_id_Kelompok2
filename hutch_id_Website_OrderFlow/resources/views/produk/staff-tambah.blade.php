@@ -106,12 +106,14 @@
                                 <i class="fas fa-image text-danger me-2"></i>Foto Produk
                             </label>
                             <div class="photo-upload-area">
-                                <input type="file" class="form-control photo-input @error('foto') is-invalid @enderror" 
-                                       id="foto" name="foto" accept="image/*">
-                                <div class="photo-placeholder">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                    <p class="mb-1">Klik atau drag foto di sini</p>
-                                    <small>JPG, PNG, GIF (Max 5MB)</small>
+                                <div class="photo-click-zone">
+                                    <input type="file" class="form-control photo-input @error('foto') is-invalid @enderror" 
+                                           id="foto" name="foto" accept="image/*">
+                                    <div class="photo-placeholder">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <p class="mb-1">Klik atau drag foto di sini</p>
+                                        <small>JPG, PNG, GIF (Max 10MB)</small>
+                                    </div>
                                 </div>
                                 <div id="foto-preview" class="mt-3 p-3 bg-light rounded" style="display: none; border: 2px solid #3b82f6;">
                                     <div class="mb-3">
@@ -449,11 +451,24 @@
         border-color: #2563eb;
     }
 
+    .photo-click-zone {
+        position: relative;
+    }
+
     .photo-input {
-        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
     }
 
     .photo-placeholder {
+        position: relative;
+        z-index: 1;
         padding: 3rem 1rem;
         text-align: center;
         color: #3b82f6;
@@ -849,7 +864,10 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.onload = (e) => {
                 previewImage.src = e.target.result;
                 photoPreview.classList.add('show');
-                if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+                if (photoArea) {
+                    const clickZone = photoArea.querySelector('.photo-click-zone');
+                    if (clickZone) clickZone.style.display = 'none';
+                }
                 console.log('✅ Photo preview loaded');
             };
             reader.onerror = () => {
@@ -860,7 +878,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event listeners
-    photoArea.addEventListener('click', () => photoInput.click());
+    // Catatan: tidak perlu lagi photoArea.addEventListener('click', ...)
+    // karena <input type="file"> sekarang jadi overlay transparan yang
+    // langsung menerima klik pengguna. Ini penting agar WebView Android
+    // (flutter_inappwebview) menganggapnya sebagai user-gesture yang sah
+    // dan memicu file chooser; trigger lewat JS .click() pada elemen lain
+    // sering tidak dianggap valid oleh WebView Android.
 
     photoArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -886,7 +909,10 @@ document.addEventListener('DOMContentLoaded', function() {
         removePhotoBtn.addEventListener('click', () => {
             photoInput.value = '';
             photoPreview.classList.remove('show');
-            if (photoPlaceholder) photoPlaceholder.style.display = 'block';
+            if (photoArea) {
+                const clickZone = photoArea.querySelector('.photo-click-zone');
+                if (clickZone) clickZone.style.display = 'block';
+            }
             console.log('✅ Photo preview cleared');
         });
     }

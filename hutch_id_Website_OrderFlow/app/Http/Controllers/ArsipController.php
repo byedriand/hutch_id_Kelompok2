@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pesanan;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ArsipController extends Controller
 {
@@ -85,5 +86,40 @@ class ArsipController extends Controller
         $pesanan->delete();
 
         return response()->json(['message' => 'Pesanan berhasil dihapus'], 200);
+    }
+
+    /**
+     * API - Download PDF for archived order
+     */
+    public function apiDownloadPdf($id)
+    {
+        $pesanan = Pesanan::with('pelanggan', 'detailPesanan.produk', 'creator')
+            ->whereIn('status', ['selesai', 'dibatalkan'])
+            ->find($id);
+
+        if (!$pesanan) {
+            return response()->json(['message' => 'Pesanan tidak ditemukan'], 404);
+        }
+
+        try {
+            $pdf = Pdf::loadView('pesanan.pdf', compact('pesanan'))
+                ->setPaper('a4', 'portrait');
+
+            // Get PDF as base64 string for mobile
+            $pdfContent = $pdf->output();
+            $base64Pdf = base64_encode($pdfContent);
+
+            return response()->json([
+                'success' => true,
+                'pdf' => $base64Pdf,
+                'filename' => $pesanan->nomor_po . '.pdf',
+                'nomor_po' => $pesanan->nomor_po,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal generate PDF: ' . $e->getMessage(),
+            ], 400);
+        }
     }
 }

@@ -22,6 +22,9 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'account_number',
+        'phone',
+        'phone_number',
     ];
 
     /**
@@ -43,4 +46,30 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Human-readable label for the user's role, used as a fallback display
+     * name whenever the user's actual `name` is empty (e.g. accounts created
+     * via phone/OTP without a name set).
+     */
+    public function getRoleLabelAttribute(): string
+    {
+        $labels = [
+            'administrator' => 'Admin',
+            'pemilik_umkm' => 'Pemilik UMKM',
+            'staf_penjualan' => 'Staf Penjualan',
+            'operator_gudang' => 'Operator Gudang',
+        ];
+
+        return $labels[$this->role] ?? ($this->role ?: 'Pengguna');
+    }
+
+    /**
+     * Best available display name for this user: their actual name if set,
+     * otherwise a label based on their role (e.g. "Admin", "Staf Penjualan").
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->name ?: $this->role_label;
+    }
 }

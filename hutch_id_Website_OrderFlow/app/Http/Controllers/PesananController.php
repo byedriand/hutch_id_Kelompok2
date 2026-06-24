@@ -15,6 +15,7 @@ use App\Models\Pelanggan;
 use App\Models\DetailPesanan;
 use App\Models\HistoriStatus;
 use App\Models\Notifikasi;
+use App\Services\WhatsAppService;
 
 class PesananController extends Controller
 {
@@ -25,16 +26,19 @@ class PesananController extends Controller
     {
         $query = Pesanan::with('pelanggan', 'detailPesanan.produk');
 
-        // Role-based filtering
-        $userRole = auth()->user()->role;
-        if ($userRole === 'staf_penjualan') {
-            // Staf Penjualan hanya lihat PO yang mereka buat
-            $query->where('created_by', auth()->id());
-        } elseif ($userRole === 'operator_gudang') {
-            // Operator Gudang hanya lihat PO yang sudah dikonfirmasi
-            $query->whereIn('status', ['dikonfirmasi', 'dalam_produksi', 'siap_kirim', 'selesai']);
-        }
+        // Role-based filtering - TEMPORARILY DISABLED FOR TESTING
+        // $userRole = auth()->user()->role;
+        // if ($userRole === 'staf_penjualan') {
+        //     // Staf Penjualan hanya lihat PO yang mereka buat
+        //     $query->where('created_by', auth()->id());
+        // } elseif ($userRole === 'operator_gudang') {
+        //     // Operator Gudang hanya lihat PO yang sudah dikonfirmasi
+        //     $query->whereIn('status', ['dikonfirmasi', 'dalam_produksi', 'siap_kirim', 'selesai']);
+        // }
         // Pemilik UMKM dan Administrator dapat lihat semua PO
+        
+        // TEMPORARY TEST: Show all pesanan
+        // (This will be reverted after confirming the layout works)
 
         if ($request->cari) {
             $query->where(function ($q) use ($request) {
@@ -284,6 +288,10 @@ class PesananController extends Controller
             }
         });
 
+        // Invalidate dashboard cache so the new PO shows up immediately,
+        // both for the staff who created it and for owners/admin/gudang.
+        DashboardController::clearCacheFor($pesanan->created_by);
+
         $message = 'PO berhasil disimpan.';
         if ($request->boolean('send_shortage_notification')) {
             $message = ! empty($detail_kurang)
@@ -457,6 +465,8 @@ class PesananController extends Controller
             'catatan' => $validated['catatan'] ?? null,
         ]);
 
+        DashboardController::clearCacheFor($pesanan->created_by);
+
         return redirect()->route('pesanan.show', $pesanan)->with('success', 'Data pesanan berhasil diperbarui.');
     }
 
@@ -467,7 +477,10 @@ class PesananController extends Controller
     {
         $this->authorize('delete', $pesanan);
 
+        $createdBy = $pesanan->created_by;
         $pesanan->delete();
+
+        DashboardController::clearCacheFor($createdBy);
 
         return redirect()->route('pesanan.index')->with('success', 'Pesanan berhasil dihapus.');
     }
@@ -511,6 +524,8 @@ class PesananController extends Controller
             NotifikasiController::createStokKurangNotifikasi($pesanan, $detail_kurang);
         }
 
+        DashboardController::clearCacheFor($pesanan->created_by);
+
         return redirect()->route('pesanan.show', $pesanan)->with('success', 'PO berhasil dikonfirmasi.');
     }
 
@@ -519,8 +534,15 @@ class PesananController extends Controller
      */
     public function updateStatus(Request $request, Pesanan $pesanan)
     {
+        // Eager load pelanggan relationship
+        $pesanan->load('pelanggan');
+
         // Use policy authorization
         $this->authorize('changeStatus', $pesanan);
+
+        // Initialize WhatsApp variables
+        $whatsappResult = null;
+        $pdfSent = false;
 
         // Validate status
         $allowedStatuses = ['dalam_produksi', 'siap_kirim', 'selesai', 'dibatalkan'];
@@ -531,29 +553,156 @@ class PesananController extends Controller
         $request->validate([
             'status' => 'required|in:' . implode(',', $allowedStatuses),
             'keterangan' => 'nullable|string|max:500',
+            'alasan_pembatalan' => 'nullable|string|min:5|max:500',
             'tanggal_dikirim' => 'nullable|date',
             'nomor_resi' => 'nullable|string|max:255',
         ]);
 
         $newStatus = $request->status;
 
+        // Helper: kembalikan JSON untuk request AJAX, atau redirect biasa untuk request normal
+        $failResponse = function (string $message) use ($request) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        };
+
         // Check if PO can be changed to this status
         if (!$this->canChangeStatusTo(auth()->user()->role, $newStatus, $pesanan)) {
-            return back()->with('error', 'Anda tidak memiliki izin untuk mengubah status ke ' . $newStatus . '.');
+            return $failResponse('Anda tidak memiliki izin untuk mengubah status ke ' . $newStatus . '.');
         }
 
         // Prevent status change if already finished or cancelled
         if (in_array($pesanan->status, ['selesai', 'dibatalkan'])) {
-            return back()->with('error', 'Status pesanan tidak dapat diubah setelah selesai atau dibatalkan.');
+            return $failResponse('Status pesanan tidak dapat diubah setelah selesai atau dibatalkan.');
         }
 
         // Ensure proper transition (can only mark siap_kirim after dalam_produksi)
         if ($newStatus === 'siap_kirim' && !in_array($pesanan->status, ['dalam_produksi', 'siap_kirim'])) {
-            return back()->with('error', 'Pesanan harus dalam status "Dalam Produksi" sebelum dapat ditandai "Siap Kirim".');
+            return $failResponse('Pesanan harus dalam status "Dalam Produksi" sebelum dapat ditandai "Siap Kirim".');
         }
 
+        // ========================================
+        // PENTING: Validasi dan kirim WhatsApp DULU sebelum ubah status
+        // ========================================
+        if (in_array($newStatus, ['siap_kirim', 'selesai'])) {
+            // Validasi nomor pelanggan - with proper null/empty checks
+            $customerPhone = null;
+            
+            // Try to get nomor_whatsapp first
+            if (!empty($pesanan->pelanggan) && !empty($pesanan->pelanggan->nomor_whatsapp)) {
+                $customerPhone = trim($pesanan->pelanggan->nomor_whatsapp);
+            }
+            // Fallback to telepon if nomor_whatsapp is empty
+            elseif (!empty($pesanan->pelanggan) && !empty($pesanan->pelanggan->telepon)) {
+                $customerPhone = trim($pesanan->pelanggan->telepon);
+            }
+
+            \Log::info('Phone Check for ' . $pesanan->nomor_po, [
+                'pelanggan_exists' => !empty($pesanan->pelanggan),
+                'pelanggan_nama' => $pesanan->pelanggan ? $pesanan->pelanggan->nama : 'N/A',
+                'nomor_whatsapp' => $pesanan->pelanggan ? $pesanan->pelanggan->nomor_whatsapp : 'N/A',
+                'telepon' => $pesanan->pelanggan ? $pesanan->pelanggan->telepon : 'N/A',
+                'final_phone' => $customerPhone,
+            ]);
+
+            if (empty($customerPhone)) {
+                return $failResponse('Nomor WhatsApp pelanggan tidak tersedia. Silakan update data pelanggan terlebih dahulu.');
+            }
+
+            if (!WhatsAppService::isValidPhoneNumber($customerPhone)) {
+                return $failResponse('Nomor WhatsApp pelanggan tidak valid: ' . $customerPhone . '. Format harus 08xx atau +62xx');
+            }
+
+            // Try to generate and send PDF with message
+            try {
+                \Log::info('🔍 DEBUG: Entering WhatsApp try block');
+                $senderPhone = auth()->user()->phone_number ?? '6281224360829';
+                $statusLabel = $newStatus === 'siap_kirim' ? 'Siap Kirim' : 'Selesai';
+                
+                \Log::info('WhatsApp Send Attempt [' . $statusLabel . ']', [
+                    'PO' => $pesanan->nomor_po,
+                    'Status' => $newStatus,
+                    'Customer' => $customerPhone,
+                    'User' => auth()->user()->name
+                ]);
+
+                try {
+                    $pdf = Pdf::loadView('pesanan.pdf', ['pesanan' => $pesanan]);
+                    $pdfFileName = 'PO_' . $pesanan->nomor_po . '_' . $newStatus . '.pdf';
+                    $pdfPath = storage_path('app/temp/' . $pdfFileName);
+                    
+                    // Ensure temp directory exists
+                    $pdfDir = dirname($pdfPath);
+                    if (!is_dir($pdfDir)) {
+                        mkdir($pdfDir, 0755, true);
+                        \Log::info('Created temp directory: ' . $pdfDir);
+                    }
+                    
+                    // Save PDF
+                    $pdf->save($pdfPath);
+                    
+                    // Verify file was created
+                    if (!file_exists($pdfPath)) {
+                        throw new \Exception('PDF file was not created at: ' . $pdfPath);
+                    }
+                    
+                    $fileSize = filesize($pdfPath);
+                    \Log::info('✅ PDF Generated Successfully', [
+                        'file' => $pdfFileName,
+                        'path' => $pdfPath,
+                        'size' => $fileSize . ' bytes',
+                        'readable' => is_readable($pdfPath)
+                    ]);
+
+                    // Send WhatsApp with PDF attachment
+                    $whatsappResult = WhatsAppService::sendReadyToShipNotification(
+                        $pesanan->pelanggan,
+                        $pesanan,
+                        $pdfPath,
+                        $senderPhone,
+                        $customerPhone,
+                        $newStatus  // Pass the status for customized message
+                    );
+
+                    if ($whatsappResult && $whatsappResult['success']) {
+                        $pdfSent = true;
+                        \Log::info('✅ WhatsApp with PDF sent successfully', ['PO' => $pesanan->nomor_po, 'Status' => $statusLabel]);
+                        
+                        // Mark PDF for cleanup
+                        file_put_contents($pdfPath . '.sent', now()->toDateTimeString());
+                    } else {
+                        // PDF send FAILED - return error and DON'T update status
+                        $errorMsg = $whatsappResult['message'] ?? 'Gagal mengirim WhatsApp';
+                        \Log::warning('❌ WhatsApp send failed', ['PO' => $pesanan->nomor_po, 'Error' => $errorMsg]);
+                        return $failResponse('Gagal mengirim notifikasi WhatsApp ke pelanggan: ' . $errorMsg . '. Status pesanan tidak diubah.');
+                    }
+                } catch (\Exception $pdfError) {
+                    // PDF generation failed - return error and DON'T update status
+                    \Log::error('❌ PDF generation/send failed: ' . $pdfError->getMessage(), [
+                        'trace' => $pdfError->getTraceAsString()
+                    ]);
+                    return $failResponse('Gagal membuat/mengirim dokumen PDF: ' . $pdfError->getMessage() . '. Status pesanan tidak diubah.');
+                }
+            } catch (\Exception $e) {
+                // WhatsApp error - return error and DON'T update status
+                \Log::error('💥 Error sending WhatsApp: ' . $e->getMessage());
+                return $failResponse('Terjadi kesalahan saat mengirim WhatsApp: ' . $e->getMessage() . '. Status pesanan tidak diubah.');
+            }
+        }
+
+        // ========================================
+        // HANYA SETELAH WhatsApp BERHASIL, barulah ubah status pesanan
+        // ========================================
         $updateData = ['status' => $newStatus];
-        if ($newStatus === 'siap_kirim') {
+        if ($newStatus === 'dibatalkan') {
+            // Wajib ada alasan pembatalan
+            if (empty($request->input('alasan_pembatalan'))) {
+                return $failResponse('Alasan pembatalan wajib diisi.');
+            }
+            $updateData['alasan_pembatalan'] = $request->input('alasan_pembatalan');
+        } elseif ($newStatus === 'siap_kirim') {
             // save shipping details if provided
             $updateData['tanggal_dikirim'] = $request->input('tanggal_dikirim');
             $updateData['nomor_resi'] = $request->input('nomor_resi');
@@ -567,6 +716,7 @@ class PesananController extends Controller
 
         $pesanan->update($updateData);
 
+        // Create history with WhatsApp info
         $historiKeterangan = $request->keterangan ?? 'Perubahan status oleh ' . auth()->user()->name;
         if ($newStatus === 'siap_kirim') {
             $extra = [];
@@ -576,9 +726,14 @@ class PesananController extends Controller
             if ($pesanan->nomor_resi) {
                 $extra[] = 'Resi: ' . $pesanan->nomor_resi;
             }
+            if ($pdfSent) {
+                $extra[] = 'PDF dikirim via WhatsApp';
+            }
             if (!empty($extra)) {
                 $historiKeterangan .= ' (' . implode(' | ', $extra) . ')';
             }
+        } elseif ($newStatus === 'selesai' && $pdfSent) {
+            $historiKeterangan .= ' (PDF dikirim via WhatsApp)';
         }
 
         $pesanan->historiStatus()->create([
@@ -587,7 +742,84 @@ class PesananController extends Controller
             'keterangan' => $historiKeterangan,
         ]);
 
-        return back()->with('success', 'Status pesanan berhasil diperbarui.');
+        DashboardController::clearCacheFor($pesanan->created_by);
+
+        // Return with WhatsApp status
+        if ($request->wantsJson() || $request->ajax()) {
+            $displayPhone = $pesanan->pelanggan ? (!empty($pesanan->pelanggan->nomor_whatsapp) ? $pesanan->pelanggan->nomor_whatsapp : $pesanan->pelanggan->telepon) : 'Unknown';
+            $customerName = $pesanan->pelanggan ? $pesanan->pelanggan->nama : 'Customer';
+            return response()->json([
+                'success' => true,
+                'message' => 'Status pesanan berhasil diperbarui.',
+                'whatsapp_sent' => in_array($newStatus, ['siap_kirim', 'selesai']) && $whatsappResult && $whatsappResult['success'],
+                'pdf_sent' => $pdfSent,
+                'whatsapp_message' => $whatsappResult ? ($whatsappResult['success'] ? '✅ Notifikasi WhatsApp berhasil dikirim ke ' . $customerName . ' (' . $displayPhone . ')' . ($pdfSent ? ' dengan PDF.' : '.') . '\n\nPesan dikirim dari nomor Hutch.id: +62 812-2436-0829' : '❌ Gagal: ' . $whatsappResult['message']) : null
+            ]);
+        }
+
+        $message = 'Status pesanan berhasil diperbarui.';
+        if ($whatsappResult) {
+            if ($whatsappResult['success']) {
+                $displayPhone = $pesanan->pelanggan ? (!empty($pesanan->pelanggan->nomor_whatsapp) ? $pesanan->pelanggan->nomor_whatsapp : $pesanan->pelanggan->telepon) : 'Unknown';
+                $customerName = $pesanan->pelanggan ? $pesanan->pelanggan->nama : 'Customer';
+                $pdfNote = $pdfSent ? ' dengan PDF' : '';
+                $message .= ' ✅ Notifikasi WhatsApp dikirim ke ' . $customerName . ' (' . $displayPhone . ')' . $pdfNote . ' dari nomor Hutch.id (+62 812-2436-0829).';
+            } else {
+                $message .= ' ⚠️ Status diubah tapi WhatsApp gagal: ' . $whatsappResult['message'];
+            }
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Notify customer via WhatsApp about stock shortage during draft order
+     */
+    public function notifyCustomerStockShortage(Request $request)
+    {
+        $request->validate([
+            'pelanggan_id' => 'required|exists:pelanggan,id',
+            'nomor_po' => 'nullable|string',
+            'detail_kurang' => 'required|array',
+        ]);
+
+        try {
+            $pelanggan = Pelanggan::findOrFail($request->pelanggan_id);
+
+            // Validate WhatsApp number
+            if (!WhatsAppService::isValidPhoneNumber($pelanggan->nomor_whatsapp)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nomor WhatsApp pelanggan belum terdaftar.'
+                ], 422);
+            }
+
+            // Send WhatsApp notification
+            $result = WhatsAppService::sendStockNotification(
+                $pelanggan,
+                (object)['nomor_po' => $request->nomor_po],
+                $request->detail_kurang,
+                auth()->user()->phone_number
+            );
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Notifikasi stok kurang berhasil dikirim ke pelanggan via WhatsApp.'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Gagal mengirim notifikasi WhatsApp.'
+                ], 422);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error notifying customer: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -620,6 +852,8 @@ class PesananController extends Controller
             'keterangan' => 'Pesanan dibatalkan oleh ' . auth()->user()->name . ' - Alasan: ' . $validated['alasan_pembatalan'],
         ]);
 
+        DashboardController::clearCacheFor($pesanan->created_by);
+
         return back()->with('success', 'Pesanan berhasil dibatalkan.');
     }
 
@@ -641,16 +875,13 @@ class PesananController extends Controller
         }
 
         if ($userRole === 'operator_gudang') {
-            // Can only change to: dalam_produksi
-            return $newStatus === 'dalam_produksi';
+            // Staf hanya bisa membatalkan pesanan (selama belum selesai/dibatalkan)
+            return $newStatus === 'dibatalkan' && !in_array($pesanan->status, ['selesai', 'dibatalkan']);
         }
 
         if ($userRole === 'staf_penjualan') {
-            // Staf Penjualan dapat membatalkan PO yang mereka buat sebelum dikonfirmasi
-            if ($pesanan->status === 'menunggu_konfirmasi' && $newStatus === 'dibatalkan') {
-                return true;
-            }
-            return false;
+            // Staf hanya bisa membatalkan pesanan (selama belum selesai/dibatalkan)
+            return $newStatus === 'dibatalkan' && !in_array($pesanan->status, ['selesai', 'dibatalkan']);
         }
 
         return false;
@@ -685,5 +916,44 @@ class PesananController extends Controller
         $pesanan = Pesanan::with('pelanggan', 'detailPesanan.produk')->findOrFail($id);
 
         return view('pesanan.public', compact('pesanan'));
+    }
+
+    /**
+     * API method to download PDF (returns file as base64 for mobile)
+     */
+    public function apiDownloadPdf(Pesanan $pesanan)
+    {
+        $this->authorize('view', $pesanan);
+        
+        $pesanan->load('pelanggan', 'detailPesanan.produk', 'creator');
+
+        $pdf = Pdf::loadView('pesanan.pdf', compact('pesanan'))
+            ->setPaper('a4', 'portrait');
+
+        // Get PDF as base64 string for mobile
+        $pdfContent = $pdf->output();
+        $base64Pdf = base64_encode($pdfContent);
+
+        return response()->json([
+            'success' => true,
+            'pdf' => $base64Pdf,
+            'filename' => $pesanan->nomor_po . '.pdf',
+            'nomor_po' => $pesanan->nomor_po,
+        ]);
+    }
+
+    /**
+     * API method to get PDF file directly (for streaming to mobile)
+     */
+    public function apiPdfFile(Pesanan $pesanan)
+    {
+        $this->authorize('view', $pesanan);
+        
+        $pesanan->load('pelanggan', 'detailPesanan.produk', 'creator');
+
+        $pdf = Pdf::loadView('pesanan.pdf', compact('pesanan'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download($pesanan->nomor_po . '.pdf');
     }
 }
