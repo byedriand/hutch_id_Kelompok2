@@ -398,12 +398,12 @@ Setiap dokumen PO yang di-generate memuat 8 elemen wajib:
 | Nama                   | NPM         | Role                                   |
 | ---------------------- | ----------- | -------------------------------------- |
 | Nayla Rabia Gustari    | 20241320034 | Project Manager                        |
-| Adrian Ronald Daga     | 20241320011 | Frontend/Backend Developer . (Website) |
-| Muhamad Alvin Ramadhan | 20241320035 | Frontend Developer · (Mobile)          |
-| Sopyan Rinaldhi        | 20241320028 | Backend Developer · (Mobile)           |
-| Eka Febryanto          | 20241320014 | Qa Tester (Website)                    |
+| Adrian Ronald Daga     | 20241320011 | Frontend / Backend (Website/Mobile)    |
+| Muhamad Alvin Ramadhan | 20241320035 | Frontend / Backend (Webiste/Mobile)    |
+| Sopyan Rinaldhi        | 20241320028 | Qa Tester  (Website/Mobile)            |
+| Eka Febryanto          | 20241320014 | Qa Tester  (Website/Mobile)            |
 | Julia Habibah          | 20241320020 | Sistem Analyst                         |
-| Akbar                  | 20241320017 | Qa Tester (Mobile)                     |
+| Akbar                  | 20241320017 | Qa Tester (Webiste/Mobile)             |
 
 ---
 
