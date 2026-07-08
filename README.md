@@ -26,17 +26,11 @@ _Program Studi Sistem Informasi — Universitas Kebangsaan Republik Indonesia (U
 ### 🌐 Website — Landing Page
 
 <!-- Upload screenshot website ke docs/screenshots/website-landing.png lalu hapus komentar ini -->
-<!-- ![Landing Page Website](docs/screenshots/website-landing.png) -->
-
-> **Cara menambahkan screenshot:**
-> 1. Buat folder `docs/screenshots/` di root repository
-> 2. Upload screenshot landing page website → `docs/screenshots/website-landing.png`
-> 3. Upload screenshot landing page mobile → `docs/screenshots/mobile-landing.png`
-> 4. Hapus blok komentar di atas dan ganti dengan tag `![...](...)`
+ ![Landing Page Website](docs/screenshots/website-landing.png)
 
 ### 📱 Mobile — Landing Page
 
-<!-- ![Landing Page Mobile](docs/screenshots/mobile-landing.png) -->
+ ![Landing Page Mobile](docs/screenshots/mobile-landing.png)
 
 ---
 
