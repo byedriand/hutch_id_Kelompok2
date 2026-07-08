@@ -67,7 +67,7 @@ Sistem ini mengelola seluruh siklus pesanan pelanggan **hutch.id** — produsen 
 | ✅ Tambah Produk (Staff) | Interface khusus staf penjualan untuk menambah produk baru dengan upload foto & preview |
 | 🔔 Notifikasi Real-time | Notifikasi ke semua role saat ada PO baru, perubahan status, atau stok menipis |
 | 📊 Dashboard Analitik | Ringkasan total PO aktif, menunggu konfirmasi, dan siap kirim secara real-time |
-| 📁 Arsip PO | Akses arsip PO selesai/dibatalkan untuk Administrator dan Pemilik Hutch.id |
+| 📁 Arsip PO | Akses arsip PO selesai/dibatalkan untuk Administrator  Hutch.id |
 | 🔐 RBAC 4 Level | Role-based access control ketat untuk setiap fitur dan halaman |
 
 ### 📱 Mobile App (Flutter)
@@ -130,7 +130,6 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 | Peran | Deskripsi | Hak Akses (ringkas) |
 |---|---|---|
 | Staf Penjualan | Menerima dan mencatat pesanan | Buat PO, edit PO sebelum konfirmasi, lihat/print PO, tambah produk baru |
-| Pemilik Hutch.id | Pemilik / manajer bisnis | Akses penuh: konfirmasi PO, ubah status produksi, batalkan PO, lihat laporan |
 | Operator Gudang | Petugas gudang / produksi | Lihat PO aktif, verifikasi bahan, tambah/kurangi stok, mulai produksi |
 | Administrator | Admin sistem | Akses penuh: manajemen user, konfigurasi, arsip, dan semua aksi operasional |
 
@@ -264,7 +263,6 @@ flutter build apk --release
 | Role | Email | Password |
 |---|---|---|
 | Administrator | admin@hutch.id | password123 |
-| Pemilik Hutch.id | pemilik@hutch.id | password123 |
 | Staf Penjualan | staf@hutch.id | password123 |
 | Operator Gudang | gudang@hutch.id | password123 |
 
@@ -378,7 +376,6 @@ Proyek ini dibuat untuk keperluan akademik. Seluruh hak cipta milik Kelompok 2 �
 
 <div align="center">
 
-Made with ❤️ by **Kelompok 2 — UKRI 2026**
 
 _Hutch.id · Custom Production for Businesses, Ready Bags for Everyone_
 
