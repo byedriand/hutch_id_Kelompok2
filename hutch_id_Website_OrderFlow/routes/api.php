@@ -9,6 +9,7 @@ use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,12 +67,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifikasi', [NotifikasiController::class, 'apiIndex']);
     Route::patch('/notifikasi/{id}/baca', [NotifikasiController::class, 'markAsRead']);
     Route::patch('/notifikasi/tandai-semua-dibaca', [NotifikasiController::class, 'markAllAsRead']);
+    Route::delete('/notifikasi/{notifikasi}', [NotifikasiController::class, 'destroy']);
+    // Staf membuat PO (mobile) menemukan stok produk kurang -> beri tahu operator gudang.
+    // Sama seperti web: NotifikasiController::storeStokKurangDraft().
+    Route::post('/notifikasi/stok-kurang', [NotifikasiController::class, 'storeStokKurangDraft']);
 
     // Produk API - Staff/Admin Functions
     Route::post('/produk', [ProdukController::class, 'apiStore']);
     Route::put('/produk/{produk}', [ProdukController::class, 'apiUpdate']);
     Route::post('/produk/{produk}/stok', [ProdukController::class, 'apiUpdateStok']);
     Route::patch('/produk/{produk}/stok-quick', [ProdukController::class, 'apiQuickUpdateStok']);
+    Route::delete('/produk/{produk}', [ProdukController::class, 'apiDestroy']);
 
     // Pesanan PDF API
     Route::get('/pesanan/{pesanan}/pdf', [PesananController::class, 'apiDownloadPdf']);
@@ -82,5 +88,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Chatbot API
     Route::post('/chatbot/message', [\App\Http\Controllers\Api\ChatbotController::class, 'sendMessage']);
-});
 
+    // User Management API (Administrator only)
+    Route::get('/users', [UserApiController::class, 'index']);
+    Route::post('/users', [UserApiController::class, 'store']);
+    Route::put('/users/{user}', [UserApiController::class, 'update']);
+    Route::delete('/users/{user}', [UserApiController::class, 'destroy']);
+});

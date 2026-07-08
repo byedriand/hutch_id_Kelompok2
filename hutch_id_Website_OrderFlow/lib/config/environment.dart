@@ -1,4 +1,4 @@
-/// Environment Configuration for Hutch Indonesia App
+/// Environment Configuration for Hutch Mobile App
 ///
 /// Gunakan file ini untuk manage URLs dan konfigurasi environment-specific
 enum AppEnvironment { development, production }
@@ -11,7 +11,7 @@ class EnvironmentConfig {
     switch (_environment) {
       case AppEnvironment.development:
         // Local Docker - pastikan laptop/docker running
-        return 'http://10.119.239.161:8082/';
+        return 'http://172.23.11.161:8082/';
       case AppEnvironment.production:
         // Railway Cloud - bisa diakses kapan saja dari mana saja
         return 'https://hutch-web-production.up.railway.app/';

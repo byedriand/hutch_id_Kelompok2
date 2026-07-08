@@ -679,12 +679,6 @@
         font-size: 0.95rem;
     }
 
-    .stok-table .stock-number {
-        color: #1e293b;
-        font-size: 1rem;
-        font-weight: 700;
-    }
-
     /* ========== STATUS BADGES ========== */
     .badge-status {
         border-radius: 0.5rem;
@@ -1238,7 +1232,7 @@
                         </div>
                         <div class="stat-label">Stok Rendah</div>
                     </div>
-                    <div class="stat-value" id="stokRendahDisplay">0</div>
+                    <div class="stat-value" id="stokRendahDisplay">{{ $stokRendah }}</div>
                     <div class="stat-subtext">Produk memerlukan pengisian</div>
                 </div>
             </div>
@@ -1421,24 +1415,6 @@
 </div>
 
 <script>
-    // Calculate low stock products
-    function calculateLowStock() {
-        const stockCells = document.querySelectorAll('.stock-number');
-        let lowStockCount = 0;
-        
-        stockCells.forEach(cell => {
-            const stock = parseInt(cell.textContent);
-            if (stock < 1 || stock <= 10) {
-                lowStockCount++;
-            }
-        });
-        
-        const stokRendahDisplay = document.getElementById('stokRendahDisplay');
-        if (stokRendahDisplay) {
-            stokRendahDisplay.textContent = lowStockCount;
-        }
-    }
-
     function showAddStokModal() {
         const modal = new bootstrap.Modal(document.getElementById('addStokModal'), {
             keyboard: false
@@ -1465,11 +1441,6 @@
             this.style.borderColor = '#e2e8f0';
             this.style.boxShadow = 'none';
         });
-    });
-
-    // Calculate low stock on page load
-    window.addEventListener('load', function() {
-        calculateLowStock();
     });
 
     // Add subtle animations to stat cards

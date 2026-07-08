@@ -8,7 +8,7 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
-        <domain includeSubdomains="true">10.119.239.161</domain>
+        <domain includeSubdomains="true">172.23.11.161</domain>
         <domain includeSubdomains="true">10.72.110.161</domain>
     </domain-config>
 </network-security-config>

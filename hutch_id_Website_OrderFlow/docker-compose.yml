@@ -3,8 +3,6 @@ services:
         build: .
         env_file:
             - .env.docker
-        ports:
-            - "8081:80"
         volumes:
             - ./:/var/www/html
         depends_on:

@@ -80,12 +80,19 @@ class LoginController extends Controller
                 ]);
         }
 
+        // Validasi role SEBELUM login — jika tidak cocok, tolak langsung.
+        // Ini mencegah user masuk dengan role yang salah.
+        if ($user->role !== $request->role) {
+            $this->incrementLoginAttempts($request);
+            return back()
+                ->withInput($request->only('email', 'role'))
+                ->withErrors([
+                    'role' => 'Role yang Anda pilih tidak sesuai dengan akun ini. Silakan pilih role yang benar.',
+                ]);
+        }
+
         // Attempt to authenticate
         if ($this->attemptLogin($request)) {
-            if ($user->role !== $request->role) {
-                $request->session()->flash('warning', 'Role yang dipilih tidak sesuai dengan akun ' . $request->email . '. Anda masuk sebagai: ' . $this->getRoleLabel($user->role) . '.');
-            }
-
             return $this->sendLoginResponse($request);
         }
 
@@ -94,24 +101,6 @@ class LoginController extends Controller
         $this->incrementLoginAttempts($request);
 
         return $this->sendFailedLoginResponse($request);
-    }
-
-    /**
-     * Get role label for display.
-     *
-     * @param string $role
-     * @return string
-     */
-    private function getRoleLabel($role)
-    {
-        $labels = [
-            'administrator' => 'Administrator',
-            'pemilik_umkm' => 'Pemilik UMKM',
-            'staf_penjualan' => 'Staf Penjualan',
-            'operator_gudang' => 'Operator Gudang',
-        ];
-        
-        return $labels[$role] ?? $role;
     }
 
     /**

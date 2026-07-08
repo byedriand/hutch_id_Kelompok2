@@ -208,11 +208,23 @@ class PesananController extends Controller
         });
 
         if ($items->isEmpty()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Tambahkan minimal satu item pesanan.',
+                    'errors' => ['items' => ['Tambahkan minimal satu item pesanan.']],
+                ], 422);
+            }
             return back()->withInput()->withErrors(['items' => 'Tambahkan minimal satu item pesanan.']);
         }
 
         $pelanggan = Pelanggan::find($validated['pelanggan_id']);
         if (! $pelanggan) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Pelanggan tidak ditemukan.',
+                    'errors' => ['pelanggan_id' => ['Pelanggan tidak ditemukan.']],
+                ], 422);
+            }
             return back()->withInput()->withErrors(['pelanggan_id' => 'Pelanggan tidak ditemukan.']);
         }
 
@@ -299,6 +311,36 @@ class PesananController extends Controller
                 : 'PO berhasil disimpan. Tidak ada kekurangan stok.';
         }
 
+        // Mobile app (and any other API client) expects a JSON payload back,
+        // not an HTML redirect. Without this, the Flutter app's
+        // ApiService.createPesanan() fails to parse the response and treats
+        // a successfully-saved PO as a failure — this also happens for POs
+        // with insufficient stock, which ARE allowed to be saved (same as
+        // the website), so the order silently appears stuck on "Buat
+        // Pesanan" even though nothing is actually blocking it server-side.
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $pesanan->load('pelanggan', 'detailPesanan.produk');
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'id' => $pesanan->id,
+                    'nomor_po' => $pesanan->nomor_po,
+                    'tanggal_pesanan' => $pesanan->tanggal_pesanan,
+                    'tanggal_pengiriman' => $pesanan->tanggal_pengiriman,
+                    'pelanggan_id' => $pesanan->pelanggan_id,
+                    'pelanggan' => $pesanan->pelanggan,
+                    'total_nilai' => $pesanan->total_nilai,
+                    'status' => $pesanan->status,
+                    'catatan' => $pesanan->catatan,
+                    'created_by' => $pesanan->created_by,
+                    'detail_pesanan' => $pesanan->detailPesanan,
+                    'detail_kurang' => $detail_kurang,
+                ],
+            ], 201);
+        }
+
         return redirect()->route('pesanan.index')->with('success', $message);
     }
 
@@ -355,6 +397,23 @@ class PesananController extends Controller
                     'catatan' => $pesanan->catatan,
                     'alasan_pembatalan' => $pesanan->alasan_pembatalan,
                     'created_by' => $pesanan->created_by,
+                    'creator' => $pesanan->creator ? [
+                        'id' => $pesanan->creator->id,
+                        'name' => $pesanan->creator->display_name,
+                        'role' => $pesanan->creator->role,
+                    ] : null,
+                    'histori_status' => $pesanan->historiStatus->map(function ($history) {
+                        return [
+                            'id' => $history->id,
+                            'status' => $history->status,
+                            'keterangan' => $history->keterangan,
+                            'user' => $history->user ? [
+                                'id' => $history->user->id,
+                                'name' => $history->user->display_name,
+                            ] : null,
+                            'created_at' => $history->created_at,
+                        ];
+                    }),
                     'detail_pesanan' => $pesanan->detailPesanan->map(function ($detail) {
                         return [
                             'id' => $detail->id,
@@ -467,13 +526,35 @@ class PesananController extends Controller
 
         DashboardController::clearCacheFor($pesanan->created_by);
 
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $pesanan->load('pelanggan', 'detailPesanan.produk');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data pesanan berhasil diperbarui.',
+                'data' => [
+                    'id' => $pesanan->id,
+                    'nomor_po' => $pesanan->nomor_po,
+                    'tanggal_pesanan' => $pesanan->tanggal_pesanan,
+                    'tanggal_pengiriman' => $pesanan->tanggal_pengiriman,
+                    'pelanggan_id' => $pesanan->pelanggan_id,
+                    'pelanggan' => $pesanan->pelanggan,
+                    'total_nilai' => $pesanan->total_nilai,
+                    'status' => $pesanan->status,
+                    'catatan' => $pesanan->catatan,
+                    'created_by' => $pesanan->created_by,
+                    'detail_pesanan' => $pesanan->detailPesanan,
+                ],
+            ], 200);
+        }
+
         return redirect()->route('pesanan.show', $pesanan)->with('success', 'Data pesanan berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Pesanan $pesanan)
+    public function destroy(Request $request, Pesanan $pesanan)
     {
         $this->authorize('delete', $pesanan);
 
@@ -481,6 +562,13 @@ class PesananController extends Controller
         $pesanan->delete();
 
         DashboardController::clearCacheFor($createdBy);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesanan berhasil dihapus.',
+            ], 200);
+        }
 
         return redirect()->route('pesanan.index')->with('success', 'Pesanan berhasil dihapus.');
     }

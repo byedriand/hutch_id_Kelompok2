@@ -54,8 +54,9 @@ class ProdukController extends Controller
         $produk = Produk::orderBy('nama')->paginate(15);
         $totalStok = Produk::sum('stok');
         $jumlahProduk = Produk::count();
+        $stokRendah = Produk::where('stok', '<=', 10)->count();
 
-        return view('produk.index', compact('produk', 'totalStok', 'jumlahProduk'));
+        return view('produk.index', compact('produk', 'totalStok', 'jumlahProduk', 'stokRendah'));
     }
 
     /**
@@ -598,7 +599,7 @@ class ProdukController extends Controller
         }
 
         $validated = $request->validate([
-            'nama' => 'required|string|max:255|unique:produks,nama',
+            'nama' => 'required|string|max:255|unique:produk,nama',
             'harga_jual' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
@@ -658,7 +659,7 @@ class ProdukController extends Controller
         }
 
         $validated = $request->validate([
-            'nama' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('produks')->ignore($produk->id)],
+            'nama' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('produk')->ignore($produk->id)],
             'harga_jual' => 'sometimes|required|numeric|min:0',
             'keterangan' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
@@ -870,5 +871,53 @@ class ProdukController extends Controller
             return redirect()->back()->withErrors(['error' => 'Gagal menghapus produk: ' . $e->getMessage()]);
         }
     }
-}
 
+    /**
+     * Hapus produk lewat API (dipakai aplikasi mobile).
+     * Logika sama dengan staffDestroy() di web, tapi response JSON, bukan redirect,
+     * supaya bisa dipanggil dari Flutter dengan token Sanctum.
+     */
+    public function apiDestroy(Produk $produk)
+    {
+        // Hanya Staf Penjualan, Administrator, Pemilik UMKM yang boleh menghapus
+        if (!in_array(auth()->user()->role, ['staf_penjualan', 'administrator', 'pemilik_umkm'])) {
+            return response()->json(['message' => 'Anda tidak memiliki akses untuk menghapus produk.'], 403);
+        }
+
+        try {
+            $produkNama = $produk->nama;
+
+            // Hapus foto jika ada
+            if ($produk->foto) {
+                $this->deleteProductPhoto($produk->foto);
+            }
+
+            // Hapus produk
+            $produk->delete();
+
+            // Buat notifikasi penghapusan produk
+            Notifikasi::create([
+                'pesanan_id' => null,
+                'tipe' => 'produk_dihapus',
+                'judul' => "Produk '{$produkNama}' Dihapus",
+                'pesan' => "Produk '{$produkNama}' telah dihapus dari sistem oleh " . auth()->user()->name . ".",
+                'data' => [
+                    'nama_produk' => $produkNama,
+                ],
+                'untuk_roles' => ['administrator', 'pemilik_umkm', 'staf_penjualan', 'operator_gudang'],
+                'created_by' => auth()->id(),
+            ]);
+
+            \Log::info("Produk '{$produkNama}' dihapus (API) oleh " . auth()->user()->name);
+
+            return response()->json([
+                'message' => "Produk '{$produkNama}' berhasil dihapus dari sistem.",
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting product (API): ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Gagal menghapus produk: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+}

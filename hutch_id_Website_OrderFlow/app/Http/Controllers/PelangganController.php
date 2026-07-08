@@ -106,8 +106,8 @@ class PelangganController extends Controller
      */
     public function destroy(Pelanggan $pelanggan, Request $request)
     {
-        // Only pemilik_umkm and administrator can delete pelanggan
-        if (!in_array(auth()->user()->role, ['pemilik_umkm', 'administrator'])) {
+        // pemilik_umkm, administrator, dan staf_penjualan dapat menghapus pelanggan
+        if (!in_array(auth()->user()->role, ['pemilik_umkm', 'administrator', 'staf_penjualan'])) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }

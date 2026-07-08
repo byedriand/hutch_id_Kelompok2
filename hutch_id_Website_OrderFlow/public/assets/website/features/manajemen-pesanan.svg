@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#e8f1ff"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="url(#g)"/>
+  <g fill="#2d7dd2" font-family="Plus Jakarta Sans, Arial, sans-serif">
+    <text x="50%" y="45%" font-size="48" text-anchor="middle">Manajemen Pesanan</text>
+    <text x="50%" y="58%" font-size="20" text-anchor="middle" fill="#3b6fb3">Pembuatan PO • Cetak PDF • Pelacakan Status</text>
+  </g>
+</svg>

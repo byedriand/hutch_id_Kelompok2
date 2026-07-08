@@ -89,6 +89,10 @@ class NotifikasiController extends Controller
     {
         $notifikasi->delete();
 
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return redirect()->back()->with('success', 'Notifikasi berhasil dihapus.');
     }
 

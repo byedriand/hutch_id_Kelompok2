@@ -67,7 +67,7 @@
             height: auto;
             box-shadow: 0 0 60px rgba(0, 0, 0, 0.15), inset 0 0 40px rgba(255,255,255,0.04);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         #sidebar::before {
@@ -92,6 +92,66 @@
             justify-content: space-between;
             position: relative;
             z-index: 1;
+        }
+
+        /* ── Sidebar Toggle Button (fixed, always visible at sidebar edge) ── */
+        #sidebar-toggle-btn {
+            position: fixed;
+            top: 1.1rem;
+            /* left is set dynamically by JS */
+            z-index: 500;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #1a3f6d;
+            border: 2px solid rgba(112, 183, 255, 0.45);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+            transition: background 0.2s, left 0.3s ease;
+        }
+        #sidebar-toggle-btn:hover {
+            background: #2d5fa6;
+            border-color: rgba(112, 183, 255, 0.8);
+        }
+        #sidebar-toggle-btn i {
+            font-size: 0.65rem;
+            transition: transform 0.3s;
+        }
+
+        /* ── Collapsed State ── */
+        #sidebar.sidebar-collapsed {
+            width: 0 !important;
+            min-width: 0 !important;
+            overflow: hidden;
+            padding: 0 !important;
+            border-right: none;
+            flex: 0 0 0 !important;
+            max-width: 0 !important;
+        }
+        #sidebar.sidebar-collapsed .sidebar-inner {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        #sidebar .sidebar-inner {
+            transition: opacity 0.2s;
+        }
+
+        /* Expand the content column when sidebar is hidden */
+        #main-col.sidebar-hidden {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        /* Smooth transition for sidebar and content */
+        #sidebar,
+        #main-col {
+            transition: all 0.3s ease;
         }
 
         .sidebar-brand {
@@ -2003,6 +2063,24 @@
                 max-width: 85%;
             }
         }
+
+        /* ===== MOBILE PERFORMANCE OPTIMIZATIONS ===== */
+        /* backdrop-filter is one of the heaviest CSS effects for mobile
+           GPUs / WebViews. These elements render on nearly every page
+           (sidebar, avatar, modals), so a high blur radius repeated across
+           the app is a major contributor to the "berat/patah-patah" feel
+           on phones. Lighten (not remove) the blur on small screens to
+           keep the glass look while cutting GPU cost significantly. */
+        @media (max-width: 768px) {
+            .sidebar-brand,
+            .sidebar-brand .logo-icon,
+            .avatar-circle,
+            .success-modal-overlay,
+            .logout-modal-overlay {
+                backdrop-filter: blur(4px);
+            }
+        }
+
     </style>
     @stack('styles')
 </head>
@@ -2011,6 +2089,10 @@
     <div class="container-fluid px-0">
         <div class="row g-0">
             <div class="col-md-3 col-lg-2 px-0 bg-navy text-white" id="sidebar">
+                <!-- Sidebar collapse button (visible inside sidebar) -->
+                <button id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Sembunyikan sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
                 <div class="sidebar-inner">
                     <div class="sidebar-brand">
                         <div class="logo-icon">
@@ -2041,7 +2123,7 @@
                                 @endif
                             </a>
                         @endif
-                        @if(auth()->user()->role !== 'operator_gudang')
+                        @if(auth()->user()->role === 'staf_penjualan')
                             <a class="nav-link {{ request()->routeIs('pesanan.create') ? 'active' : '' }}" href="{{ route('pesanan.create') }}">
                                 <i class="fas fa-plus"></i>Buat PO
                             </a>
@@ -2069,6 +2151,9 @@
                                 <nav class="nav flex-column py-1">
                                     <a class="nav-link {{ request()->routeIs('arsip.index') ? 'active' : '' }}" href="{{ route('arsip.index') }}">
                                         <i class="fas fa-archive"></i>Arsip PDF
+                                    </a>
+                                    <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
+                                        <i class="fas fa-users-cog"></i>Manajemen Pengguna
                                     </a>
                                 </nav>
                             @endif
@@ -2114,13 +2199,14 @@
                 </div>
             </div>
 
-            <div class="col-md-9 col-lg-10 px-0">
+            <div class="col-md-9 col-lg-10 px-0" id="main-col">
                 <div class="main-content p-3">
                     @yield('content')
                 </div>
             </div>
         </div>
     </div>
+
     @else
     <div class="container py-5">
         <div class="row justify-content-center">
@@ -2679,6 +2765,75 @@
             const chatBody = document.getElementById('chatbotBody');
             chatBody.scrollTop = chatBody.scrollHeight;
         }
+
+        // ── Sidebar Toggle ──────────────────────────────────────────────────
+        function updateToggleBtnPosition() {
+            const sidebar   = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            if (!sidebar || !toggleBtn) return;
+            const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+            const sidebarW    = isCollapsed ? 0 : sidebar.getBoundingClientRect().width;
+            toggleBtn.style.left = (sidebarW - 13) + 'px';
+        }
+
+        function toggleSidebar() {
+            const sidebar    = document.getElementById('sidebar');
+            const mainCol    = document.getElementById('main-col');
+            const toggleBtn  = document.getElementById('sidebar-toggle-btn');
+            const toggleIcon = document.querySelector('#sidebar-toggle-btn i');
+            const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+
+            if (isCollapsed) {
+                sidebar.classList.remove('sidebar-collapsed');
+                mainCol.classList.remove('sidebar-hidden');
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+                if (toggleBtn)  toggleBtn.title = 'Sembunyikan sidebar';
+                localStorage.setItem('sidebarCollapsed', 'false');
+                // update position after transition ends
+                setTimeout(updateToggleBtnPosition, 310);
+            } else {
+                sidebar.classList.add('sidebar-collapsed');
+                mainCol.classList.add('sidebar-hidden');
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+                if (toggleBtn)  toggleBtn.title = 'Tampilkan sidebar';
+                localStorage.setItem('sidebarCollapsed', 'true');
+                setTimeout(updateToggleBtnPosition, 310);
+            }
+        }
+
+        // Restore sidebar state on page load without transition flash
+        (function() {
+            const sidebar   = document.getElementById('sidebar');
+            const mainCol   = document.getElementById('main-col');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            const toggleIcon = document.querySelector('#sidebar-toggle-btn i');
+
+            // Disable transitions during init
+            if (sidebar)  sidebar.style.transition  = 'none';
+            if (mainCol)  mainCol.style.transition   = 'none';
+            if (toggleBtn) toggleBtn.style.transition = 'none';
+
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                if (sidebar)  sidebar.classList.add('sidebar-collapsed');
+                if (mainCol)  mainCol.classList.add('sidebar-hidden');
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+                if (toggleBtn)  toggleBtn.title = 'Tampilkan sidebar';
+            }
+
+            // Position button, then re-enable transitions
+            requestAnimationFrame(() => {
+                updateToggleBtnPosition();
+                requestAnimationFrame(() => {
+                    if (sidebar)   sidebar.style.transition   = '';
+                    if (mainCol)   mainCol.style.transition    = '';
+                    if (toggleBtn) toggleBtn.style.transition  = '';
+                });
+            });
+
+            // Also reposition on window resize
+            window.addEventListener('resize', updateToggleBtnPosition);
+        })();
+        // ───────────────────────────────────────────────────────────────────
 
         function toggleChatbot() {
             const modal = document.getElementById('chatbotModal');

@@ -10,6 +10,8 @@ use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\Api\ChatbotController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -25,7 +27,9 @@ use Illuminate\Http\Request;
 |
 */
 
-Auth::routes();
+// Register dinonaktifkan — pembuatan akun hanya bisa dilakukan
+// oleh Administrator melalui menu Manajemen Pengguna (/admin/users).
+Auth::routes(['register' => false]);
 
 // Mobile Sync Route - Accept token from mobile and sync session
 Route::get('/auth/mobile-sync', function (Request $request) {
@@ -79,7 +83,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Chatbot API Route (requires auth)
-    Route::post('/api/chatbot/message', [ChatbotController::class, 'sendMessage'])->name('api.chatbot.message')->middleware('auth');
+  Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])->name('api.chatbot.message')->middleware('auth');
 
     // PO Confirmation - Pemilik UMKM, Administrator
     Route::middleware(['role:pemilik_umkm,administrator'])->group(function () {
@@ -161,7 +165,17 @@ Route::middleware(['auth'])->group(function () {
 // Admin Dashboard - Administrator Only
 Route::middleware(['auth', 'role:administrator'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    // User management for administrators
+    Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
+    Route::get('/admin/users/create', [UserManagementController::class, 'create'])->name('admin.users.create');
+    Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
+    Route::get('/admin/users/{user}/edit', [UserManagementController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
+    Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 });
+
+// Feature detail pages for landing (public)
+Route::get('/features/{slug}', [FeatureController::class, 'show'])->name('feature.show');
 
 // Public Share - No auth required
 Route::get('/po/share/{token}', [PesananController::class, 'publicShare'])->name('pesanan.publicShare');

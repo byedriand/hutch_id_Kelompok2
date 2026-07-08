@@ -1,0 +1,106 @@
+# ============================================================
+# docker-compose.prod.yml — Hutch.id Production Stack
+# Domain  : hutch-prestige.my.id
+# VPS     : co-exist dengan simhpsb (port 80 sudah dipakai)
+# Nginx   : container sendiri, expose port 443 (HTTPS) & 8090 (HTTP)
+# N8N     : DIHAPUS — chatbot menggunakan local engine
+# Flutter : tidak di-deploy (mobile-only)
+#
+# CARA PAKAI:
+#   Build & push dari lokal  → lihat build-push.sh
+#   Deploy di VPS            → docker compose -f docker-compose.prod.yml up -d
+#
+# DOCKER HUB IMAGE:
+#   Ganti DOCKERHUB_USERNAME di bawah dengan username Docker Hub kamu.
+# ============================================================
+
+services:
+
+  # ── PHP-FPM (Laravel backend) ───────────────────────────────────────────
+  hutch_app:
+    # Image di-pull dari Docker Hub (build dilakukan di lokal, bukan di VPS)
+    image: ${DOCKERHUB_USERNAME:-yourusername}/hutch-app:${APP_VERSION:-latest}
+    container_name: hutch_app
+    restart: unless-stopped
+    env_file:
+      - .env.production.docker
+    volumes:
+      # Storage persistent (uploads foto, PDF PO, dll)
+      - hutch_storage:/var/www/html/storage
+      # Bootstrap cache persistent
+      - hutch_bootstrap_cache:/var/www/html/bootstrap/cache
+      # Public folder (berbagi CSS/JS/Index dengan nginx)
+      - hutch_public:/var/www/html/public
+    depends_on:
+      hutch_db:
+        condition: service_healthy
+    networks:
+      - hutch_network
+    labels:
+      - "com.hutch.project=hutch-prestige"
+      - "com.hutch.service=app"
+
+  # ── Nginx (web server) ──────────────────────────────────────────────────
+  # Expose port 443 (HTTPS, SSL terminate di sini via Certbot)
+  # Port 8090 sebagai fallback HTTP (redirect ke HTTPS)
+  hutch_nginx:
+    image: nginx:alpine
+    container_name: hutch_nginx
+    restart: unless-stopped
+    ports:
+      - "8090:80"     # Port HTTP hutch
+    volumes:
+      - ./docker/nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
+      # Storage untuk serve file upload (foto produk, PDF)
+      - hutch_storage:/var/www/html/storage:ro
+      # Public folder (compiled assets)
+      - hutch_public:/var/www/html/public:ro
+    depends_on:
+      - hutch_app
+    networks:
+      - hutch_network
+    labels:
+      - "com.hutch.project=hutch-prestige"
+      - "com.hutch.service=nginx"
+
+  # ── MySQL Database ──────────────────────────────────────────────────────
+  # Container MySQL tersendiri, TIDAK expose ke host (aman)
+  hutch_db:
+    image: mysql:8.0
+    container_name: hutch_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - hutch_dbdata:/var/lib/mysql
+    networks:
+      - hutch_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "com.hutch.project=hutch-prestige"
+      - "com.hutch.service=db"
+
+# ── Volumes ──────────────────────────────────────────────────────────────
+volumes:
+  hutch_dbdata:
+    name: hutch_dbdata
+  hutch_storage:
+    name: hutch_storage
+  hutch_bootstrap_cache:
+    name: hutch_bootstrap_cache
+  hutch_public:
+    name: hutch_public
+
+# ── Networks ─────────────────────────────────────────────────────────────
+# Network hutch tersendiri, TIDAK bergabung dengan network simhpsb
+networks:
+  hutch_network:
+    name: hutch_network
+    driver: bridge

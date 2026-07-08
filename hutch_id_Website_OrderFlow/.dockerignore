@@ -1,8 +1,80 @@
+# ── Dependencies (akan di-install saat build) ─────────────────────────────
 vendor
 node_modules
+
+# ── Environment files (jangan masuk image, inject via --env-file) ─────────
 .env
+.env.*
+!.env.example
+
+# ── Build artifacts sementara ─────────────────────────────────────────────
 storage/framework/cache
 storage/framework/sessions
 storage/framework/views
 storage/logs
+
+# ── Git ────────────────────────────────────────────────────────────────────
 .git
+.gitignore
+.gitattributes
+
+# ── N8N (dihapus dari production) ─────────────────────────────────────────
+n8n/
+
+# ── Flutter / Mobile (tidak di-deploy di VPS) ────────────────────────────
+android/
+ios/
+linux/
+macos/
+windows/
+web/
+build/
+lib/
+*.apk
+*.iml
+pubspec.yaml
+pubspec.lock
+analysis_options.yaml
+*.log
+flutter_*.log
+
+# ── Development & debug scripts ──────────────────────────────────────────
+check_*.php
+debug_*.php
+diagnose_*.php
+test_*.php
+test/
+fix_*.php
+update_*.php
+sync_*.php
+verify_*.php
+setup_*.php
+create_*.php
+delete_*.php
+reset_*.php
+run_*.php
+run_*.bat
+run_*.sh
+deploy-railway.bat
+*.bat
+*.sh
+!docker/entrypoint.sh
+
+# ── Dokumentasi & misc ───────────────────────────────────────────────────
+*.md
+!README.md
+workspace_backup_*
+.dart_tool/
+.metadata
+.flutter-plugins-dependencies
+.phpunit.result.cache
+.railwayignore
+.editorconfig
+.laravel_tail.txt
+railway.json
+
+# ── IDE & OS ──────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db

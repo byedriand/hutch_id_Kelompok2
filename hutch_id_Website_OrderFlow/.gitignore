@@ -8,6 +8,7 @@
 .env
 .env.backup
 .env.production
+.env.production.docker
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
@@ -28,5 +29,20 @@ yarn-error.log
 .pub-cache/
 .pub/
 /coverage/
+/android/**/build/
+/ios/Flutter/ephemeral/
+/ios/Pods/
+/macos/Flutter/ephemeral/
+/windows/flutter/ephemeral/
+/linux/flutter/ephemeral/
 lib/generated_plugin_registrant.dart
 .fvm/flutter_sdk
+
+# Laravel / local runtime artifacts
+/storage/framework/cache/*
+/storage/framework/views/*
+/storage/framework/sessions/*
+/storage/logs/*
+/bootstrap/cache/*
+/public/build/
+/public/hot

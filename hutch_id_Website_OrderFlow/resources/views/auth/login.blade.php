@@ -531,6 +531,20 @@
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 16px rgba(37, 117, 215, 0.05);
             position: relative;
             overflow: hidden;
+            color: #0f172a;
+            caret-color: #2575d7;
+        }
+
+        /* Pastikan teks autofill browser juga hitam */
+        .form-group input:-webkit-autofill,
+        .form-group input:-webkit-autofill:hover,
+        .form-group input:-webkit-autofill:focus,
+        .form-group input:-webkit-autofill:active {
+            -webkit-text-fill-color: #0f172a !important;
+            -webkit-box-shadow: 0 0 0 1000px #f0f7ff inset !important;
+            box-shadow: 0 0 0 1000px #f0f7ff inset !important;
+            transition: background-color 9999s ease-in-out 0s;
+            caret-color: #2575d7;
         }
 
         .form-group input::before {
@@ -553,6 +567,7 @@
                 0 8px 20px rgba(37, 117, 215, 0.12);
             background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
             transform: translateY(-3px);
+            color: #0f172a;
         }
 
         .form-group input:focus::before {
@@ -564,20 +579,18 @@
             from { left: -100%; }
             to { left: 100%; }
         }
-
-        .form-group input:hover:not(:focus) {
             border-color: #cbd5e1;
             box-shadow: 0 6px 16px rgba(37, 117, 215, 0.12), inset 0 1px 3px rgba(0, 0, 0, 0.05);
             background: linear-gradient(135deg, #f5f9ff 0%, #ffffff 100%);
         }
 
         .form-group input::placeholder {
-            color: #cbd5e1;
+            color: #94a3b8;
             transition: all 0.3s ease;
         }
 
         .form-group input:focus::placeholder {
-            color: #a0aec0;
+            color: #b0bec5;
         }
 
         /* Button */
@@ -1797,7 +1810,7 @@
                             <div class="role-card-content">
                                 <div class="role-icon"><i class="fas fa-crown"></i></div>
                                 <div class="role-name">Administrator</div>
-                                <div class="role-desc">Akses Penuh</div>
+                                <div class="role-desc">Akses Monitoring</div>
                             </div>
                         </label>
                         <label class="role-card">

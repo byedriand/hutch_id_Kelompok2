@@ -10,7 +10,8 @@ class Produk extends Model
     use HasFactory;
 
     protected $table = 'produk';
-    protected $fillable = ['nama', 'foto', 'harga_jual', 'stok', 'keterangan'];
+    protected $fillable = ['nama', 'foto', 'harga_jual', 'stok', 'keterangan', 'created_by'];
+    protected $appends = ['foto_url'];
 
     public function detailPesanan()
     {
@@ -34,16 +35,19 @@ class Produk extends Model
             return $foto;
         }
         
-        // Jika path dimulai dengan 'images/', sudah benar
+        // Return absolute URL untuk backend
+        $basePath = rtrim(config('app.url'), '/');
+        
+        // Jika path dimulai dengan 'images/', tambahkan base URL
         if (strpos($foto, 'images/') === 0) {
-            return '/' . $foto;
+            return $basePath . '/' . $foto;
         }
         
         // Extract filename dari path
         $filename = basename($foto);
         
-        // Return dari /images/ folder (semua file sudah di-copy ke sini)
-        return '/images/' . $filename;
+        // Return dari /images/ folder dengan full URL
+        return $basePath . '/images/' . $filename;
     }
 }
 
