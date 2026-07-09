@@ -21,8 +21,6 @@ _Program Studi Sistem Informasi — Universitas Kebangsaan Republik Indonesia (U
 
 ---
 
-## 🖼️ Tampilan Aplikasi
-
 ### 🌐 Website — Landing Page
 
 <!-- Upload screenshot website ke docs/screenshots/website-landing.png lalu hapus komentar ini -->
@@ -302,7 +300,6 @@ Base URL: `/api` | Auth: Bearer Token (Laravel Sanctum)
 - **Role-Based Access Control (RBAC)** dengan 4 level pengguna di website dan mobile
 - Autentikasi API menggunakan **Laravel Sanctum** (Bearer Token)
 - Link berbagi PDF menggunakan **token acak** dan kedaluwarsa dalam 24 jam
-- Seluruh data pelanggan dikelola sesuai **UU PDP No. 27 Tahun 2022**
 - APK mobile hanya tersedia via unduhan langsung dari website resmi hutch.id
 
 ---
@@ -341,7 +338,7 @@ Base URL: `/api` | Auth: Bearer Token (Laravel Sanctum)
 | Nama | NPM | Role |
 |---|---|---|
 | Nayla Rabia Gustari | 20241320034 | Project Manager |
-| Adrian Ronald Daga | 20241320011 | ) |
+| Adrian Ronald Daga | 20241320011 | Backend |
 | Muhamad Alvin Ramadhan | 20241320035 | Frontend  |
 | Sopyan Rinaldhi | 20241320028 | QA Tester (Mobile) |
 | Eka Febryanto | 20241320014 | QA Tester (Website) |
