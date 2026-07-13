@@ -16,7 +16,8 @@ class PelangganController extends Controller
         if ($request->expectsJson() || $request->is('api/*')) {
             $pelanggan = Pelanggan::withCount('pesanan')
                 ->when($request->cari, function ($query, $cari) {
-                    $query->where('nama', 'like', '%' . $cari . '%');
+                    $query->where('nama', 'like', '%' . $cari . '%')
+                          ->orWhere('telepon', 'like', '%' . $cari . '%');
                 })
                 ->latest()
                 ->get();
@@ -27,7 +28,8 @@ class PelangganController extends Controller
         // Web request, return paginated view
         $pelanggan = Pelanggan::withCount('pesanan')
             ->when($request->cari, function ($query, $cari) {
-                $query->where('nama', 'like', '%' . $cari . '%');
+                $query->where('nama', 'like', '%' . $cari . '%')
+                      ->orWhere('telepon', 'like', '%' . $cari . '%');
             })
             ->latest()
             ->paginate(12);
