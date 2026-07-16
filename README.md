@@ -23,12 +23,15 @@ _Program Studi Sistem Informasi — Universitas Kebangsaan Republik Indonesia (U
 
 ### 🌐 Website — Landing Page
 
-<!-- Upload screenshot website ke docs/screenshots/website-landing.png lalu hapus komentar ini -->
- ![Landing Page Website](docs/screenshots/website-landing.png)
+<div align="center">
+  <img src="docs/screenshots/website-landing.png" width="80%" />
+</div>
 
 ### 📱 Mobile — Landing Page
 
- ![Landing Page Mobile](docs/screenshots/mobile-landing.png)
+<div align="center">
+  <img src="docs/screenshots/mobile-landing.png" width="40%" />
+</div>
 
 ---
 
