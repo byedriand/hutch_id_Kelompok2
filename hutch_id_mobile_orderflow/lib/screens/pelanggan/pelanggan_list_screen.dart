@@ -145,8 +145,7 @@ class _PelangganListScreenState extends State<PelangganListScreen>
                   borderColor: Colors.white,
                   borderOpacity: 0.6,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: TextField(
-                    controller: _searchController,
+                  child: TextField(key: const Key('search_pelanggan'), controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Cari nama, email, atau telepon...',
                       hintStyle: TextStyle(
@@ -259,7 +258,7 @@ class _PelangganListScreenState extends State<PelangganListScreen>
         ],
       ),
       floatingActionButton: canManage
-          ? FloatingActionButton(
+          ? FloatingActionButton(key: const Key('FloatingActionButton'),
               onPressed: () {
                 Navigator.pushNamed(context, '/pelanggan-form');
               },

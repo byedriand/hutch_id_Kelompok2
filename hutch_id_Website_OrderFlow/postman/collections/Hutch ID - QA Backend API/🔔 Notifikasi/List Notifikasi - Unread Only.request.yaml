@@ -1,0 +1,23 @@
+$kind: http-request
+description: Ambil hanya notifikasi yang belum dibaca.
+url: "{{base_url}}/notifikasi?filter=unread"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  filter: unread
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('All notifications are unread', function () {
+          var json = pm.response.json();
+          json.forEach(function(notif) {
+              pm.expect(notif.dibaca_at).to.be.null;
+          });
+      });
+    language: text/javascript
+order: 2000

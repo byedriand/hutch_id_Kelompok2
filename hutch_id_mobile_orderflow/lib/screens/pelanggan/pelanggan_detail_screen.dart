@@ -236,9 +236,7 @@ class _PelangganDetailScreenState extends State<PelangganDetailScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pushNamed(
+                      child: ElevatedButton.icon(key: const Key('edit_pelanggan_btn'), onPressed: () { Navigator.pushNamed(
                             context,
                             '/pelanggan-form',
                             arguments: widget.pelangganId,

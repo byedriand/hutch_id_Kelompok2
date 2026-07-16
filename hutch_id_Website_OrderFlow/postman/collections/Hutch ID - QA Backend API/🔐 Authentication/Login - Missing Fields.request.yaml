@@ -1,0 +1,25 @@
+$kind: http-request
+description: Test login tanpa email dan password.
+url: "{{base_url}}/login"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: "{}"
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 422', function () {
+          pm.response.to.have.status(422);
+      });
+
+      pm.test('Validation errors exist', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('errors');
+      });
+    language: text/javascript
+order: 3000

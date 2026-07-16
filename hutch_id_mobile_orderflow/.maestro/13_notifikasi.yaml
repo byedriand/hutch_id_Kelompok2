@@ -1,0 +1,99 @@
+################################################################################
+# TC-MOB-013 : NOTIFIKASI
+# Deskripsi  : Verifikasi halaman notifikasi — list notifikasi, mark as read,
+#              badge counter, dan pull-to-refresh
+# Role       : staf_penjualan
+# Precondition: Berhasil login sebagai Staf Penjualan
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Staf Penjualan ───────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Staf Penjualan.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Notifikasi via AppBar ─────────────────────────────────────
+# Notifikasi bisa diakses dari ikon lonceng di AppBar dashboard
+- tapOn:
+    text: ".*Dashboard.*"
+- waitForAnimationToEnd
+- tapOn:
+    id: "notifikasi_icon"
+- waitForAnimationToEnd
+# ── TC-MOB-013-A: Verifikasi Halaman Notifikasi ──────────────────────────────
+- takeScreenshot: "13a_notifikasi_screen"
+
+- assertVisible:
+    text: ".*Notifikasi.*"
+
+# ── TC-MOB-013-B: Pull-to-Refresh Notifikasi ─────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 600
+- waitForAnimationToEnd
+- takeScreenshot: "13b_notifikasi_refreshed"
+
+# ── TC-MOB-013-C: Scroll Notifikasi ──────────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1500
+
+- takeScreenshot: "13c_notifikasi_scrolled"
+
+# ── TC-MOB-013-D: Tap Notifikasi Pertama ─────────────────────────────────────
+- tapOn:
+    index: 0
+    id: "notifikasi_item"
+- waitForAnimationToEnd
+- takeScreenshot: "13d_notifikasi_item_tapped"
+
+# ── TC-MOB-013-E: Kembali dari Notifikasi ────────────────────────────────────
+- pressKey: back
+- waitForAnimationToEnd

@@ -1,0 +1,2854 @@
+{
+	"info": {
+		"_postman_id": "hutch-id-qa-backend-api",
+		"name": "Hutch ID - QA Backend API",
+		"description": "Koleksi Postman untuk QA Testing seluruh Backend API Hutch ID Website OrderFlow.\n\n## Setup\n1. Import collection ini ke Postman\n2. Import environment file\n3. Jalankan request **Login** terlebih dahulu untuk mendapatkan token\n4. Token otomatis tersimpan di environment variable\n\n## Roles yang tersedia\n- `administrator`\n- `staf_penjualan`\n- `operator_gudang`\n- `pemilik_umkm`\n\n## Alur Status Pesanan\n`menunggu_konfirmasi` → `dikonfirmasi` → `dalam_produksi` → `siap_kirim` → `selesai`\n\nDari status apapun (kecuali selesai/dibatalkan) dapat ke `dibatalkan`.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"description": "Endpoint autentikasi menggunakan Laravel Sanctum.",
+			"item": [
+				{
+					"name": "Login (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// ===== STATUS CODE =====",
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// ===== RESPONSE STRUCTURE =====",
+									"pm.test('Response has user and token', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('user');",
+									"    pm.expect(json).to.have.property('token');",
+									"    pm.expect(json.token).to.be.a('string').and.not.empty;",
+									"});",
+									"",
+									"// ===== USER OBJECT =====",
+									"pm.test('User object has required fields', function () {",
+									"    var user = pm.response.json().user;",
+									"    pm.expect(user).to.have.property('id');",
+									"    pm.expect(user).to.have.property('email');",
+									"    pm.expect(user).to.have.property('role');",
+									"    pm.expect(user).to.not.have.property('password');",
+									"});",
+									"",
+									"// ===== SAVE TOKEN =====",
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    pm.environment.set('auth_token', json.token);",
+									"    pm.environment.set('user_id', json.user.id);",
+									"    pm.environment.set('user_role', json.user.role);",
+									"    console.log('✅ Token saved:', json.token.substring(0, 20) + '...');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@hutch.id\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": ["{{base_url}}"],
+							"path": ["login"]
+						},
+						"description": "Login sebagai Administrator. Token otomatis tersimpan di environment."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Invalid Credentials",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Response has validation error', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('errors');",
+									"    pm.expect(json.errors).to.have.property('email');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@hutch.id\",\n    \"password\": \"wrong_password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": ["{{base_url}}"],
+							"path": ["login"]
+						},
+						"description": "Test login dengan credential salah."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Missing Fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Validation errors exist', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('errors');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": ["{{base_url}}"],
+							"path": ["login"]
+						},
+						"description": "Test login tanpa email dan password."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Profile has user data', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('id');",
+									"    pm.expect(json).to.have.property('email');",
+									"    pm.expect(json).to.have.property('role');",
+									"    pm.expect(json).to.not.have.property('password');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": ["{{base_url}}"],
+							"path": ["profile"]
+						},
+						"description": "Ambil profil user yang sedang login."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User (Sanctum)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Returns authenticated user', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('id');",
+									"    pm.expect(json).to.have.property('email');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user",
+							"host": ["{{base_url}}"],
+							"path": ["user"]
+						},
+						"description": "Ambil data user via Sanctum middleware."
+					},
+					"response": []
+				},
+				{
+					"name": "Unauthorized Access (No Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 401', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Returns unauthenticated message', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": ["{{base_url}}"],
+							"path": ["profile"]
+						},
+						"description": "Test akses endpoint protected tanpa token."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Logout message received', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('message');",
+									"    pm.expect(json.message).to.include('Logged out');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": ["{{base_url}}"],
+							"path": ["logout"]
+						},
+						"description": "Logout dan revoke token saat ini. ⚠️ Jalankan terakhir karena token akan expired."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📦 Produk (Products)",
+			"description": "Endpoint untuk manajemen produk. Endpoint `GET /produk` bersifat public.",
+			"item": [
+				{
+					"name": "List All Produk (Public)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Each produk has required fields', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.length > 0) {",
+									"        var produk = json[0];",
+									"        pm.expect(produk).to.have.property('id');",
+									"        pm.expect(produk).to.have.property('nama');",
+									"        pm.expect(produk).to.have.property('harga_jual');",
+									"        pm.expect(produk).to.have.property('stok');",
+									"        pm.expect(produk).to.have.property('foto_url');",
+									"        // Save first produk ID for later tests",
+									"        pm.environment.set('produk_id', produk.id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produk",
+							"host": ["{{base_url}}"],
+							"path": ["produk"]
+						},
+						"description": "Ambil semua produk (public, tanpa auth)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Produk Detail (Public)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Produk has complete fields', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('id');",
+									"    pm.expect(json).to.have.property('nama');",
+									"    pm.expect(json).to.have.property('harga_jual');",
+									"    pm.expect(json).to.have.property('stok');",
+									"    pm.expect(json).to.have.property('keterangan');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produk/{{produk_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["produk", "{{produk_id}}"]
+						},
+						"description": "Ambil detail satu produk berdasarkan ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Produk Detail - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404', function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Returns not found message', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produk/99999",
+							"host": ["{{base_url}}"],
+							"path": ["produk", "99999"]
+						},
+						"description": "Test ambil produk dengan ID yang tidak ada."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Produk (API)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Produk created successfully', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json).to.have.property('produk');",
+									"    pm.expect(json.produk).to.have.property('id');",
+									"    pm.expect(json.produk.nama).to.eql('Test Produk QA');",
+									"    pm.environment.set('created_produk_id', json.produk.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "nama",
+									"value": "Test Produk QA",
+									"type": "text"
+								},
+								{
+									"key": "harga_jual",
+									"value": "50000",
+									"type": "text"
+								},
+								{
+									"key": "keterangan",
+									"value": "Produk untuk testing QA",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/produk",
+							"host": ["{{base_url}}"],
+							"path": ["produk"]
+						},
+						"description": "Buat produk baru via API. Stok default 0."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Produk - Duplicate Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Validation error for duplicate nama', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('errors');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "nama",
+									"value": "Test Produk QA",
+									"type": "text"
+								},
+								{
+									"key": "harga_jual",
+									"value": "50000",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/produk",
+							"host": ["{{base_url}}"],
+							"path": ["produk"]
+						},
+						"description": "Test buat produk dengan nama yang sudah ada."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Produk (API)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Produk updated successfully', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.produk.nama).to.eql('Test Produk QA Updated');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nama\": \"Test Produk QA Updated\",\n    \"harga_jual\": 75000,\n    \"keterangan\": \"Produk sudah diperbarui\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/produk/{{created_produk_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["produk", "{{created_produk_id}}"]
+						},
+						"description": "Update produk via API (nama, harga, keterangan)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Stok Produk (Full)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Stock updated', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.new_stok).to.eql(100);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"stok\": 100,\n    \"keterangan\": \"Update stok awal untuk QA testing\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/produk/{{created_produk_id}}/stok",
+							"host": ["{{base_url}}"],
+							"path": ["produk", "{{created_produk_id}}", "stok"]
+						},
+						"description": "Update stok produk dengan keterangan (operator gudang / admin)."
+					},
+					"response": []
+				},
+				{
+					"name": "Quick Update Stok Produk",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Quick stock update successful', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.produk).to.have.property('stok');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"stok\": 50\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/produk/{{created_produk_id}}/stok-quick",
+							"host": ["{{base_url}}"],
+							"path": ["produk", "{{created_produk_id}}", "stok-quick"]
+						},
+						"description": "Quick update stok tanpa keterangan (mobile app)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Produk (API)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Produk deleted successfully', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produk/{{created_produk_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["produk", "{{created_produk_id}}"]
+						},
+						"description": "Hapus produk via API."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👥 Pelanggan (Customers)",
+			"description": "Endpoint untuk manajemen pelanggan. `GET /pelanggan` bersifat public.",
+			"item": [
+				{
+					"name": "List All Pelanggan (Public)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Each pelanggan has required fields', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.length > 0) {",
+									"        var pelanggan = json[0];",
+									"        pm.expect(pelanggan).to.have.property('id');",
+									"        pm.expect(pelanggan).to.have.property('nama');",
+									"        pm.expect(pelanggan).to.have.property('alamat');",
+									"        pm.expect(pelanggan).to.have.property('telepon');",
+									"        pm.expect(pelanggan).to.have.property('pesanan_count');",
+									"        pm.environment.set('pelanggan_id', pelanggan.id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pelanggan",
+							"host": ["{{base_url}}"],
+							"path": ["pelanggan"]
+						},
+						"description": "Ambil semua pelanggan (public)."
+					},
+					"response": []
+				},
+				{
+					"name": "List Pelanggan - With Search",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pelanggan?cari=test",
+							"host": ["{{base_url}}"],
+							"path": ["pelanggan"],
+							"query": [
+								{
+									"key": "cari",
+									"value": "test"
+								}
+							]
+						},
+						"description": "Cari pelanggan berdasarkan nama."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Pelanggan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Pelanggan created with correct data', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('id');",
+									"    pm.expect(json.nama).to.eql('Pelanggan QA Test');",
+									"    pm.expect(json.alamat).to.eql('Jl. Testing No. 1, Jakarta');",
+									"    pm.expect(json.telepon).to.eql('081234567890');",
+									"    pm.environment.set('created_pelanggan_id', json.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nama\": \"Pelanggan QA Test\",\n    \"alamat\": \"Jl. Testing No. 1, Jakarta\",\n    \"telepon\": \"081234567890\",\n    \"email\": \"qa_test@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pelanggan",
+							"host": ["{{base_url}}"],
+							"path": ["pelanggan"]
+						},
+						"description": "Buat pelanggan baru."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Pelanggan - Validation Error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Validation errors for required fields', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('errors');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"invalid-email\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pelanggan",
+							"host": ["{{base_url}}"],
+							"path": ["pelanggan"]
+						},
+						"description": "Test buat pelanggan tanpa field yang required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pelanggan Detail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pelanggan data returned', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('id');",
+									"    pm.expect(json).to.have.property('nama');",
+									"    pm.expect(json).to.have.property('alamat');",
+									"    pm.expect(json).to.have.property('telepon');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pelanggan/{{created_pelanggan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["pelanggan", "{{created_pelanggan_id}}"]
+						},
+						"description": "Ambil detail pelanggan berdasarkan ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Pelanggan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pelanggan updated', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.nama).to.eql('Pelanggan QA Updated');",
+									"    pm.expect(json.alamat).to.eql('Jl. Testing No. 2, Bandung');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nama\": \"Pelanggan QA Updated\",\n    \"alamat\": \"Jl. Testing No. 2, Bandung\",\n    \"telepon\": \"089876543210\",\n    \"email\": \"qa_updated@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pelanggan/{{created_pelanggan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["pelanggan", "{{created_pelanggan_id}}"]
+						},
+						"description": "Update data pelanggan."
+					},
+					"response": []
+				},
+				{
+					"name": "Search Pelanggan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Search returns array', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Search results have correct fields', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.length > 0) {",
+									"        pm.expect(json[0]).to.have.property('id');",
+									"        pm.expect(json[0]).to.have.property('nama');",
+									"        pm.expect(json[0]).to.have.property('alamat');",
+									"        pm.expect(json[0]).to.have.property('telepon');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pelanggan/search?q=QA",
+							"host": ["{{base_url}}"],
+							"path": ["pelanggan", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "QA"
+								}
+							]
+						},
+						"description": "Cari pelanggan untuk autocomplete (max 10 results)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Pelanggan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pelanggan deleted', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('message');",
+									"    pm.expect(json.message).to.include('berhasil dihapus');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pelanggan/{{created_pelanggan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["pelanggan", "{{created_pelanggan_id}}"]
+						},
+						"description": "Hapus pelanggan. Hanya pemilik_umkm, administrator, staf_penjualan."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📋 Pesanan (Orders)",
+			"description": "Endpoint CRUD dan status management untuk pesanan/purchase order (PO).",
+			"item": [
+				{
+					"name": "List All Pesanan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Pesanan items have required fields', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.length > 0) {",
+									"        var pesanan = json[0];",
+									"        pm.expect(pesanan).to.have.property('id');",
+									"        pm.expect(pesanan).to.have.property('nomor_po');",
+									"        pm.expect(pesanan).to.have.property('tanggal_pesanan');",
+									"        pm.expect(pesanan).to.have.property('tanggal_pengiriman');",
+									"        pm.expect(pesanan).to.have.property('pelanggan');",
+									"        pm.expect(pesanan).to.have.property('total_nilai');",
+									"        pm.expect(pesanan).to.have.property('status');",
+									"        pm.expect(pesanan).to.have.property('detail_pesanan');",
+									"        pm.environment.set('pesanan_id', pesanan.id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pesanan",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan"]
+						},
+						"description": "Ambil semua pesanan dengan detail produk dan pelanggan."
+					},
+					"response": []
+				},
+				{
+					"name": "List Pesanan - Filter by Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('All results have correct status', function () {",
+									"    var json = pm.response.json();",
+									"    json.forEach(function(pesanan) {",
+									"        pm.expect(pesanan.status).to.eql('menunggu_konfirmasi');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pesanan?status=menunggu_konfirmasi",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan"],
+							"query": [
+								{
+									"key": "status",
+									"value": "menunggu_konfirmasi"
+								}
+							]
+						},
+						"description": "Filter pesanan berdasarkan status."
+					},
+					"response": []
+				},
+				{
+					"name": "List Pesanan - Search",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pesanan?cari=PO-",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan"],
+							"query": [
+								{
+									"key": "cari",
+									"value": "PO-"
+								}
+							]
+						},
+						"description": "Cari pesanan berdasarkan nomor PO, nama pelanggan, atau nama produk."
+					},
+					"response": []
+				},
+				{
+					"name": "List Pesanan - Date Range & Advanced Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pesanan?dari=2026-01-01&sampai=2026-12-31&min_total=10000&max_total=5000000",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan"],
+							"query": [
+								{
+									"key": "dari",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "sampai",
+									"value": "2026-12-31"
+								},
+								{
+									"key": "min_total",
+									"value": "10000"
+								},
+								{
+									"key": "max_total",
+									"value": "5000000"
+								}
+							]
+						},
+						"description": "Filter pesanan berdasarkan rentang tanggal pengiriman dan total nilai."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Pesanan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Pesanan created successfully', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json).to.have.property('data');",
+									"    pm.expect(json.data).to.have.property('id');",
+									"    pm.expect(json.data).to.have.property('nomor_po');",
+									"    pm.expect(json.data.status).to.eql('menunggu_konfirmasi');",
+									"    pm.environment.set('created_pesanan_id', json.data.id);",
+									"    pm.environment.set('created_nomor_po', json.data.nomor_po);",
+									"});",
+									"",
+									"pm.test('Pesanan has detail items', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.data.detail_pesanan).to.be.an('array');",
+									"    pm.expect(json.data.detail_pesanan.length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Set tanggal_pesanan to today",
+									"var today = new Date().toISOString().split('T')[0];",
+									"var nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];",
+									"pm.environment.set('today_date', today);",
+									"pm.environment.set('next_week_date', nextWeek);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tanggal_pesanan\": \"{{today_date}}\",\n    \"tanggal_pengiriman\": \"{{next_week_date}}\",\n    \"pelanggan_id\": {{pelanggan_id}},\n    \"total_nilai\": 0,\n    \"catatan\": \"Pesanan test dari Postman QA\",\n    \"items\": [\n        {\n            \"produk_id\": {{produk_id}},\n            \"jumlah\": 2,\n            \"spesifikasi\": \"Warna merah\"\n        }\n    ],\n    \"send_shortage_notification\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/pesanan",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan"]
+						},
+						"description": "Buat pesanan baru.\n\n⚠️ **Catatan**: `total_nilai` harus sesuai dengan kalkulasi server (jumlah × harga_jual). Jika tidak cocok akan error 422.\n\nUntuk testing, set `total_nilai` sesuai kalkulasi: `jumlah × harga_jual produk`."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Pesanan - Validation Error (No Items)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Validation error returned', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('errors');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tanggal_pesanan\": \"2026-07-13\",\n    \"tanggal_pengiriman\": \"2026-07-20\",\n    \"pelanggan_id\": {{pelanggan_id}},\n    \"total_nilai\": 0,\n    \"items\": []\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pesanan",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan"]
+						},
+						"description": "Test buat pesanan tanpa item."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pesanan Detail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pesanan detail is complete', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('data');",
+									"    var data = json.data;",
+									"    pm.expect(data).to.have.property('id');",
+									"    pm.expect(data).to.have.property('nomor_po');",
+									"    pm.expect(data).to.have.property('pelanggan');",
+									"    pm.expect(data).to.have.property('detail_pesanan');",
+									"    pm.expect(data).to.have.property('histori_status');",
+									"    pm.expect(data).to.have.property('status');",
+									"    pm.expect(data).to.have.property('total_nilai');",
+									"});",
+									"",
+									"pm.test('Histori status exists', function () {",
+									"    var data = pm.response.json().data;",
+									"    pm.expect(data.histori_status).to.be.an('array');",
+									"    pm.expect(data.histori_status.length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pesanan/{{pesanan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan", "{{pesanan_id}}"]
+						},
+						"description": "Ambil detail lengkap pesanan termasuk histori status dan detail item."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Pesanan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pesanan updated', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.data.catatan).to.eql('Catatan diperbarui via Postman QA');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tanggal_pengiriman\": \"{{next_week_date}}\",\n    \"catatan\": \"Catatan diperbarui via Postman QA\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pesanan/{{pesanan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan", "{{pesanan_id}}"]
+						},
+						"description": "Update tanggal pengiriman dan catatan pesanan."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - Dikonfirmasi",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var code = pm.response.code;",
+									"",
+									"pm.test('Status code is 200 or 302 or 422', function () {",
+									"    pm.expect([200, 302, 422]).to.include(code);",
+									"});",
+									"",
+									"if (code === 200) {",
+									"    pm.test('Status changed to dikonfirmasi', function () {",
+									"        var json = pm.response.json();",
+									"        pm.expect(json.success).to.eql(true);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"dikonfirmasi\",\n    \"keterangan\": \"Dikonfirmasi via Postman QA\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pesanan/{{pesanan_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan", "{{pesanan_id}}", "status"]
+						},
+						"description": "Update status pesanan dari menunggu_konfirmasi → dikonfirmasi."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - Dalam Produksi",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var code = pm.response.code;",
+									"pm.test('Status code is 200 or 302 or 422', function () {",
+									"    pm.expect([200, 302, 422]).to.include(code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"dalam_produksi\",\n    \"keterangan\": \"Masuk produksi via Postman QA\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pesanan/{{pesanan_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan", "{{pesanan_id}}", "status"]
+						},
+						"description": "Update status pesanan dari dikonfirmasi → dalam_produksi."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - Dibatalkan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var code = pm.response.code;",
+									"pm.test('Status code is 200 or 302 or 422', function () {",
+									"    pm.expect([200, 302, 422]).to.include(code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"dibatalkan\",\n    \"keterangan\": \"Dibatalkan via Postman QA\",\n    \"alasan_pembatalan\": \"Testing pembatalan pesanan via QA\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pesanan/{{pesanan_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan", "{{pesanan_id}}", "status"]
+						},
+						"description": "Batalkan pesanan. Memerlukan alasan_pembatalan (min 5 karakter)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status - Invalid Transition",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422 or 403', function () {",
+									"    pm.expect([422, 403]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"selesai\",\n    \"keterangan\": \"Skip steps - should fail\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pesanan/{{pesanan_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan", "{{pesanan_id}}", "status"]
+						},
+						"description": "Test transisi status yang tidak valid (skip step)."
+					},
+					"response": []
+				},
+				{
+					"name": "Download Pesanan PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('PDF data returned', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json).to.have.property('pdf');",
+									"    pm.expect(json).to.have.property('filename');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pesanan/{{pesanan_id}}/pdf",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan", "{{pesanan_id}}", "pdf"]
+						},
+						"description": "Download PDF pesanan (base64 encoded)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Pesanan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pesanan deleted', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.message).to.include('berhasil dihapus');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pesanan/{{created_pesanan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["pesanan", "{{created_pesanan_id}}"]
+						},
+						"description": "Hapus pesanan."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔔 Notifikasi",
+			"description": "Endpoint untuk manajemen notifikasi (role-based).",
+			"item": [
+				{
+					"name": "List Notifikasi",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Save notifikasi ID for later tests', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.length > 0) {",
+									"        pm.environment.set('notifikasi_id', json[0].id);",
+									"        pm.expect(json[0]).to.have.property('id');",
+									"        pm.expect(json[0]).to.have.property('judul');",
+									"        pm.expect(json[0]).to.have.property('pesan');",
+									"        pm.expect(json[0]).to.have.property('tipe');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifikasi",
+							"host": ["{{base_url}}"],
+							"path": ["notifikasi"]
+						},
+						"description": "Ambil semua notifikasi untuk role user saat ini."
+					},
+					"response": []
+				},
+				{
+					"name": "List Notifikasi - Unread Only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('All notifications are unread', function () {",
+									"    var json = pm.response.json();",
+									"    json.forEach(function(notif) {",
+									"        pm.expect(notif.dibaca_at).to.be.null;",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifikasi?filter=unread",
+							"host": ["{{base_url}}"],
+							"path": ["notifikasi"],
+							"query": [
+								{
+									"key": "filter",
+									"value": "unread"
+								}
+							]
+						},
+						"description": "Ambil hanya notifikasi yang belum dibaca."
+					},
+					"response": []
+				},
+				{
+					"name": "List Notifikasi - With Limit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Results limited to 5', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.length).to.be.at.most(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifikasi?limit=5",
+							"host": ["{{base_url}}"],
+							"path": ["notifikasi"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Ambil notifikasi dengan batas jumlah."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notifikasi as Read",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Notification marked as read', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifikasi/{{notifikasi_id}}/baca",
+							"host": ["{{base_url}}"],
+							"path": ["notifikasi", "{{notifikasi_id}}", "baca"]
+						},
+						"description": "Tandai satu notifikasi sebagai sudah dibaca."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark All Notifikasi as Read",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('All marked as read', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifikasi/tandai-semua-dibaca",
+							"host": ["{{base_url}}"],
+							"path": ["notifikasi", "tandai-semua-dibaca"]
+						},
+						"description": "Tandai semua notifikasi sebagai sudah dibaca."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Stok Kurang Notification (Draft)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Notification created', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json).to.have.property('notifikasi_id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nomor_po\": \"PO-TEST-001\",\n    \"detail_kurang\": [\n        {\n            \"nama_produk\": \"Produk Test A\",\n            \"stok_tersedia\": 5,\n            \"kebutuhan\": 20,\n            \"kurang\": 15\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/notifikasi/stok-kurang",
+							"host": ["{{base_url}}"],
+							"path": ["notifikasi", "stok-kurang"]
+						},
+						"description": "Buat notifikasi stok kurang dari draft PO (tanpa menyimpan pesanan)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Notifikasi",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Notification deleted', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifikasi/{{notifikasi_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["notifikasi", "{{notifikasi_id}}"]
+						},
+						"description": "Hapus notifikasi."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📊 Dashboard",
+			"description": "Endpoint untuk dashboard statistics.",
+			"item": [
+				{
+					"name": "Get Dashboard Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Dashboard has required statistics', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('total_aktif');",
+									"    pm.expect(json).to.have.property('total_menunggu');",
+									"    pm.expect(json).to.have.property('total_siap_kirim');",
+									"    pm.expect(json).to.have.property('total_selesai_bulan_ini');",
+									"    pm.expect(json).to.have.property('nilai_selesai_bulan_ini');",
+									"});",
+									"",
+									"pm.test('Statistics are numbers', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.total_aktif).to.be.a('number');",
+									"    pm.expect(json.total_menunggu).to.be.a('number');",
+									"    pm.expect(json.total_siap_kirim).to.be.a('number');",
+									"    pm.expect(json.total_selesai_bulan_ini).to.be.a('number');",
+									"    pm.expect(json.nilai_selesai_bulan_ini).to.be.a('number');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["dashboard"]
+						},
+						"description": "Ambil data statistik dashboard (role-based filtering)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🗄️ Arsip PDF",
+			"description": "Endpoint untuk arsip pesanan yang sudah selesai/dibatalkan.",
+			"item": [
+				{
+					"name": "List Arsip",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Arsip items have correct structure', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.length > 0) {",
+									"        var arsip = json[0];",
+									"        pm.expect(arsip).to.have.property('id');",
+									"        pm.expect(arsip).to.have.property('no');",
+									"        pm.expect(arsip).to.have.property('pelanggan');",
+									"        pm.expect(arsip).to.have.property('status');",
+									"        pm.expect(arsip).to.have.property('total_nilai');",
+									"        pm.expect(['selesai', 'dibatalkan']).to.include(arsip.status);",
+									"        pm.environment.set('arsip_id', arsip.id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/arsip-pdf",
+							"host": ["{{base_url}}"],
+							"path": ["arsip-pdf"]
+						},
+						"description": "Ambil semua arsip pesanan (status: selesai/dibatalkan)."
+					},
+					"response": []
+				},
+				{
+					"name": "List Arsip - With Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Filtered results only show selesai', function () {",
+									"    var json = pm.response.json();",
+									"    json.forEach(function(arsip) {",
+									"        pm.expect(arsip.status).to.eql('selesai');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/arsip-pdf?status=selesai",
+							"host": ["{{base_url}}"],
+							"path": ["arsip-pdf"],
+							"query": [
+								{
+									"key": "status",
+									"value": "selesai"
+								}
+							]
+						},
+						"description": "Filter arsip berdasarkan status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Arsip Detail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Arsip detail returned', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json).to.have.property('id');",
+									"    pm.expect(json).to.have.property('nomor_po');",
+									"    pm.expect(json).to.have.property('status');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/arsip-pdf/{{arsip_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["arsip-pdf", "{{arsip_id}}"]
+						},
+						"description": "Ambil detail arsip pesanan."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Arsip Detail - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404', function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Not found message', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.message).to.include('tidak ditemukan');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/arsip-pdf/99999",
+							"host": ["{{base_url}}"],
+							"path": ["arsip-pdf", "99999"]
+						},
+						"description": "Test ambil arsip dengan ID yang tidak ada."
+					},
+					"response": []
+				},
+				{
+					"name": "Download Arsip PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('PDF base64 data returned', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json).to.have.property('pdf');",
+									"    pm.expect(json).to.have.property('filename');",
+									"    pm.expect(json).to.have.property('nomor_po');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/arsip-pdf/{{arsip_id}}/pdf",
+							"host": ["{{base_url}}"],
+							"path": ["arsip-pdf", "{{arsip_id}}", "pdf"]
+						},
+						"description": "Download PDF arsip pesanan (base64 encoded)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Arsip",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Arsip deleted', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.message).to.include('berhasil dihapus');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/arsip-pdf/{{arsip_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["arsip-pdf", "{{arsip_id}}"]
+						},
+						"description": "Hapus arsip pesanan."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👤 User Management",
+			"description": "Endpoint manajemen pengguna (hanya Administrator).",
+			"item": [
+				{
+					"name": "List Users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has user data', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json).to.have.property('data');",
+									"    pm.expect(json.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('User objects have required fields', function () {",
+									"    var json = pm.response.json();",
+									"    if (json.data.length > 0) {",
+									"        var user = json.data[0];",
+									"        pm.expect(user).to.have.property('id');",
+									"        pm.expect(user).to.have.property('email');",
+									"        pm.expect(user).to.have.property('role');",
+									"        pm.expect(user).to.have.property('created_at');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Ambil semua pengguna (Administrator only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('User created successfully', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.data.email).to.eql('qa_staff@hutch.id');",
+									"    pm.expect(json.data.role).to.eql('staf_penjualan');",
+									"    pm.environment.set('created_user_id', json.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"qa_staff@hutch.id\",\n    \"role\": \"staf_penjualan\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Buat user baru. Roles: administrator, staf_penjualan, operator_gudang, pemilik_umkm."
+					},
+					"response": []
+				},
+				{
+					"name": "Create User - Duplicate Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Duplicate email error', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(false);",
+									"    pm.expect(json).to.have.property('errors');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"qa_staff@hutch.id\",\n    \"role\": \"staf_penjualan\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Test buat user dengan email yang sudah ada."
+					},
+					"response": []
+				},
+				{
+					"name": "Create User - Invalid Role",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test('Invalid role error', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"invalid_role@hutch.id\",\n    \"role\": \"super_admin\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						},
+						"description": "Test buat user dengan role yang tidak valid."
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('User updated successfully', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.data.email).to.eql('qa_staff_updated@hutch.id');",
+									"    pm.expect(json.data.role).to.eql('operator_gudang');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"qa_staff_updated@hutch.id\",\n    \"role\": \"operator_gudang\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{created_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["users", "{{created_user_id}}"]
+						},
+						"description": "Update email dan role user."
+					},
+					"response": []
+				},
+				{
+					"name": "Update User - With Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('User updated with new password', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"qa_staff_updated@hutch.id\",\n    \"role\": \"operator_gudang\",\n    \"password\": \"newpassword456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{created_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["users", "{{created_user_id}}"]
+						},
+						"description": "Update user termasuk password baru."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User - Cannot Delete Self",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 403', function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"pm.test('Self-delete prevented', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(false);",
+									"    pm.expect(json.message).to.include('tidak dapat menghapus');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["users", "{{user_id}}"]
+						},
+						"description": "Test hapus akun sendiri (harus ditolak)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('User deleted', function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.message).to.include('berhasil dihapus');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/{{created_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["users", "{{created_user_id}}"]
+						},
+						"description": "Hapus user lain."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🤖 Chatbot",
+			"description": "Endpoint API Chatbot.",
+			"item": [
+				{
+					"name": "Send Chatbot Message",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Chatbot responds', function () {",
+									"    var json = pm.response.json();",
+									"    // Response structure may vary",
+									"    pm.expect(json).to.be.an('object');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Berapa total pesanan bulan ini?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chatbot/message",
+							"host": ["{{base_url}}"],
+							"path": ["chatbot", "message"]
+						},
+						"description": "Kirim pesan ke chatbot AI."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

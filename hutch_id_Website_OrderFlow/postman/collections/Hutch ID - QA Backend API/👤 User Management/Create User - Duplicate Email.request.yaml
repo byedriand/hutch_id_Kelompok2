@@ -1,0 +1,29 @@
+$kind: http-request
+description: Test buat user dengan email yang sudah ada.
+url: "{{base_url}}/users"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "qa_staff@hutch.id",
+        "role": "staf_penjualan",
+        "password": "password123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 422', function () {
+          pm.response.to.have.status(422);
+      });
+
+      pm.test('Duplicate email error', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(false);
+          pm.expect(json).to.have.property('errors');
+      });
+    language: text/javascript
+order: 3000

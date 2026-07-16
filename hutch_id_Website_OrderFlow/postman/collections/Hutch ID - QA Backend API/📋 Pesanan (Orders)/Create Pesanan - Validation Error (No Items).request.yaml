@@ -1,0 +1,30 @@
+$kind: http-request
+description: Test buat pesanan tanpa item.
+url: "{{base_url}}/pesanan"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "tanggal_pesanan": "2026-07-13",
+        "tanggal_pengiriman": "2026-07-20",
+        "pelanggan_id": {{pelanggan_id}},
+        "total_nilai": 0,
+        "items": []
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 422', function () {
+          pm.response.to.have.status(422);
+      });
+
+      pm.test('Validation error returned', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('errors');
+      });
+    language: text/javascript
+order: 6000

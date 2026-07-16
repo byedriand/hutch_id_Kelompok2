@@ -1,0 +1,33 @@
+$kind: http-request
+description: "Ambil semua arsip pesanan (status: selesai/dibatalkan)."
+url: "{{base_url}}/arsip-pdf"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.be.an('array');
+      });
+
+      pm.test('Arsip items have correct structure', function () {
+          var json = pm.response.json();
+          if (json.length > 0) {
+              var arsip = json[0];
+              pm.expect(arsip).to.have.property('id');
+              pm.expect(arsip).to.have.property('no');
+              pm.expect(arsip).to.have.property('pelanggan');
+              pm.expect(arsip).to.have.property('status');
+              pm.expect(arsip).to.have.property('total_nilai');
+              pm.expect(['selesai', 'dibatalkan']).to.include(arsip.status);
+              pm.environment.set('arsip_id', arsip.id);
+          }
+      });
+    language: text/javascript
+order: 1000

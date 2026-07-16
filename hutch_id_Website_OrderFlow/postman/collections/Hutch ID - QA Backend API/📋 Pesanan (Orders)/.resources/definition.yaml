@@ -1,0 +1,3 @@
+$kind: collection
+description: Endpoint CRUD dan status management untuk pesanan/purchase order (PO).
+order: 4000

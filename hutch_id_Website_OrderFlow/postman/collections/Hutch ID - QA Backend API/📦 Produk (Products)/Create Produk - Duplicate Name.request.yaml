@@ -1,0 +1,28 @@
+$kind: http-request
+description: Test buat produk dengan nama yang sudah ada.
+url: "{{base_url}}/produk"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: nama
+      value: Test Produk QA
+    - type: text
+      key: harga_jual
+      value: "50000"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 422', function () {
+          pm.response.to.have.status(422);
+      });
+
+      pm.test('Validation error for duplicate nama', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('errors');
+      });
+    language: text/javascript
+order: 5000

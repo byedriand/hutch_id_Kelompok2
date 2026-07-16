@@ -1,0 +1,3 @@
+$kind: collection
+description: Endpoint untuk manajemen pelanggan. `GET /pelanggan` bersifat public.
+order: 3000

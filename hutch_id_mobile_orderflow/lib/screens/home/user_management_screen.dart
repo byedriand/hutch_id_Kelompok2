@@ -921,7 +921,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
       // ─ FAB Tambah Pengguna ─
       floatingActionButton: isAdmin
-          ? FloatingActionButton.extended(
+          ? FloatingActionButton.extended(key: const Key('FloatingActionButton'),
               onPressed: () => _showUserDialog(),
               backgroundColor: _blue,
               foregroundColor: Colors.white,

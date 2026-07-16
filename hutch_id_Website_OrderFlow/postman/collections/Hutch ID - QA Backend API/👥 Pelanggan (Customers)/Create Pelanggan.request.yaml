@@ -1,0 +1,33 @@
+$kind: http-request
+description: Buat pelanggan baru.
+url: "{{base_url}}/pelanggan"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "nama": "Pelanggan QA Test",
+        "alamat": "Jl. Testing No. 1, Jakarta",
+        "telepon": "081234567890",
+        "email": "qa_test@example.com"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 201', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('Pelanggan created with correct data', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('id');
+          pm.expect(json.nama).to.eql('Pelanggan QA Test');
+          pm.expect(json.alamat).to.eql('Jl. Testing No. 1, Jakarta');
+          pm.expect(json.telepon).to.eql('081234567890');
+          pm.environment.set('created_pelanggan_id', json.id);
+      });
+    language: text/javascript
+order: 3000

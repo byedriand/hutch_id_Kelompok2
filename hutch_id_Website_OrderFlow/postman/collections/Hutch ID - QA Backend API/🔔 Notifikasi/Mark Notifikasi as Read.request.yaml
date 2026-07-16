@@ -1,0 +1,19 @@
+$kind: http-request
+description: Tandai satu notifikasi sebagai sudah dibaca.
+url: "{{base_url}}/notifikasi/{{notifikasi_id}}/baca"
+method: PATCH
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Notification marked as read', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+      });
+    language: text/javascript
+order: 4000

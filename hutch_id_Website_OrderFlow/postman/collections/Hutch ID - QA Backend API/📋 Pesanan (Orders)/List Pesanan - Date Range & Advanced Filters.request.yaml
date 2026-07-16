@@ -1,0 +1,23 @@
+$kind: http-request
+description: Filter pesanan berdasarkan rentang tanggal pengiriman dan total nilai.
+url: "{{base_url}}/pesanan?dari=2026-01-01&sampai=2026-12-31&min_total=10000&max_total=5000000"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  dari: 2026-01-01
+  sampai: 2026-12-31
+  min_total: "10000"
+  max_total: "5000000"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          pm.expect(pm.response.json()).to.be.an('array');
+      });
+    language: text/javascript
+order: 4000

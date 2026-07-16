@@ -1,0 +1,32 @@
+$kind: http-request
+description: Ambil data statistik dashboard (role-based filtering).
+url: "{{base_url}}/dashboard"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Dashboard has required statistics', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('total_aktif');
+          pm.expect(json).to.have.property('total_menunggu');
+          pm.expect(json).to.have.property('total_siap_kirim');
+          pm.expect(json).to.have.property('total_selesai_bulan_ini');
+          pm.expect(json).to.have.property('nilai_selesai_bulan_ini');
+      });
+
+      pm.test('Statistics are numbers', function () {
+          var json = pm.response.json();
+          pm.expect(json.total_aktif).to.be.a('number');
+          pm.expect(json.total_menunggu).to.be.a('number');
+          pm.expect(json.total_siap_kirim).to.be.a('number');
+          pm.expect(json.total_selesai_bulan_ini).to.be.a('number');
+          pm.expect(json.nilai_selesai_bulan_ini).to.be.a('number');
+      });
+    language: text/javascript
+order: 1000

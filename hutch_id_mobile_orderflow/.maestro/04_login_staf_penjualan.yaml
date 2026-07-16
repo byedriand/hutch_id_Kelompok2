@@ -1,0 +1,138 @@
+################################################################################
+# TC-MOB-004 : LOGIN BERHASIL — ROLE STAF PENJUALAN
+# Deskripsi  : Login berhasil sebagai Staf Penjualan, verifikasi navigasi
+#              (Dashboard, Pesanan, Pelanggan, Tambah Produk),
+#              serta akses pembuatan pesanan (FAB)
+# Role       : staf_penjualan
+# Precondition: Akun staf_penjualan aktif di backend
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP ─────────────────────────────────────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Login ──────────────────────────────────────────────────────
+- assertVisible:
+    text: ".*Login.*"
+
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+# ── 2. Pilih Role Staf Penjualan ──────────────────────────────────────────────
+- tapOn:
+    text: ".*Staf Penjualan.*"
+- waitForAnimationToEnd
+# ── 3. Isi Kredensial ─────────────────────────────────────────────────────────
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+# ── 4. Klik Masuk ─────────────────────────────────────────────────────────────
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 5. Verifikasi Welcome Dialog ─────────────────────────────────────────────
+- assertVisible:
+    text: ".*Login Berhasil!.*"
+
+- assertVisible:
+    text: ".*Staf Penjualan.*"
+
+- takeScreenshot: "04a_staf_welcome_dialog"
+
+# Auto-dismiss
+- waitForAnimationToEnd
+# ── 6. Verifikasi Bottom Navigation Bar untuk Staf Penjualan ─────────────────
+# Staf Penjualan memiliki: Dashboard, Pesanan, Pelanggan, Tambah Produk
+- assertVisible:
+    text: ".*Dashboard.*"
+
+- assertVisible:
+    text: ".*Pesanan.*"
+
+- assertVisible:
+    text: ".*Pelanggan.*"
+
+- assertVisible:
+    text: ".*Tambah Produk.*"
+
+# Staf Penjualan TIDAK punya menu Arsip
+- assertNotVisible:
+    text: ".*Arsip.*"
+
+- takeScreenshot: "04b_staf_nav_bar"
+
+# ── 7. Verifikasi Dashboard Staf ─────────────────────────────────────────────
+- takeScreenshot: "04c_staf_dashboard"
+
+# Refresh dashboard dengan pull-to-refresh
+- swipe:
+    direction: UP
+    duration: 500
+- waitForAnimationToEnd
+# ── 8. Navigasi ke Pesanan ────────────────────────────────────────────────────
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+- assertVisible:
+    text: ".*Pesanan.*"
+
+# Staf Penjualan bisa membuat PO (ada FAB)
+- assertVisible:
+    id: "FloatingActionButton"
+
+- takeScreenshot: "04d_staf_pesanan_list"
+
+# ── 9. Navigasi ke Pelanggan ──────────────────────────────────────────────────
+- tapOn:
+    text: ".*Pelanggan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "04e_staf_pelanggan_list"
+
+# ── 10. Navigasi ke Tambah Produk ────────────────────────────────────────────
+- tapOn:
+    text: ".*Tambah Produk.*"
+- waitForAnimationToEnd
+- takeScreenshot: "04f_staf_tambah_produk"
+
+# ── 11. Kembali ke Dashboard ──────────────────────────────────────────────────
+- tapOn:
+    text: ".*Dashboard.*"
+- waitForAnimationToEnd
+- takeScreenshot: "04g_staf_dashboard_final"

@@ -1,0 +1,23 @@
+$kind: http-request
+description: Filter arsip berdasarkan status.
+url: "{{base_url}}/arsip-pdf?status=selesai"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  status: selesai
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Filtered results only show selesai', function () {
+          var json = pm.response.json();
+          json.forEach(function(arsip) {
+              pm.expect(arsip.status).to.eql('selesai');
+          });
+      });
+    language: text/javascript
+order: 2000

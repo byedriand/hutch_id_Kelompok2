@@ -1,0 +1,35 @@
+$kind: http-request
+description: Ambil semua pesanan dengan detail produk dan pelanggan.
+url: "{{base_url}}/pesanan"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.be.an('array');
+      });
+
+      pm.test('Pesanan items have required fields', function () {
+          var json = pm.response.json();
+          if (json.length > 0) {
+              var pesanan = json[0];
+              pm.expect(pesanan).to.have.property('id');
+              pm.expect(pesanan).to.have.property('nomor_po');
+              pm.expect(pesanan).to.have.property('tanggal_pesanan');
+              pm.expect(pesanan).to.have.property('tanggal_pengiriman');
+              pm.expect(pesanan).to.have.property('pelanggan');
+              pm.expect(pesanan).to.have.property('total_nilai');
+              pm.expect(pesanan).to.have.property('status');
+              pm.expect(pesanan).to.have.property('detail_pesanan');
+              pm.environment.set('pesanan_id', pesanan.id);
+          }
+      });
+    language: text/javascript
+order: 1000

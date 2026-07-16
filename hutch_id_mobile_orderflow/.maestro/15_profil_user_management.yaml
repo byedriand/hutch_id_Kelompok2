@@ -1,0 +1,117 @@
+################################################################################
+# TC-MOB-015 : PROFIL & USER MANAGEMENT (Administrator)
+# Deskripsi  : Verifikasi halaman profil user, edit profil,
+#              dan user management (admin only)
+# Role       : administrator
+# Precondition: Berhasil login sebagai Administrator
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Administrator ────────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Administrator.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_ADMIN}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_ADMIN}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Profil via Avatar ─────────────────────────────────────────
+- tapOn:
+    id: "profile_avatar"
+- waitForAnimationToEnd
+# ── TC-MOB-015-A: Verifikasi Halaman Profil ──────────────────────────────────
+- takeScreenshot: "15a_profile_screen"
+
+# Profil menampilkan nama dan role user
+- assertVisible:
+    text: ".*administrator.*"
+
+# ── TC-MOB-015-B: Scroll Profil ──────────────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1000
+
+- takeScreenshot: "15b_profile_scrolled"
+
+# ── TC-MOB-015-C: Menu User Management (Admin only) ──────────────────────────
+# Admin memiliki akses ke User Management
+- tapOn:
+    text: ".*Manajemen Pengguna.*"
+- waitForAnimationToEnd
+- takeScreenshot: "15c_user_management"
+
+- assertVisible:
+    text: ".*Manajemen Pengguna.*"
+
+# ── TC-MOB-015-D: Verifikasi List User ───────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1000
+
+- takeScreenshot: "15d_user_list"
+
+# ── TC-MOB-015-E: Kembali ke Profil ──────────────────────────────────────────
+- pressKey: back
+- waitForAnimationToEnd
+# ── TC-MOB-015-F: Logout dari Profil ─────────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1000
+
+- tapOn:
+    text: ".*Keluar.*"
+- waitForAnimationToEnd
+- assertVisible:
+    text: ".*Konfirmasi.*"
+
+- takeScreenshot: "15e_logout_confirm_dialog"
+
+# Batalkan logout
+- tapOn:
+    text: ".*Batal.*"
+- waitForAnimationToEnd
+- takeScreenshot: "15f_logout_cancelled"

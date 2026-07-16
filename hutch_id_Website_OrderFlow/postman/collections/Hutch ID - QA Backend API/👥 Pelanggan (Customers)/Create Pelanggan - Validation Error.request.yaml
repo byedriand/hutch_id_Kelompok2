@@ -1,0 +1,26 @@
+$kind: http-request
+description: Test buat pelanggan tanpa field yang required.
+url: "{{base_url}}/pelanggan"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "invalid-email"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 422', function () {
+          pm.response.to.have.status(422);
+      });
+
+      pm.test('Validation errors for required fields', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('errors');
+      });
+    language: text/javascript
+order: 4000

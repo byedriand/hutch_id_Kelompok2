@@ -1,0 +1,20 @@
+$kind: http-request
+description: Test hapus akun sendiri (harus ditolak).
+url: "{{base_url}}/users/{{user_id}}"
+method: DELETE
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 403', function () {
+          pm.response.to.have.status(403);
+      });
+
+      pm.test('Self-delete prevented', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(false);
+          pm.expect(json.message).to.include('tidak dapat menghapus');
+      });
+    language: text/javascript
+order: 7000

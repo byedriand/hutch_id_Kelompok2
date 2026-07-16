@@ -1,0 +1,35 @@
+$kind: http-request
+description: Ambil semua produk (public, tanpa auth).
+url: "{{base_url}}/produk"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.be.an('array');
+      });
+
+      pm.test('Each produk has required fields', function () {
+          var json = pm.response.json();
+          if (json.length > 0) {
+              var produk = json[0];
+              pm.expect(produk).to.have.property('id');
+              pm.expect(produk).to.have.property('nama');
+              pm.expect(produk).to.have.property('harga_jual');
+              pm.expect(produk).to.have.property('stok');
+              pm.expect(produk).to.have.property('foto_url');
+              // Save first produk ID for later tests
+              pm.environment.set('produk_id', produk.id);
+          }
+      });
+    language: text/javascript
+order: 1000

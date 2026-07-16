@@ -1,0 +1,27 @@
+$kind: http-request
+description: Kirim pesan ke chatbot AI.
+url: "{{base_url}}/chatbot/message"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "message": "Berapa total pesanan bulan ini?"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Chatbot responds', function () {
+          var json = pm.response.json();
+          // Response structure may vary
+          pm.expect(json).to.be.an('object');
+      });
+    language: text/javascript
+order: 1000

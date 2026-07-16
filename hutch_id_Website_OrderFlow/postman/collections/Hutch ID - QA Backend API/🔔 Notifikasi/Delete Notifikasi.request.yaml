@@ -1,0 +1,19 @@
+$kind: http-request
+description: Hapus notifikasi.
+url: "{{base_url}}/notifikasi/{{notifikasi_id}}"
+method: DELETE
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Notification deleted', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+      });
+    language: text/javascript
+order: 7000

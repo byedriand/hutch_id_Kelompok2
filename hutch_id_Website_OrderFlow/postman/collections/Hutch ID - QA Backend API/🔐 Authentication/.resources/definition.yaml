@@ -1,0 +1,3 @@
+$kind: collection
+description: Endpoint autentikasi menggunakan Laravel Sanctum.
+order: 1000

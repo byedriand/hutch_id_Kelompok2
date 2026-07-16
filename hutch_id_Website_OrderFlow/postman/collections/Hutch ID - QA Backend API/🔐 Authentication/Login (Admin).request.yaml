@@ -1,0 +1,52 @@
+$kind: http-request
+name: Login (Admin)
+description: Login sebagai Administrator. Token otomatis tersimpan di environment.
+url: "{{base_url}}/login"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "admin@hutch.id",
+        "password": "password123"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      // ===== STATUS CODE =====
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      // ===== RESPONSE STRUCTURE =====
+      pm.test('Response has user and token', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('user');
+          pm.expect(json).to.have.property('token');
+          pm.expect(json.token).to.be.a('string').and.not.empty;
+      });
+
+      // ===== USER OBJECT =====
+      pm.test('User object has required fields', function () {
+          var user = pm.response.json().user;
+          pm.expect(user).to.have.property('id');
+          pm.expect(user).to.have.property('email');
+          pm.expect(user).to.have.property('role');
+          pm.expect(user).to.not.have.property('password');
+      });
+
+      // ===== SAVE TOKEN =====
+      if (pm.response.code === 200) {
+          var json = pm.response.json();
+          pm.environment.set('auth_token', json.token);
+          pm.environment.set('user_id', json.user.id);
+          pm.environment.set('user_role', json.user.role);
+          console.log('✅ Token saved:', json.token.substring(0, 20) + '...');
+      }
+    language: text/javascript
+order: 1000

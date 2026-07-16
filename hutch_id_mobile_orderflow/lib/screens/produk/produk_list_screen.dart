@@ -135,7 +135,7 @@ class _ProdukListScreenState extends State<ProdukListScreen> {
         ],
       ),
       floatingActionButton: canAddProduct
-          ? FloatingActionButton(
+          ? FloatingActionButton(key: const Key('FloatingActionButton'),
               onPressed: () async {
                 await Navigator.pushNamed(context, '/produk-staf-tambah');
                 if (mounted) {
@@ -155,7 +155,7 @@ class _ProdukListScreenState extends State<ProdukListScreen> {
   Widget _buildProdukCard(BuildContext context, dynamic produk) {
     final formatter = NumberFormat('#,##0', 'id_ID');
 
-    return Card(
+    return Card(key: const Key('produk_card'),
       clipBehavior: Clip.antiAlias,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

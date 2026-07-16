@@ -1,0 +1,134 @@
+################################################################################
+# TC-MOB-011 : PRODUK — DAFTAR & TAMBAH PRODUK (Staf Penjualan)
+# Deskripsi  : Verifikasi halaman daftar produk, tambah produk baru (staf),
+#              dan edit produk (jika ada akses)
+# Role       : staf_penjualan
+# Precondition: Berhasil login sebagai Staf Penjualan
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Staf Penjualan ───────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Staf Penjualan.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Tambah Produk ─────────────────────────────────────────────
+- tapOn:
+    text: ".*Tambah Produk.*"
+- waitForAnimationToEnd
+# ── TC-MOB-011-A: Verifikasi Halaman Produk (dari menu Tambah Produk) ─────────
+- takeScreenshot: "11a_produk_staf_screen"
+
+# ── TC-MOB-011-B: Lihat detail produk ────────────────────────────────────────
+- tapOn:
+    index: 0
+    id: "produk_card"
+- waitForAnimationToEnd
+- takeScreenshot: "11b_produk_detail"
+
+- assertVisible:
+    text: ".*Detail Produk.*"
+
+# ── TC-MOB-011-C: Scroll detail produk ───────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1000
+
+- takeScreenshot: "11c_produk_detail_scrolled"
+
+- pressKey: back
+- waitForAnimationToEnd
+# ── TC-MOB-011-D: Tambah Produk Baru ─────────────────────────────────────────
+- tapOn:
+    id: "FloatingActionButton"
+- waitForAnimationToEnd
+- takeScreenshot: "11d_produk_form_baru"
+
+- assertVisible:
+    text: ".*Tambah Produk.*"
+
+# ── TC-MOB-011-E: Isi Form Produk Baru ───────────────────────────────────────
+- tapOn:
+    id: "nama_produk"
+
+- inputText: "Produk QA Test"
+
+- tapOn:
+    id: "harga_produk"
+
+- inputText: "150000"
+
+- tapOn:
+    id: "deskripsi_produk"
+
+- inputText: "Deskripsi produk untuk testing QA Maestro"
+- hideKeyboard
+- takeScreenshot: "11e_produk_form_filled"
+
+# ── TC-MOB-011-F: Submit Produk Baru ─────────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1000
+
+- tapOn:
+    text: ".*Simpan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "11f_produk_saved"
+
+# ── TC-MOB-011-G: Validasi Form Produk Kosong ────────────────────────────────
+- tapOn:
+    id: "FloatingActionButton"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Simpan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "11g_produk_form_empty_validation"
+
+- pressKey: back

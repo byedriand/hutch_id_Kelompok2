@@ -1,0 +1,30 @@
+$kind: http-request
+description: Update data pelanggan.
+url: "{{base_url}}/pelanggan/{{created_pelanggan_id}}"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "nama": "Pelanggan QA Updated",
+        "alamat": "Jl. Testing No. 2, Bandung",
+        "telepon": "089876543210",
+        "email": "qa_updated@example.com"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Pelanggan updated', function () {
+          var json = pm.response.json();
+          pm.expect(json.nama).to.eql('Pelanggan QA Updated');
+          pm.expect(json.alamat).to.eql('Jl. Testing No. 2, Bandung');
+      });
+    language: text/javascript
+order: 6000

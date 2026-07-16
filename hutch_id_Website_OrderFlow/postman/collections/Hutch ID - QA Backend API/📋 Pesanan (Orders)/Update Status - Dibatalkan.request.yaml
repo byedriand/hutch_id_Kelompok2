@@ -1,0 +1,24 @@
+$kind: http-request
+description: Batalkan pesanan. Memerlukan alasan_pembatalan (min 5 karakter).
+url: "{{base_url}}/pesanan/{{pesanan_id}}/status"
+method: PATCH
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "status": "dibatalkan",
+        "keterangan": "Dibatalkan via Postman QA",
+        "alasan_pembatalan": "Testing pembatalan pesanan via QA"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      var code = pm.response.code;
+      pm.test('Status code is 200 or 302 or 422', function () {
+          pm.expect([200, 302, 422]).to.include(code);
+      });
+    language: text/javascript
+order: 11000

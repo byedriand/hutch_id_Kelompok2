@@ -1,0 +1,20 @@
+$kind: http-request
+description: Hapus pelanggan. Hanya pemilik_umkm, administrator, staf_penjualan.
+url: "{{base_url}}/pelanggan/{{created_pelanggan_id}}"
+method: DELETE
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Pelanggan deleted', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('message');
+          pm.expect(json.message).to.include('berhasil dihapus');
+      });
+    language: text/javascript
+order: 8000

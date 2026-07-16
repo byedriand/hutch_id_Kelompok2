@@ -1,0 +1,215 @@
+################################################################################
+# TC-MOB-018 : END-TO-END FLOW — FULL ORDER WORKFLOW
+# Deskripsi  : Full E2E flow: Staf Penjualan buat PO → Admin konfirmasi →
+#              verifikasi status berubah di list
+# Note       : Test ini memerlukan interaksi dari 2 role berbeda secara berurutan
+# Role       : staf_penjualan (buat PO), administrator (konfirmasi)
+# Precondition: Semua akun aktif, ada pelanggan & produk di sistem
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ════════════════════════════════════════════════════════════════════
+# FASE 1: Staf Penjualan — Buat Pesanan Baru
+# ════════════════════════════════════════════════════════════════════
+
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Staf Penjualan.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# Navigasi ke Pesanan
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+# Buat pesanan baru
+- tapOn:
+    id: "FloatingActionButton"
+- waitForAnimationToEnd
+# Pilih Pelanggan
+- tapOn:
+    text: ".*Pilih Pelanggan.*"
+- waitForAnimationToEnd
+- tapOn:
+    index: 0
+    id: "pelanggan_item"
+- waitForAnimationToEnd
+# Tambah Produk
+- tapOn:
+    text: ".*Tambah Produk.*"
+- waitForAnimationToEnd
+- tapOn:
+    index: 0
+    id: "produk_item"
+- waitForAnimationToEnd
+- tapOn:
+    id: "jumlah_field"
+
+- eraseText: 100
+
+- inputText: "3"
+
+- tapOn:
+    text: ".*Tambahkan.*"
+- waitForAnimationToEnd
+# Isi catatan
+- tapOn:
+    id: "catatan"
+
+- inputText: "E2E Test - Pesanan untuk konfirmasi"
+- hideKeyboard
+# Submit
+- swipe:
+    direction: UP
+    duration: 1000
+
+- tapOn:
+    text: ".*Simpan Pesanan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "18a_e2e_po_created_by_staf"
+
+# Catat PO yang baru dibuat (ambil screenshot)
+- assertVisible:
+    text: ".*Pesanan.*"
+
+# Filter Menunggu untuk melihat PO baru
+- tapOn:
+    text: ".*Menunggu.*"
+- waitForAnimationToEnd
+- takeScreenshot: "18b_e2e_po_menunggu_konfirmasi"
+
+# Logout dari Staf
+- tapOn:
+    id: "profile_avatar"
+- waitForAnimationToEnd
+- swipe:
+    direction: UP
+    duration: 500
+
+- tapOn:
+    text: ".*Keluar.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Logout.*"
+- waitForAnimationToEnd
+- assertVisible:
+    text: ".*HUTCH PRESTIGE.*"
+
+# ════════════════════════════════════════════════════════════════════
+# FASE 2: Administrator — Lihat dan konfirmasi pesanan baru
+# ════════════════════════════════════════════════════════════════════
+
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Administrator.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_ADMIN}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_ADMIN}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# Navigasi ke Pesanan
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+# Filter Menunggu untuk melihat PO baru dari Staf
+- tapOn:
+    text: ".*Menunggu.*"
+- waitForAnimationToEnd
+- takeScreenshot: "18c_e2e_admin_sees_menunggu"
+
+# Buka detail PO pertama (yang baru dibuat)
+- tapOn:
+    index: 0
+    id: "pesanan_card"
+- waitForAnimationToEnd
+- takeScreenshot: "18d_e2e_admin_pesanan_detail"
+
+# Scroll ke bagian update status
+- swipe:
+    direction: UP
+    duration: 2000
+
+# Ubah status ke "Dikonfirmasi"
+- tapOn:
+    text: ".*Dikonfirmasi.*"
+- waitForAnimationToEnd
+- takeScreenshot: "18e_e2e_admin_konfirmasi_po"
+
+# Simpan perubahan status
+- tapOn:
+    text: ".*Perbarui Status.*"
+- waitForAnimationToEnd
+- takeScreenshot: "18f_e2e_status_dikonfirmasi"
+
+# ── Verifikasi di Dashboard Admin ────────────────────────────────────────────
+- pressKey: back
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Dashboard.*"
+- waitForAnimationToEnd
+- swipe:
+    direction: UP
+    duration: 600
+- waitForAnimationToEnd
+- takeScreenshot: "18g_e2e_admin_dashboard_updated"

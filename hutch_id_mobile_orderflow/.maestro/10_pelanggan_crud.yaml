@@ -1,0 +1,195 @@
+################################################################################
+# TC-MOB-010 : PELANGGAN — DAFTAR, SEARCH, DETAIL, TAMBAH, EDIT
+# Deskripsi  : CRUD pelanggan — list, search, view detail,
+#              tambah pelanggan baru, edit data pelanggan
+# Role       : staf_penjualan
+# Precondition: Berhasil login sebagai Staf Penjualan, ada data pelanggan
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Staf Penjualan ───────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Staf Penjualan.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Pelanggan ──────────────────────────────────────────────────
+- tapOn:
+    text: ".*Pelanggan.*"
+- waitForAnimationToEnd
+# ── TC-MOB-010-A: Verifikasi Halaman Pelanggan ───────────────────────────────
+- takeScreenshot: "10a_pelanggan_list"
+
+# ── TC-MOB-010-B: Pull-to-Refresh ────────────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 600
+- waitForAnimationToEnd
+- takeScreenshot: "10b_pelanggan_refreshed"
+
+# ── TC-MOB-010-C: Search Pelanggan ───────────────────────────────────────────
+- tapOn:
+    id: "search_pelanggan"
+
+- inputText: "a"
+- waitForAnimationToEnd
+- takeScreenshot: "10c_pelanggan_search_result"
+
+# Hapus search
+- tapOn:
+    text: "a"
+- eraseText: 100
+- waitForAnimationToEnd
+# ── TC-MOB-010-D: Buka Detail Pelanggan ──────────────────────────────────────
+- tapOn:
+    index: 0
+    id: "pelanggan_card"
+- waitForAnimationToEnd
+- takeScreenshot: "10d_pelanggan_detail"
+
+# Verifikasi elemen detail
+- assertVisible:
+    text: ".*Detail Pelanggan.*"
+
+# ── TC-MOB-010-E: Kembali ke List ────────────────────────────────────────────
+- pressKey: back
+- waitForAnimationToEnd
+# ── TC-MOB-010-F: Tambah Pelanggan Baru via FAB ──────────────────────────────
+- tapOn:
+    id: "FloatingActionButton"
+- waitForAnimationToEnd
+- takeScreenshot: "10e_pelanggan_form_baru"
+
+# Verifikasi form fields
+- assertVisible:
+    text: ".*Tambah Pelanggan.*"
+
+# ── TC-MOB-010-G: Isi Form Pelanggan Baru ────────────────────────────────────
+- tapOn:
+    id: "nama_pelanggan"
+
+- inputText: "QA Test Customer"
+
+- tapOn:
+    id: "email_pelanggan"
+
+- inputText: "qatest@example.com"
+
+- tapOn:
+    id: "telepon_pelanggan"
+
+- inputText: "08123456789"
+
+- tapOn:
+    id: "alamat_pelanggan"
+
+- inputText: "Jl. QA Test No. 1, Jakarta"
+- hideKeyboard
+- takeScreenshot: "10f_pelanggan_form_filled"
+
+# ── TC-MOB-010-H: Submit Pelanggan Baru ──────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1000
+
+- tapOn:
+    text: ".*Simpan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "10g_pelanggan_saved"
+
+# Setelah simpan, kembali ke list
+- assertVisible:
+    text: ".*Pelanggan.*"
+
+# ── TC-MOB-010-I: Cari Pelanggan yang Baru Ditambah ──────────────────────────
+- tapOn:
+    id: "search_pelanggan"
+
+- inputText: "QA Test Customer"
+- waitForAnimationToEnd
+- takeScreenshot: "10h_pelanggan_search_new"
+
+# ── TC-MOB-010-J: Buka Detail & Edit Pelanggan Baru ─────────────────────────
+- tapOn:
+    index: 0
+    id: "pelanggan_card"
+- waitForAnimationToEnd
+# Tap tombol Edit
+- tapOn:
+    id: "edit_pelanggan_btn"
+- waitForAnimationToEnd
+- takeScreenshot: "10i_pelanggan_form_edit"
+
+# Update nomor telepon
+- tapOn:
+    id: "telepon_pelanggan"
+
+- eraseText: 100
+
+- inputText: "08987654321"
+- hideKeyboard
+- tapOn:
+    text: ".*Simpan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "10j_pelanggan_edited_saved"
+
+# ── TC-MOB-010-K: Validasi Form Pelanggan (nama kosong) ─────────────────────
+- tapOn:
+    id: "FloatingActionButton"
+- waitForAnimationToEnd
+- swipe:
+    direction: UP
+    duration: 500
+
+- tapOn:
+    text: ".*Simpan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "10k_pelanggan_validation_empty"
+
+- pressKey: back

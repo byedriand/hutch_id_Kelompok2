@@ -1,0 +1,114 @@
+################################################################################
+# TC-MOB-009 : PESANAN — VALIDASI FORM & EDGE CASES
+# Deskripsi  : Verifikasi validasi form pesanan (tanpa pelanggan, tanpa produk,
+#              jumlah 0/negatif, submit tanpa item)
+# Role       : staf_penjualan
+# Precondition: Berhasil login sebagai Staf Penjualan
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Staf Penjualan ───────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Staf Penjualan.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Form Pesanan ───────────────────────────────────────────────
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+- tapOn:
+    id: "FloatingActionButton"
+- waitForAnimationToEnd
+# ── TC-MOB-009-A: Submit TANPA pilih pelanggan & produk ──────────────────────
+- swipe:
+    direction: UP
+    duration: 1000
+
+- tapOn:
+    text: ".*Simpan Pesanan.*"
+- waitForAnimationToEnd
+# Harus ada pesan error/snackbar
+- takeScreenshot: "09a_pesanan_form_empty_submit"
+
+# ── TC-MOB-009-B: Coba tambah produk tanpa pilih produk ─────────────────────
+- swipe:
+    direction: DOWN
+    duration: 1000
+
+# Langsung klik tambah tanpa pilih produk
+- tapOn:
+    text: ".*Tambah Produk.*"
+- waitForAnimationToEnd
+- takeScreenshot: "09b_pesanan_no_produk_picker"
+
+# Keluar dari product picker
+- pressKey: back
+- waitForAnimationToEnd
+# ── TC-MOB-009-C: Masukkan jumlah = 0 ───────────────────────────────────────
+- tapOn:
+    id: "jumlah_field"
+
+- eraseText: 100
+
+- inputText: "0"
+
+- tapOn:
+    text: ".*Tambahkan.*"
+- waitForAnimationToEnd
+# Harus ada snackbar "Jumlah harus lebih dari 0"
+- assertVisible:
+    text: ".*Jumlah harus lebih dari 0.*"
+
+- takeScreenshot: "09c_pesanan_jumlah_zero_error"
+
+# ── TC-MOB-009-D: Kembali ke Pesanan list ────────────────────────────────────
+- pressKey: back
+- waitForAnimationToEnd
+- takeScreenshot: "09d_pesanan_form_cancelled"

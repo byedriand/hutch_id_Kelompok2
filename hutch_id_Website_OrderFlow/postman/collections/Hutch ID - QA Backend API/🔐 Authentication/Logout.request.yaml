@@ -1,0 +1,20 @@
+$kind: http-request
+description: Logout dan revoke token saat ini. ⚠️ Jalankan terakhir karena token akan expired.
+url: "{{base_url}}/logout"
+method: POST
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Logout message received', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('message');
+          pm.expect(json.message).to.include('Logged out');
+      });
+    language: text/javascript
+order: 7000

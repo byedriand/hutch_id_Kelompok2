@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: f0221eb4-3853-4270-8b6a-4ef18097efd5
+
+cloudResources:
+  collections:
+    ../postman/collections/Hutch ID - QA Backend API: b46bee65-1ceb-45b2-a5e1-abb4ed89cdaa
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/

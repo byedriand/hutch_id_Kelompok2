@@ -1,0 +1,222 @@
+appId: com.hutchprestige.mobile
+
+env:
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ==============================================================================
+# Launch App
+# ==============================================================================
+- launchApp:
+    clearState: true
+
+- sleep: 2000
+
+# ==============================================================================
+# Landing Page
+# ==============================================================================
+- waitUntilVisible:
+    text: "Login"
+    timeout: ${TIMEOUT_DEFAULT}
+
+- assertVisible:
+    text: "Login"
+
+- tapOn:
+    text: "Login"
+
+- sleep: 1500
+
+# ==============================================================================
+# Login Screen - Verify All Roles Visible
+# ==============================================================================
+- waitUntilVisible:
+    text: "Administrator"
+    timeout: ${TIMEOUT_DEFAULT}
+
+- assertVisible:
+    text: "Administrator"
+
+- assertVisible:
+    text: "Staf Penjualan"
+
+- assertVisible:
+    text: "Operator Gudang"
+
+- takeScreenshot:
+    filename: "02a_login_screen_roles"
+
+# ==============================================================================
+# Verify Role Not Selected Message
+# ==============================================================================
+- waitUntilVisible:
+    text: "Pilih role terlebih dahulu"
+    timeout: ${TIMEOUT_DEFAULT}
+
+- assertVisible:
+    text: "Pilih role terlebih dahulu"
+
+- takeScreenshot:
+    filename: "02b_login_no_role_info"
+
+# ==============================================================================
+# Select Administrator Role
+# ==============================================================================
+- tapOn:
+    text: "Administrator"
+
+- sleep: 1500
+
+- waitUntilVisible:
+    id: "email"
+    timeout: ${TIMEOUT_DEFAULT}
+
+- assertVisible:
+    id: "email"
+
+- assertVisible:
+    id: "password"
+
+- takeScreenshot:
+    filename: "02c_login_role_selected"
+
+# ==============================================================================
+# Test: Empty Form Validation
+# ==============================================================================
+- scroll:
+    direction: UP
+
+- sleep: 800
+
+- tapOn:
+    text: "MASUK SEKARANG"
+
+- sleep: 1500
+
+- assertVisible:
+    text: "Email"
+
+- takeScreenshot:
+    filename: "02d_login_empty_form_validation"
+
+# ==============================================================================
+# Test: Invalid Email Format
+# ==============================================================================
+- tapOn:
+    id: "email"
+
+- sleep: 500
+
+- eraseText: 100
+
+- typeText: "emailtidakvalid"
+
+- sleep: 800
+
+- tapOn:
+    text: "MASUK SEKARANG"
+
+- sleep: 1500
+
+- takeScreenshot:
+    filename: "02e_login_invalid_email"
+
+# ==============================================================================
+# Test: Wrong Credentials
+# ==============================================================================
+- tapOn:
+    id: "email"
+
+- sleep: 500
+
+- eraseText: 100
+
+- typeText: "wrong@hutch.id"
+
+- sleep: 500
+
+- tapOn:
+    id: "password"
+
+- sleep: 500
+
+- eraseText: 100
+
+- typeText: "wrongpassword"
+
+- sleep: 800
+
+- tapOn:
+    text: "MASUK SEKARANG"
+
+- sleep: 1500
+
+- takeScreenshot:
+    filename: "02f_login_wrong_credentials"
+
+# ==============================================================================
+# Test: Role Mismatch
+# ==============================================================================
+- tapOn:
+    text: "Staf Penjualan"
+
+- sleep: 1500
+
+- tapOn:
+    id: "email"
+
+- sleep: 500
+
+- eraseText: 100
+
+- typeText: ${EMAIL_ADMIN}
+
+- sleep: 500
+
+- tapOn:
+    id: "password"
+
+- sleep: 500
+
+- eraseText: 100
+
+- typeText: ${PASSWORD_ADMIN}
+
+- sleep: 800
+
+- tapOn:
+    text: "MASUK SEKARANG"
+
+- sleep: 1500
+
+- waitUntilVisible:
+    text: "Role Tidak Sesuai"
+    timeout: ${TIMEOUT_LONG}
+
+- assertVisible:
+    text: "Role Tidak Sesuai"
+
+- takeScreenshot:
+    filename: "02g_login_role_mismatch"
+
+# ==============================================================================
+# Close Dialog
+# ==============================================================================
+- waitUntilVisible:
+    text: "Tutup"
+    timeout: ${TIMEOUT_DEFAULT}
+
+- tapOn:
+    text: "Tutup"
+
+- sleep: 1500

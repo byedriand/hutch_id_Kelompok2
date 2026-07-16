@@ -225,6 +225,7 @@ class _GudangStokScreenState extends State<GudangStokScreen> {
                       ),
                       const SizedBox(height: 8),
                       TextField(
+                        key: const Key('stok_baru_field'),
                         controller: jumlahController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(

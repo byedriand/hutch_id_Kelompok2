@@ -1,0 +1,34 @@
+name: Hutch ID - QA Environment
+values:
+  - key: base_url
+    value: 'http://localhost:8000/api'
+  - key: auth_token
+    value: ''
+  - key: user_id
+    value: ''
+  - key: user_role
+    value: ''
+  - key: pelanggan_id
+    value: ''
+  - key: created_pelanggan_id
+    value: ''
+  - key: produk_id
+    value: ''
+  - key: created_produk_id
+    value: ''
+  - key: pesanan_id
+    value: ''
+  - key: created_pesanan_id
+    value: ''
+  - key: created_nomor_po
+    value: ''
+  - key: notifikasi_id
+    value: ''
+  - key: arsip_id
+    value: ''
+  - key: created_user_id
+    value: ''
+  - key: today_date
+    value: ''
+  - key: next_week_date
+    value: ''

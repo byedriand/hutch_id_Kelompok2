@@ -1,0 +1,22 @@
+$kind: http-request
+description: Download PDF arsip pesanan (base64 encoded).
+url: "{{base_url}}/arsip-pdf/{{arsip_id}}/pdf"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('PDF base64 data returned', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+          pm.expect(json).to.have.property('pdf');
+          pm.expect(json).to.have.property('filename');
+          pm.expect(json).to.have.property('nomor_po');
+      });
+    language: text/javascript
+order: 5000

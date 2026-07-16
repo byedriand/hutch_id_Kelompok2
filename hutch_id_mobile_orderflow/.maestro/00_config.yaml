@@ -1,0 +1,41 @@
+################################################################################
+# HUTCH.ID MOBILE — MAESTRO QA CONFIG
+# File       : 00_config.yaml
+# Deskripsi  : Shared environment variables & reusable definitions
+#              digunakan oleh semua flow di folder .maestro/
+# Framework  : Flutter (Android / iOS)
+# Tim QA     : Sopyan Rinakdhi, Akbar
+################################################################################
+
+# Variabel global yang dapat di-override via CLI:
+#   maestro test --env EMAIL_ADMIN=xxx --env PASSWORD_ADMIN=yyy
+
+# ─── App ID ───────────────────────────────────────────────────────────────────
+appId: com.hutchprestige.mobile   # sesuaikan dengan applicationId di build.gradle
+
+# ─── Environment Variables (default) ─────────────────────────────────────────
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+- assertVisible:
+    id: "dummy_to_bypass_validation"
+    optional: true

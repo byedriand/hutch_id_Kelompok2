@@ -1,0 +1,28 @@
+$kind: http-request
+description: Update tanggal pengiriman dan catatan pesanan.
+url: "{{base_url}}/pesanan/{{pesanan_id}}"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "tanggal_pengiriman": "{{next_week_date}}",
+        "catatan": "Catatan diperbarui via Postman QA"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Pesanan updated', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+          pm.expect(json.data.catatan).to.eql('Catatan diperbarui via Postman QA');
+      });
+    language: text/javascript
+order: 8000

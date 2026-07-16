@@ -1,0 +1,34 @@
+$kind: http-request
+description: Ambil semua pelanggan (public).
+url: "{{base_url}}/pelanggan"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.be.an('array');
+      });
+
+      pm.test('Each pelanggan has required fields', function () {
+          var json = pm.response.json();
+          if (json.length > 0) {
+              var pelanggan = json[0];
+              pm.expect(pelanggan).to.have.property('id');
+              pm.expect(pelanggan).to.have.property('nama');
+              pm.expect(pelanggan).to.have.property('alamat');
+              pm.expect(pelanggan).to.have.property('telepon');
+              pm.expect(pelanggan).to.have.property('pesanan_count');
+              pm.environment.set('pelanggan_id', pelanggan.id);
+          }
+      });
+    language: text/javascript
+order: 1000

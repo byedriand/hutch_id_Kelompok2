@@ -1,0 +1,35 @@
+$kind: http-request
+description: Buat produk baru via API. Stok default 0.
+url: "{{base_url}}/produk"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: nama
+      value: Test Produk QA
+    - type: text
+      key: harga_jual
+      value: "50000"
+    - type: text
+      key: keterangan
+      value: Produk untuk testing QA
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 201', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('Produk created successfully', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+          pm.expect(json).to.have.property('produk');
+          pm.expect(json.produk).to.have.property('id');
+          pm.expect(json.produk.nama).to.eql('Test Produk QA');
+          pm.environment.set('created_produk_id', json.produk.id);
+      });
+    language: text/javascript
+order: 4000

@@ -1,0 +1,97 @@
+################################################################################
+# TC-MOB-006 : DASHBOARD — VERIFIKASI DATA & REFRESH
+# Deskripsi  : Verifikasi tampilan dashboard (stat cards, recent orders),
+#              pull-to-refresh, dan navigasi shortcut dari dashboard
+# Role       : administrator (akses dashboard paling lengkap)
+# Precondition: Berhasil login sebagai Administrator
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Admin ────────────────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Administrator.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_ADMIN}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_ADMIN}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# Tunggu welcome dialog dismiss otomatis
+- waitForAnimationToEnd
+# ── TC-MOB-006-A: Verifikasi Dashboard Cards Tersedia ────────────────────────
+- assertVisible:
+    text: ".*Dashboard.*"
+
+# Stat cards yang umum di dashboard (total pesanan, menunggu konfirmasi, dll)
+- assertVisible:
+    text: ".*Menunggu Konfirmasi.*"
+
+- takeScreenshot: "06a_dashboard_initial"
+
+# ── TC-MOB-006-B: Scroll Dashboard ke bawah ──────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1500
+
+- takeScreenshot: "06b_dashboard_scrolled"
+
+# ── TC-MOB-006-C: Pull-to-Refresh Dashboard ──────────────────────────────────
+- swipe:
+    direction: DOWN
+    duration: 1000
+
+- swipe:
+    direction: UP
+    duration: 600
+- waitForAnimationToEnd
+- takeScreenshot: "06c_dashboard_after_refresh"
+
+# ── TC-MOB-006-D: Verifikasi Loading State Tidak Stuck ───────────────────────
+# Pastikan tidak ada loading indicator setelah data dimuat
+- assertNotVisible:
+    text: ".*Memuat dashboard....*"
+
+- takeScreenshot: "06d_dashboard_data_loaded"

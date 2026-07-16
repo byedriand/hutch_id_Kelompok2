@@ -1,0 +1,28 @@
+$kind: collection
+description: |-
+  Koleksi Postman untuk QA Testing seluruh Backend API Hutch ID Website OrderFlow.
+
+  ## Setup
+  1. Import collection ini ke Postman
+  2. Import environment file
+  3. Jalankan request **Login** terlebih dahulu untuk mendapatkan token
+  4. Token otomatis tersimpan di environment variable
+
+  ## Roles yang tersedia
+  - `administrator`
+  - `staf_penjualan`
+  - `operator_gudang`
+  - `pemilik_umkm`
+
+  ## Alur Status Pesanan
+  `menunggu_konfirmasi` → `dikonfirmasi` → `dalam_produksi` → `siap_kirim` → `selesai`
+
+  Dari status apapun (kecuali selesai/dibatalkan) dapat ke `dibatalkan`.
+variables:
+  base_url: http://localhost:8080/api
+auth:
+  - id: b4d06c04-5d3e-407e-988a-be31315db164
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{auth_token}}"

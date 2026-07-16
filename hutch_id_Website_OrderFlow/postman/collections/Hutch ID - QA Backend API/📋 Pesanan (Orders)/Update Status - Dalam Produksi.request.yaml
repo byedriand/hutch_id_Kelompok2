@@ -1,0 +1,23 @@
+$kind: http-request
+description: Update status pesanan dari dikonfirmasi → dalam_produksi.
+url: "{{base_url}}/pesanan/{{pesanan_id}}/status"
+method: PATCH
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "status": "dalam_produksi",
+        "keterangan": "Masuk produksi via Postman QA"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      var code = pm.response.code;
+      pm.test('Status code is 200 or 302 or 422', function () {
+          pm.expect([200, 302, 422]).to.include(code);
+      });
+    language: text/javascript
+order: 10000

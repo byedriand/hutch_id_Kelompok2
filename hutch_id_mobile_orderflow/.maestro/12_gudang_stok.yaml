@@ -1,0 +1,111 @@
+################################################################################
+# TC-MOB-012 : MANAJEMEN STOK GUDANG (Operator Gudang)
+# Deskripsi  : Verifikasi halaman manajemen stok, update stok bahan baku,
+#              refresh data, dan filter/search stok
+# Role       : operator_gudang
+# Precondition: Berhasil login sebagai Operator Gudang, ada data stok
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Operator Gudang ──────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Operator Gudang.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_GUDANG}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_GUDANG}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Manajemen Stok ────────────────────────────────────────────
+- tapOn:
+    text: ".*Manajemen Stok.*"
+- waitForAnimationToEnd
+# ── TC-MOB-012-A: Verifikasi Halaman Stok Gudang ─────────────────────────────
+- takeScreenshot: "12a_gudang_stok_screen"
+
+# ── TC-MOB-012-B: Pull-to-Refresh Stok ───────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 600
+- waitForAnimationToEnd
+- takeScreenshot: "12b_gudang_stok_refreshed"
+
+# ── TC-MOB-012-C: Scroll untuk melihat semua stok ────────────────────────────
+- swipe:
+    direction: UP
+    duration: 2000
+
+- takeScreenshot: "12c_gudang_stok_scrolled"
+
+- swipe:
+    direction: DOWN
+    duration: 1000
+
+# ── TC-MOB-012-D: Tap item stok untuk update ─────────────────────────────────
+- tapOn:
+    index: 0
+    id: "stok_item"
+- waitForAnimationToEnd
+- takeScreenshot: "12d_gudang_stok_detail_or_update"
+
+# ── TC-MOB-012-E: Update stok jika ada form update ───────────────────────────
+# Cek apakah ada field untuk update stok
+- tapOn:
+    id: "stok_baru_field"
+
+- eraseText: 100
+
+- inputText: "50"
+
+- tapOn:
+    text: ".*Update.*"
+- waitForAnimationToEnd
+- takeScreenshot: "12e_gudang_stok_updated"
+
+# Kembali ke list
+- pressKey: back
+- waitForAnimationToEnd
+- takeScreenshot: "12f_gudang_stok_list_after_update"

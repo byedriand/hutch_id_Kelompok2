@@ -1,0 +1,43 @@
+################################################################################
+# HUTCH.ID MOBILE — MAESTRO TEST SUITE RUNNER
+# File       : run_all_tests.yaml
+# Deskripsi  : Jalankan semua test case secara berurutan
+# Cara pakai : maestro test .maestro/run_all_tests.yaml
+################################################################################
+
+# Jalankan semua flow secara berurutan:
+# maestro test .maestro/ --include-tags smoke
+# atau:
+# maestro test .maestro/run_all_tests.yaml
+
+---
+
+# Flow ini adalah shortcut untuk menjalankan test penting saja (Smoke Test)
+# Jalankan individual jika perlu full suite
+
+# ── Smoke Test (Core Flows) ───────────────────────────────────────────────────
+# Urutan sesuai prioritas:
+
+# 1. Splash & Landing
+- runFlow: 01_splash_landing.yaml
+
+# 2. Login Validasi
+- runFlow: 02_login_validasi.yaml
+
+# 3. Login Admin
+- runFlow: 03_login_admin.yaml
+
+# 4. Login Staf Penjualan
+- runFlow: 04_login_staf_penjualan.yaml
+
+# 5. Login Operator Gudang
+- runFlow: 05_login_operator_gudang.yaml
+
+# 6. Dashboard
+- runFlow: 06_dashboard.yaml
+
+# 7. Pesanan List, Filter, Search
+- runFlow: 07_pesanan_list_filter_search.yaml
+
+# 8. RBAC Akses Kontrol
+- runFlow: 16_rbac_akses_kontrol.yaml

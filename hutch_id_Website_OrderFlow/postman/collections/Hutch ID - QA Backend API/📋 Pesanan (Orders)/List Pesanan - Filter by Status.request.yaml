@@ -1,0 +1,23 @@
+$kind: http-request
+description: Filter pesanan berdasarkan status.
+url: "{{base_url}}/pesanan?status=menunggu_konfirmasi"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  status: menunggu_konfirmasi
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('All results have correct status', function () {
+          var json = pm.response.json();
+          json.forEach(function(pesanan) {
+              pm.expect(pesanan.status).to.eql('menunggu_konfirmasi');
+          });
+      });
+    language: text/javascript
+order: 2000

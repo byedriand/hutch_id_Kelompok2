@@ -254,6 +254,7 @@ class _PelangganFormScreenState extends State<PelangganFormScreen>
         ),
         const SizedBox(height: 8),
         TextFormField(
+          key: Key(label.toLowerCase().replaceAll(' ', '_')),
           controller: controller,
           keyboardType: keyboardType,
           maxLines: maxLines,

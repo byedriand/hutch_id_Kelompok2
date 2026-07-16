@@ -1,0 +1,29 @@
+$kind: http-request
+description: Update produk via API (nama, harga, keterangan).
+url: "{{base_url}}/produk/{{created_produk_id}}"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "nama": "Test Produk QA Updated",
+        "harga_jual": 75000,
+        "keterangan": "Produk sudah diperbarui"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Produk updated successfully', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+          pm.expect(json.produk.nama).to.eql('Test Produk QA Updated');
+      });
+    language: text/javascript
+order: 6000

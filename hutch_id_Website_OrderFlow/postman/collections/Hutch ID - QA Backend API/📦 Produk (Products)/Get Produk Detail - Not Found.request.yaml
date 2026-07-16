@@ -1,0 +1,21 @@
+$kind: http-request
+description: Test ambil produk dengan ID yang tidak ada.
+url: "{{base_url}}/produk/99999"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 404', function () {
+          pm.response.to.have.status(404);
+      });
+
+      pm.test('Returns not found message', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(false);
+      });
+    language: text/javascript
+order: 3000

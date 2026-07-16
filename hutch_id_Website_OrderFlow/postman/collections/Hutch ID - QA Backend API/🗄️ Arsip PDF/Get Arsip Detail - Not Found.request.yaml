@@ -1,0 +1,19 @@
+$kind: http-request
+description: Test ambil arsip dengan ID yang tidak ada.
+url: "{{base_url}}/arsip-pdf/99999"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 404', function () {
+          pm.response.to.have.status(404);
+      });
+
+      pm.test('Not found message', function () {
+          var json = pm.response.json();
+          pm.expect(json.message).to.include('tidak ditemukan');
+      });
+    language: text/javascript
+order: 4000

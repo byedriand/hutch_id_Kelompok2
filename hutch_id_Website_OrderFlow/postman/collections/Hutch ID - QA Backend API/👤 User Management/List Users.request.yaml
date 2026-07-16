@@ -1,0 +1,32 @@
+$kind: http-request
+description: Ambil semua pengguna (Administrator only).
+url: "{{base_url}}/users"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response has user data', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+          pm.expect(json).to.have.property('data');
+          pm.expect(json.data).to.be.an('array');
+      });
+
+      pm.test('User objects have required fields', function () {
+          var json = pm.response.json();
+          if (json.data.length > 0) {
+              var user = json.data[0];
+              pm.expect(user).to.have.property('id');
+              pm.expect(user).to.have.property('email');
+              pm.expect(user).to.have.property('role');
+              pm.expect(user).to.have.property('created_at');
+          }
+      });
+    language: text/javascript
+order: 1000

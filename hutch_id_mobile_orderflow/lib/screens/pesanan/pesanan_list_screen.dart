@@ -235,7 +235,7 @@ class _PesananListScreenState extends State<PesananListScreen> {
         },
       ),
       floatingActionButton: canAddPesanan
-          ? FloatingActionButton(
+          ? FloatingActionButton(key: const Key('FloatingActionButton'),
               onPressed: () {
                 Navigator.pushNamed(context, '/pesanan-form');
               },

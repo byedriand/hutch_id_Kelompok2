@@ -389,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, _) {
                     final userName = authProvider.user?.name ?? 'User';
-                    return PopupMenuButton<String>(
+                    return PopupMenuButton<String>(key: const Key('profile_avatar'),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),

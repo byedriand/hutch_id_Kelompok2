@@ -1,0 +1,35 @@
+$kind: http-request
+description: Buat notifikasi stok kurang dari draft PO (tanpa menyimpan pesanan).
+url: "{{base_url}}/notifikasi/stok-kurang"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "nomor_po": "PO-TEST-001",
+        "detail_kurang": [
+            {
+                "nama_produk": "Produk Test A",
+                "stok_tersedia": 5,
+                "kebutuhan": 20,
+                "kurang": 15
+            }
+        ]
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Notification created', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+          pm.expect(json).to.have.property('notifikasi_id');
+      });
+    language: text/javascript
+order: 6000

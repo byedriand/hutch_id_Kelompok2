@@ -1,0 +1,77 @@
+$kind: http-request
+name: Create Pesanan
+description: |-
+  Buat pesanan baru.
+
+  ⚠️ **Catatan**: `total_nilai` harus sesuai dengan kalkulasi server (jumlah × harga_jual). Jika tidak cocok akan error 422.
+
+  Untuk testing, set `total_nilai` sesuai kalkulasi: `jumlah × harga_jual produk`.
+url: "{{base_url}}/pesanan"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\r
+
+    \    \"tanggal_pesanan\": \"2026-07-13\",\r
+
+    \    \"tanggal_pengiriman\": \"2026-07-20\",\r
+
+    \    \"pelanggan_id\": 1,\r
+
+    \    \"total_nilai\": 100000,\r
+
+    \    \"catatan\": \"Pesanan test dari Postman QA\",\r
+
+    \    \"items\": [\r
+
+    \        {\r
+
+    \            \"produk_id\": 4,\r
+
+    \            \"jumlah\": 2,\r
+
+    \            \"spesifikasi\": \"Warna merah\"\r
+
+    \        }\r
+
+    \    ],\r
+
+    \    \"send_shortage_notification\": false\r
+
+    }\r\n"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 201', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('Pesanan created successfully', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+          pm.expect(json).to.have.property('data');
+          pm.expect(json.data).to.have.property('id');
+          pm.expect(json.data).to.have.property('nomor_po');
+          pm.expect(json.data.status).to.eql('menunggu_konfirmasi');
+          pm.environment.set('created_pesanan_id', json.data.id);
+          pm.environment.set('created_nomor_po', json.data.nomor_po);
+      });
+
+      pm.test('Pesanan has detail items', function () {
+          var json = pm.response.json();
+          pm.expect(json.data.detail_pesanan).to.be.an('array');
+          pm.expect(json.data.detail_pesanan.length).to.be.greaterThan(0);
+      });
+    language: text/javascript
+  - type: beforeRequest
+    code: |-
+      // Set tanggal_pesanan to today
+      var today = new Date().toISOString().split('T')[0];
+      var nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      pm.environment.set('today_date', today);
+      pm.environment.set('next_week_date', nextWeek);
+    language: text/javascript
+order: 5000

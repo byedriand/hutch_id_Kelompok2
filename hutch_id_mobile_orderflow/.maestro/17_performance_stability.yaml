@@ -1,0 +1,140 @@
+################################################################################
+# TC-MOB-017 : PERFORMANCE & STABILITY
+# Deskripsi  : Test performa app — waktu load screen, scroll mulus,
+#              tidak ada crash saat navigasi cepat, dan network error handling
+# Role       : staf_penjualan
+# Precondition: Berhasil login sebagai Staf Penjualan
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Staf Penjualan ───────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Staf Penjualan.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── TC-MOB-017-A: Rapid Navigation (stress test) ─────────────────────────────
+# Navigasi cepat antar tab untuk cek tidak ada crash
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Pelanggan.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Tambah Produk.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Dashboard.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Dashboard.*"
+- waitForAnimationToEnd
+- takeScreenshot: "17a_rapid_nav_no_crash"
+
+# ── TC-MOB-017-B: Scroll Performance ─────────────────────────────────────────
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+# Scroll cepat
+- swipe:
+    direction: UP
+    duration: 500
+
+- swipe:
+    direction: UP
+    duration: 500
+
+- swipe:
+    direction: DOWN
+    duration: 500
+
+- swipe:
+    direction: DOWN
+    duration: 500
+
+- takeScreenshot: "17b_scroll_performance"
+
+# ── TC-MOB-017-C: Multiple Pull-to-Refresh ───────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 400
+- waitForAnimationToEnd
+- swipe:
+    direction: UP
+    duration: 400
+- waitForAnimationToEnd
+- takeScreenshot: "17c_multiple_refresh"
+
+# ── TC-MOB-017-D: Back Navigation Consistency ────────────────────────────────
+- tapOn:
+    text: ".*Pelanggan.*"
+- waitForAnimationToEnd
+- tapOn:
+    index: 0
+    id: "pelanggan_card"
+- waitForAnimationToEnd
+# Back dari detail
+- pressKey: back
+- waitForAnimationToEnd
+# Back lagi harus kembali ke tab yang sama (bukan exit app)
+- assertVisible:
+    text: ".*Pelanggan.*"
+
+- takeScreenshot: "17d_back_navigation"
+
+# ── TC-MOB-017-E: App tidak crash setelah lama idle ──────────────────────────
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Dashboard.*"
+- waitForAnimationToEnd
+- takeScreenshot: "17e_after_idle"

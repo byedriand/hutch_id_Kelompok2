@@ -1,0 +1,31 @@
+$kind: http-request
+description: Cari pelanggan untuk autocomplete (max 10 results).
+url: "{{base_url}}/pelanggan/search?q=QA"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  q: QA
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Search returns array', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.be.an('array');
+      });
+
+      pm.test('Search results have correct fields', function () {
+          var json = pm.response.json();
+          if (json.length > 0) {
+              pm.expect(json[0]).to.have.property('id');
+              pm.expect(json[0]).to.have.property('nama');
+              pm.expect(json[0]).to.have.property('alamat');
+              pm.expect(json[0]).to.have.property('telepon');
+          }
+      });
+    language: text/javascript
+order: 7000

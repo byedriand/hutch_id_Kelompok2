@@ -217,7 +217,9 @@ class _LoginScreenState extends State<LoginScreen>
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     return Scaffold(
-      body: Stack(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
         children: [
           _buildBackground(),
           SafeArea(
@@ -618,55 +620,62 @@ class _LoginScreenState extends State<LoginScreen>
             // Email field
             _fieldLabel('EMAIL'),
             const SizedBox(height: 8),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              enabled: _selectedRoleId != null,
-              decoration: _inputDecoration(
-                hint: _selectedRole?.hint ?? 'email@hutch.id',
-                icon: Icons.email_outlined,
+            Semantics(
+              identifier: 'email',
+              child: TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                enabled: _selectedRoleId != null,
+                decoration: _inputDecoration(
+                  hint: _selectedRole?.hint ?? 'email@hutch.id',
+                  icon: Icons.email_outlined,
+                ),
+                style: const TextStyle(
+                    fontSize: 14, color: Color(0xFF1e3a5f),
+                    fontWeight: FontWeight.w500),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Email harus diisi';
+                  if (!v.contains('@')) return 'Format email tidak valid';
+                  return null;
+                },
               ),
-              style: const TextStyle(
-                  fontSize: 14, color: Color(0xFF1e3a5f),
-                  fontWeight: FontWeight.w500),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Email harus diisi';
-                if (!v.contains('@')) return 'Format email tidak valid';
-                return null;
-              },
             ),
             const SizedBox(height: 20),
 
             // Password field
             _fieldLabel('PASSWORD'),
             const SizedBox(height: 8),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: !_showPassword,
-              enabled: _selectedRoleId != null,
-              decoration: _inputDecoration(
-                hint: 'Masukkan password Anda',
-                icon: Icons.lock_outline_rounded,
-                suffix: IconButton(
-                  icon: Icon(
-                    _showPassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    color: const Color(0xFF2563eb),
-                    size: 20,
+            Semantics(
+              identifier: 'password',
+              child: TextFormField(
+                controller: _passwordController,
+                obscureText: !_showPassword,
+                enabled: _selectedRoleId != null,
+                decoration: _inputDecoration(
+                  hint: 'Masukkan password Anda',
+                  icon: Icons.lock_outline_rounded,
+                  suffix: IconButton(
+                    icon: Icon(
+                      _showPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Colors.grey[400],
+                      size: 20,
+                    ),
+                    onPressed: () => setState(() => _showPassword = !_showPassword),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
-                  onPressed: () => setState(() => _showPassword = !_showPassword),
-                  splashRadius: 20,
                 ),
+                style: const TextStyle(
+                    fontSize: 14, color: Color(0xFF1e3a5f),
+                    fontWeight: FontWeight.w500),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Password harus diisi';
+                  if (v.length < 6) return 'Password minimal 6 karakter';
+                  return null;
+                },
               ),
-              style: const TextStyle(
-                  fontSize: 14, color: Color(0xFF1e3a5f),
-                  fontWeight: FontWeight.w500),
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Password harus diisi';
-                if (v.length < 6) return 'Password minimal 6 karakter';
-                return null;
-              },
             ),
             const SizedBox(height: 28),
 

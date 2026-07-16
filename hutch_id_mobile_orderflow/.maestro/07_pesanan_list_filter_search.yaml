@@ -1,0 +1,160 @@
+################################################################################
+# TC-MOB-007 : PESANAN — DAFTAR, FILTER, SEARCH, & DETAIL
+# Deskripsi  : Verifikasi daftar pesanan, filter by status, pencarian,
+#              dan buka detail pesanan
+# Role       : staf_penjualan (akses penuh pesanan)
+# Precondition: Berhasil login sebagai Staf Penjualan, ada data pesanan
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Staf Penjualan ───────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Staf Penjualan.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# Tunggu welcome dialog dismiss
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Pesanan ────────────────────────────────────────────────────
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+# ── TC-MOB-007-A: Verifikasi Halaman Pesanan ─────────────────────────────────
+- assertVisible:
+    text: ".*Pesanan.*"
+
+- takeScreenshot: "07a_pesanan_list_all"
+
+# ── TC-MOB-007-B: Verifikasi Filter Chips tersedia ───────────────────────────
+- assertVisible:
+    text: ".*Semua.*"
+
+- assertVisible:
+    text: ".*Menunggu.*"
+
+- assertVisible:
+    text: ".*Dikonfirmasi.*"
+
+- assertVisible:
+    text: ".*Produksi.*"
+
+- assertVisible:
+    text: ".*Siap Kirim.*"
+
+- assertVisible:
+    text: ".*Selesai.*"
+
+- assertVisible:
+    text: ".*Dibatalkan.*"
+
+# ── TC-MOB-007-C: Filter Status "Menunggu" ───────────────────────────────────
+- tapOn:
+    text: ".*Menunggu.*"
+- waitForAnimationToEnd
+- takeScreenshot: "07b_pesanan_filter_menunggu"
+
+# ── TC-MOB-007-D: Filter Status "Dikonfirmasi" ───────────────────────────────
+- tapOn:
+    text: ".*Dikonfirmasi.*"
+- waitForAnimationToEnd
+- takeScreenshot: "07c_pesanan_filter_dikonfirmasi"
+
+# ── TC-MOB-007-E: Filter Status "Selesai" ────────────────────────────────────
+- tapOn:
+    text: ".*Selesai.*"
+- waitForAnimationToEnd
+- takeScreenshot: "07d_pesanan_filter_selesai"
+
+# ── TC-MOB-007-F: Reset ke "Semua" ───────────────────────────────────────────
+- tapOn:
+    text: ".*Semua.*"
+- waitForAnimationToEnd
+# ── TC-MOB-007-G: Search Pesanan by No. PO ───────────────────────────────────
+- tapOn:
+    text: ".*Cari no. PO atau nama pelanggan....*"
+
+- inputText: "PO-"
+- waitForAnimationToEnd
+- takeScreenshot: "07e_pesanan_search_po"
+
+# ── TC-MOB-007-H: Hapus Search ───────────────────────────────────────────────
+- tapOn:
+    text: "PO-"
+- eraseText: 100
+- waitForAnimationToEnd
+# ── TC-MOB-007-I: Pull-to-Refresh Daftar Pesanan ─────────────────────────────
+- swipe:
+    direction: UP
+    duration: 600
+- waitForAnimationToEnd
+- takeScreenshot: "07f_pesanan_after_refresh"
+
+# ── TC-MOB-007-J: Buka Detail Pesanan Pertama ────────────────────────────────
+# Tap item pertama di list (jika ada)
+- tapOn:
+    index: 0
+    id: "pesanan_card"
+- waitForAnimationToEnd
+- takeScreenshot: "07g_pesanan_detail"
+
+# Verifikasi elemen di detail pesanan
+- assertVisible:
+    text: ".*Detail Pesanan.*"
+
+# ── TC-MOB-007-K: Scroll Detail Pesanan ──────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1500
+
+- takeScreenshot: "07h_pesanan_detail_scrolled"
+
+# ── TC-MOB-007-L: Kembali ke Daftar Pesanan ──────────────────────────────────
+- pressKey: back
+- waitForAnimationToEnd
+- takeScreenshot: "07i_pesanan_back_to_list"

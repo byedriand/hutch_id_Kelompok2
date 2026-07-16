@@ -1,0 +1,149 @@
+################################################################################
+# TC-MOB-003 : LOGIN BERHASIL — ROLE ADMINISTRATOR
+# Deskripsi  : Login berhasil sebagai Administrator, verifikasi dashboard,
+#              navigasi bottom bar (Dashboard, Pesanan, Arsip), dan logout
+# Role       : administrator
+# Precondition: Akun administrator aktif di backend
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP ─────────────────────────────────────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Login ──────────────────────────────────────────────────────
+- assertVisible:
+    text: ".*Login.*"
+
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+# ── 2. Pilih Role Administrator ───────────────────────────────────────────────
+- tapOn:
+    text: ".*Administrator.*"
+- waitForAnimationToEnd
+# ── 3. Isi Kredensial ─────────────────────────────────────────────────────────
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_ADMIN}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_ADMIN}
+
+- takeScreenshot: "03a_admin_credentials_filled"
+
+# ── 4. Klik Masuk ─────────────────────────────────────────────────────────────
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 5. Verifikasi Welcome Dialog ─────────────────────────────────────────────
+- assertVisible:
+    text: ".*Login Berhasil!.*"
+
+- assertVisible:
+    text: ".*Administrator.*"
+
+- takeScreenshot: "03b_admin_welcome_dialog"
+
+# Dialog auto-dismiss dalam 1.5 detik
+- waitForAnimationToEnd
+# ── 6. Verifikasi Dashboard tampil ───────────────────────────────────────────
+- assertVisible:
+    text: ".*Dashboard.*"
+
+- takeScreenshot: "03c_admin_dashboard"
+
+# ── 7. Verifikasi Bottom Navigation Bar untuk Admin ──────────────────────────
+# Admin memiliki: Dashboard, Pesanan, Arsip
+- assertVisible:
+    text: ".*Pesanan.*"
+
+- assertVisible:
+    text: ".*Arsip.*"
+
+# ── 8. Navigasi ke Pesanan ────────────────────────────────────────────────────
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+- assertVisible:
+    text: ".*Pesanan.*"
+
+- takeScreenshot: "03d_admin_pesanan_screen"
+
+# Admin TIDAK bisa buat PO baru (tidak ada FAB)
+- assertNotVisible:
+    id: "FloatingActionButton"
+
+# ── 9. Navigasi ke Arsip ──────────────────────────────────────────────────────
+- tapOn:
+    text: ".*Arsip.*"
+- waitForAnimationToEnd
+- takeScreenshot: "03e_admin_arsip_screen"
+
+# ── 10. Kembali ke Dashboard ──────────────────────────────────────────────────
+- tapOn:
+    text: ".*Dashboard.*"
+- waitForAnimationToEnd
+# ── 11. Navigasi ke Profil via AppBar ────────────────────────────────────────
+# Cek ikon profile di AppBar (avatar)
+- assertVisible:
+    id: "profile_avatar"
+
+- tapOn:
+    id: "profile_avatar"
+- waitForAnimationToEnd
+- takeScreenshot: "03f_admin_profile"
+
+# ── 12. Logout ───────────────────────────────────────────────────────────────
+# Scroll ke bawah untuk mencari tombol logout
+- swipe:
+    direction: UP
+    duration: 1000
+
+- tapOn:
+    text: ".*Keluar.*"
+- waitForAnimationToEnd
+# Konfirmasi dialog logout
+- assertVisible:
+    text: ".*Konfirmasi.*"
+
+- tapOn:
+    text: ".*Logout.*"
+- waitForAnimationToEnd
+# Setelah logout, harus kembali ke landing/login
+- assertVisible:
+    text: ".*HUTCH PRESTIGE.*"
+
+- takeScreenshot: "03g_admin_after_logout"

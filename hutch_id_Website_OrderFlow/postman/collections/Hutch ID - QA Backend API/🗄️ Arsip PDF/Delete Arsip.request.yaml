@@ -1,0 +1,19 @@
+$kind: http-request
+description: Hapus arsip pesanan.
+url: "{{base_url}}/arsip-pdf/{{arsip_id}}"
+method: DELETE
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Arsip deleted', function () {
+          var json = pm.response.json();
+          pm.expect(json.message).to.include('berhasil dihapus');
+      });
+    language: text/javascript
+order: 6000

@@ -1,0 +1,99 @@
+################################################################################
+# TC-MOB-014 : ARSIP PESANAN (Administrator)
+# Deskripsi  : Verifikasi halaman arsip pesanan — list arsip, filter,
+#              search, dan view detail pesanan terarsip
+# Role       : administrator
+# Precondition: Berhasil login sebagai Administrator, ada data arsip
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Administrator ────────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Administrator.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_ADMIN}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_ADMIN}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Arsip ─────────────────────────────────────────────────────
+- tapOn:
+    text: ".*Arsip.*"
+- waitForAnimationToEnd
+# ── TC-MOB-014-A: Verifikasi Halaman Arsip ───────────────────────────────────
+- takeScreenshot: "14a_arsip_screen"
+
+- assertVisible:
+    text: ".*Arsip.*"
+
+# ── TC-MOB-014-B: Pull-to-Refresh Arsip ──────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 600
+- waitForAnimationToEnd
+- takeScreenshot: "14b_arsip_refreshed"
+
+# ── TC-MOB-014-C: Scroll Arsip ───────────────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1500
+
+- takeScreenshot: "14c_arsip_scrolled"
+
+- swipe:
+    direction: DOWN
+    duration: 1000
+
+# ── TC-MOB-014-D: Buka Detail dari Arsip ─────────────────────────────────────
+- tapOn:
+    index: 0
+    id: "arsip_item"
+- waitForAnimationToEnd
+- takeScreenshot: "14d_arsip_detail"
+
+# Kembali
+- pressKey: back
+- waitForAnimationToEnd

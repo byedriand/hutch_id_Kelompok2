@@ -1,0 +1,33 @@
+$kind: http-request
+description: Ambil detail lengkap pesanan termasuk histori status dan detail item.
+url: "{{base_url}}/pesanan/{{pesanan_id}}"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Pesanan detail is complete', function () {
+          var json = pm.response.json();
+          pm.expect(json).to.have.property('data');
+          var data = json.data;
+          pm.expect(data).to.have.property('id');
+          pm.expect(data).to.have.property('nomor_po');
+          pm.expect(data).to.have.property('pelanggan');
+          pm.expect(data).to.have.property('detail_pesanan');
+          pm.expect(data).to.have.property('histori_status');
+          pm.expect(data).to.have.property('status');
+          pm.expect(data).to.have.property('total_nilai');
+      });
+
+      pm.test('Histori status exists', function () {
+          var data = pm.response.json().data;
+          pm.expect(data.histori_status).to.be.an('array');
+          pm.expect(data.histori_status.length).to.be.greaterThan(0);
+      });
+    language: text/javascript
+order: 7000

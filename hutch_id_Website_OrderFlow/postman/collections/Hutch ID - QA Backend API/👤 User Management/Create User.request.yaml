@@ -1,0 +1,31 @@
+$kind: http-request
+description: "Buat user baru. Roles: administrator, staf_penjualan, operator_gudang, pemilik_umkm."
+url: "{{base_url}}/users"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "qa_staff@hutch.id",
+        "role": "staf_penjualan",
+        "password": "password123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 201', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('User created successfully', function () {
+          var json = pm.response.json();
+          pm.expect(json.success).to.eql(true);
+          pm.expect(json.data.email).to.eql('qa_staff@hutch.id');
+          pm.expect(json.data.role).to.eql('staf_penjualan');
+          pm.environment.set('created_user_id', json.data.id);
+      });
+    language: text/javascript
+order: 2000

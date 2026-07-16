@@ -221,6 +221,7 @@ class _ProdukStafTambahScreenState extends State<ProdukStafTambahScreen> {
             ),
             const SizedBox(height: 10),
             TextField(
+              key: const Key('nama_produk'),
               controller: _namaController,
               decoration: InputDecoration(
                 hintText: 'Contoh: Tas Kulit Premium',
@@ -251,6 +252,7 @@ class _ProdukStafTambahScreenState extends State<ProdukStafTambahScreen> {
             ),
             const SizedBox(height: 10),
             TextField(
+              key: const Key('harga_produk'),
               controller: _hargaJualController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
@@ -286,6 +288,7 @@ class _ProdukStafTambahScreenState extends State<ProdukStafTambahScreen> {
             ),
             const SizedBox(height: 10),
             TextField(
+              key: const Key('deskripsi_produk'),
               controller: _keteranganController,
               maxLines: 4,
               decoration: InputDecoration(

@@ -1,0 +1,80 @@
+################################################################################
+# TC-MOB-001 : SPLASH SCREEN & LANDING PAGE
+# Deskripsi  : Verifikasi splash screen muncul lalu redirect ke landing page
+# Role       : Semua (unauthenticated)
+# Precondition: Aplikasi baru dibuka / user belum login
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+---
+
+# ── 1. Launch App ─────────────────────────────────────────────────────────────
+- launchApp:
+    clearState: true
+
+# ── 2. Tunggu Splash Screen ───────────────────────────────────────────────────
+# Splash screen muncul sebentar saat app pertama dibuka
+- waitForAnimationToEnd
+# ── 3. Verifikasi Landing Screen tampil ───────────────────────────────────────
+# Landing screen memiliki text "HUTCH PRESTIGE" di AppBar
+- assertVisible:
+    text: ".*HUTCH PRESTIGE.*"
+
+# ── 4. Verifikasi elemen utama Landing Page ───────────────────────────────────
+- assertVisible:
+    text: ".*Platform Manajemen.*"
+
+- assertVisible:
+    text: ".*Login.*"
+
+# ── 5. Verifikasi badge versi tampil ──────────────────────────────────────────
+- assertVisible:
+    text: ".*Hutch Mobile.*"
+
+# ── 6. Scroll ke bawah untuk melihat bagian Fitur Unggulan ───────────────────
+- swipe:
+    direction: UP
+    duration: 600
+
+- assertVisible:
+    text: ".*FITUR UNGGULAN.*"
+
+# ── 7. Scroll ke bawah untuk melihat bagian Team ─────────────────────────────
+# Melakukan swipe cepat (fling) dari bawah ke atas agar halaman tergulir jauh ke bawah
+- swipe:
+    direction: UP
+    duration: 600
+- swipe:
+    direction: UP
+    duration: 600
+- swipe:
+    direction: UP
+    duration: 600
+- swipe:
+    direction: UP
+    duration: 600
+
+- assertVisible:
+    text: ".*TIM KAMI.*"
+
+# ── 8. Scroll kembali ke atas ────────────────────────────────────────────────
+# Melakukan swipe cepat (fling) dari atas ke bawah agar halaman kembali ke puncak
+- swipe:
+    direction: DOWN
+    duration: 600
+- swipe:
+    direction: DOWN
+    duration: 600
+- swipe:
+    direction: DOWN
+    duration: 600
+- swipe:
+    direction: DOWN
+    duration: 600
+
+- assertVisible:
+    text: ".*Platform Manajemen.*"
+
+# ── 9. Screenshot hasil ───────────────────────────────────────────────────────
+- takeScreenshot: "01_landing_page_result"

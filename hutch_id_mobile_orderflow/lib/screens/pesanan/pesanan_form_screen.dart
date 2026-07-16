@@ -763,8 +763,7 @@ class _PesananFormScreenState extends State<PesananFormScreen> {
 
                 // QTY field
                 _labelText('QTY'),
-                TextFormField(
-                  controller: _jumlahController,
+                TextFormField(key: const Key('jumlah_field'), controller: _jumlahController,
                   keyboardType: TextInputType.number,
                   onChanged: (_) => setState(() {}),
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
@@ -821,8 +820,7 @@ class _PesananFormScreenState extends State<PesananFormScreen> {
                 _sectionHeader(Icons.sticky_note_2_rounded, 'Catatan Khusus (Opsional)',
                     'Catatan tambahan untuk pesanan ini'),
                 _labelText('Catatan', optional: true),
-                TextFormField(
-                  controller: _catatanController,
+                TextFormField(key: const Key('catatan'), controller: _catatanController,
                   maxLines: 3,
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
                       color: Color(0xFF1E293B)),
@@ -1206,8 +1204,7 @@ class _PesananFormScreenState extends State<PesananFormScreen> {
                 ],
                 const SizedBox(height: 20),
                 _labelText('Catatan', optional: true),
-                TextFormField(
-                  controller: _catatanController, maxLines: 3,
+                TextFormField(key: const Key('catatan'), controller: _catatanController, maxLines: 3,
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
                       color: Color(0xFF1E293B)),
                   decoration: _fieldDeco(hint: 'Tambahkan catatan pesanan...'),

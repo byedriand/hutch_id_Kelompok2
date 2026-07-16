@@ -1,0 +1,159 @@
+################################################################################
+# TC-MOB-008 : PESANAN — BUAT PESANAN BARU (Happy Path)
+# Deskripsi  : Staf Penjualan membuat Pesanan/PO baru dengan memilih pelanggan,
+#              menambah produk, mengisi catatan, dan submit
+# Role       : staf_penjualan
+# Precondition: - Berhasil login sebagai Staf Penjualan
+#               - Ada data pelanggan di sistem
+#               - Ada data produk di sistem
+################################################################################
+
+appId: com.hutchprestige.mobile
+
+env:
+  # Admin
+  EMAIL_ADMIN: "admin@hutch.id"
+  PASSWORD_ADMIN: "password123"
+
+  # Staf Penjualan
+  EMAIL_STAF: "staf@hutch.id"
+  PASSWORD_STAF: "password123"
+
+  # Operator Gudang
+  EMAIL_GUDANG: "gudang@hutch.id"
+  PASSWORD_GUDANG: "password123"
+
+  # Data pesanan baru
+  NAMA_PELANGGAN_TEST: "Pelanggan QA Test"
+  CATATAN_PESANAN: "Catatan pesanan dari Maestro QA"
+
+  # Batas waktu umum (detik)
+  TIMEOUT_DEFAULT: 10000
+  TIMEOUT_LONG: 20000
+
+---
+
+# ── SETUP: Login sebagai Staf Penjualan ───────────────────────────────────────
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Login.*"
+- waitForAnimationToEnd
+- tapOn:
+    text: ".*Staf Penjualan.*"
+
+# Pastikan form login masuk ke layar
+- swipe:
+    direction: UP
+    duration: 600
+- tapOn:
+    id: "email"
+
+- inputText: ${EMAIL_STAF}
+
+- tapOn:
+    id: "password"
+
+- inputText: ${PASSWORD_STAF}
+
+- hideKeyboard
+- tapOn:
+    text: ".*MASUK SEKARANG.*"
+- waitForAnimationToEnd
+# ── 1. Navigasi ke Pesanan ────────────────────────────────────────────────────
+- tapOn:
+    text: ".*Pesanan.*"
+- waitForAnimationToEnd
+# ── TC-MOB-008-A: Buka Form Buat Pesanan via FAB ──────────────────────────────
+- assertVisible:
+    id: "FloatingActionButton"
+
+- tapOn:
+    id: "FloatingActionButton"
+- waitForAnimationToEnd
+- takeScreenshot: "08a_pesanan_form_opened"
+
+# ── TC-MOB-008-B: Verifikasi Form Elements ───────────────────────────────────
+- assertVisible:
+    text: ".*Buat Pesanan Baru.*"
+
+# Verifikasi section form tersedia
+- assertVisible:
+    text: ".*Pelanggan.*"
+
+- assertVisible:
+    text: ".*Produk.*"
+
+# ── TC-MOB-008-C: Pilih Pelanggan ────────────────────────────────────────────
+# Tap dropdown/picker pelanggan
+- tapOn:
+    text: ".*Pilih Pelanggan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "08b_pesanan_pelanggan_picker"
+
+# Pilih pelanggan pertama yang tersedia
+- tapOn:
+    index: 0
+    id: "pelanggan_item"
+- waitForAnimationToEnd
+- takeScreenshot: "08c_pesanan_pelanggan_selected"
+
+# ── TC-MOB-008-D: Pilih Tanggal Pengiriman ───────────────────────────────────
+# Tap field tanggal pengiriman
+- tapOn:
+    id: "tanggal_pengiriman"
+- waitForAnimationToEnd
+# Pilih tanggal (confirm date picker)
+- tapOn:
+    text: ".*OK.*"
+- waitForAnimationToEnd
+# ── TC-MOB-008-E: Tambah Produk ke Order ─────────────────────────────────────
+# Tap tombol tambah produk
+- tapOn:
+    text: ".*Tambah Produk.*"
+- waitForAnimationToEnd
+- takeScreenshot: "08d_pesanan_product_picker"
+
+# Pilih produk pertama
+- tapOn:
+    index: 0
+    id: "produk_item"
+- waitForAnimationToEnd
+# Isi jumlah produk
+- tapOn:
+    id: "jumlah_field"
+
+- eraseText: 100
+
+- inputText: "5"
+
+# Konfirmasi tambah produk
+- tapOn:
+    text: ".*Tambahkan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "08e_pesanan_produk_added"
+
+# ── TC-MOB-008-F: Isi Catatan Pesanan ────────────────────────────────────────
+- tapOn:
+    id: "catatan"
+
+- inputText: ${CATATAN_PESANAN}
+- hideKeyboard
+# ── TC-MOB-008-G: Submit Pesanan ─────────────────────────────────────────────
+- swipe:
+    direction: UP
+    duration: 1000
+
+- tapOn:
+    text: ".*Simpan Pesanan.*"
+- waitForAnimationToEnd
+- takeScreenshot: "08f_pesanan_submit_result"
+
+# ── TC-MOB-008-H: Verifikasi Pesanan Berhasil Dibuat ─────────────────────────
+# Setelah sukses, harus kembali ke list atau tampil success message
+# dan pesanan baru muncul di list dengan status "menunggu_konfirmasi"
+- assertVisible:
+    text: ".*Pesanan.*"
+
+- takeScreenshot: "08g_pesanan_created_success"
