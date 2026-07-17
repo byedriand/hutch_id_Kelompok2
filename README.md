@@ -128,9 +128,9 @@ Menunggu Konfirmasi → Dikonfirmasi → Dalam Produksi → Siap Kirim → Seles
 
 | Peran | Deskripsi | Hak Akses (ringkas) |
 |---|---|---|
-| Staf Penjualan | Menerima dan mencatat pesanan | Buat PO, edit PO sebelum konfirmasi, lihat/print PO, tambah produk baru |
-| Operator Gudang | Petugas gudang / produksi | Lihat PO aktif, verifikasi bahan, tambah/kurangi stok, mulai produksi |
-| Administrator | Admin sistem | Akses penuh: manajemen user, konfigurasi, arsip, dan semua aksi operasional |
+| Staf Penjualan | Menerima dan mencatat pesanan | Buat PO, lihat/print PO, tambah produk baru (via menu khusus), kelola pelanggan |
+| Operator Gudang | Petugas gudang / produksi | Lihat PO aktif, tambah/kurangi stok, update status produksi |
+| Administrator | Admin sistem | Akses penuh: manajemen user, konfirmasi PO, edit PO, batalkan PO, arsip, dan semua aksi operasional |
 
 ---
 
@@ -187,75 +187,442 @@ hutch_id_Kelompok2/
 
 ## 📖 Cara Penggunaan
 
-### 🌐 Akses Website
+---
 
-1. Buka browser dan kunjungi **[https://hutch-prestige.my.id](https://hutch-prestige.my.id)**
-2. Klik tombol **Login** pada landing page
-3. Masukkan email dan password sesuai role Anda
-4. Sistem akan otomatis mengarahkan ke dashboard sesuai peran
+### 🌐 Website — Panduan Lengkap
+
+#### 1️⃣ Akses & Login
+
+1. Buka browser (Chrome / Firefox / Edge) dan kunjungi **[https://hutch-prestige.my.id](https://hutch-prestige.my.id)**
+2. Anda akan disambut oleh **Landing Page** — berisi profil produk, fitur unggulan, dan tombol unduh APK mobile
+3. Klik tombol **"Masuk ke Sistem"** atau **"Login"** di pojok kanan atas
+4. Masukkan **email** dan **password** sesuai role Anda
+5. Klik **"Login"** — sistem akan otomatis mengarahkan ke **dashboard** sesuai peran
+
+> 💡 Setiap role memiliki tampilan dan menu yang berbeda. Lihat tabel akun default di bagian bawah.
 
 ---
 
-### 👤 Panduan Per Role
+#### 2️⃣ Panduan Per Role — Website
 
-#### 📋 Staf Penjualan
+##### 📋 Staf Penjualan
+
+<details>
+<summary><b>Klik untuk expand — Panduan Staf Penjualan</b></summary>
+
+**A. Membuat Purchase Order (PO) Baru**
 | Langkah | Aksi |
 |---|---|
-| 1 | Login dengan akun Staf Penjualan |
-| 2 | Klik **"Buat PO Baru"** di dashboard atau menu Pesanan |
-| 3 | Pilih pelanggan (atau tambah pelanggan baru jika belum ada) |
-| 4 | Tambahkan item produk, jumlah, dan harga — nomor PO di-generate otomatis |
-| 5 | Klik **Simpan** — stok bahan baku langsung diverifikasi otomatis |
-| 6 | Jika stok bahan baku **tidak mencukupi** → sistem menampilkan tabel selisih stok → Staf dapat mengirim **notifikasi stok kurang** ke Operator Gudang langsung dari halaman tersebut |
-| 7 | PO masuk status **"Menunggu Konfirmasi"** dan notifikasi dikirim ke semua role |
-| 8 | Untuk menambah produk baru: buka menu **Produk** → **Tambah Produk** → upload foto & isi detail |
+| 1 | Login sebagai Staf Penjualan |
+| 2 | Di dashboard, klik **"Buat PO Baru"** atau buka menu **Pesanan → Buat PO** |
+| 3 | Pilih pelanggan dari dropdown (ketik nama untuk autocomplete). Jika pelanggan belum terdaftar, klik **"Tambah Pelanggan Baru"** |
+| 4 | Isi **Tanggal PO** dan **Catatan** (opsional) |
+| 5 | Klik **"Tambah Item"** — pilih produk, isi **jumlah** dan **harga satuan** |
+| 6 | Ulangi langkah 5 untuk setiap item produk yang dipesan |
+| 7 | Sistem akan menampilkan **total nilai PO** secara otomatis |
+| 8 | Klik **"Simpan PO"** — nomor PO di-generate otomatis format `PO-YYYYMMDD-XXX` |
+| 9 | Sistem langsung melakukan **verifikasi stok bahan baku** |
+| 10 | ✅ Jika stok cukup → PO masuk status **"Menunggu Konfirmasi"**, notifikasi terkirim ke semua role |
+| 11 | ⚠️ Jika stok **tidak mencukupi** → halaman menampilkan **tabel selisih stok** (tersedia vs kebutuhan vs kekurangan) → klik **"Kirim Notifikasi Stok Kurang"** untuk menginformasikan Operator Gudang |
 
-#### 🏭 Operator Gudang
+> **Catatan:** Setelah PO tersimpan, PO hanya bisa **diedit atau dikonfirmasi** oleh **Administrator**. Staf Penjualan tidak dapat mengubah PO yang sudah dibuat.
+
+**B. Menambah Produk Baru (khusus Staf)**
 | Langkah | Aksi |
 |---|---|
-| 1 | Login dengan akun Operator Gudang |
-| 2 | Cek menu **Notifikasi** — jika ada stok kurang, akan muncul notifikasi dari Staf Penjualan beserta detail bahan baku yang kurang dan jumlah kekurangannya |
-| 3 | Buka menu **Inventori** → pilih bahan baku yang kurang → klik **"Tambahkan Stok"** → isi jumlah penambahan → 
+| 1 | Buka menu **Produk** → klik **"Tambah Produk"** (tersedia di menu khusus staf: `/produk/staf/tambah`) |
+| 2 | Isi nama produk, kategori, harga, dan deskripsi |
+| 3 | Upload foto produk — preview foto akan tampil sebelum disimpan |
+| 4 | Klik **"Simpan"** — notifikasi otomatis terkirim ke semua role |
 
-#### 🔐 Administrator
+**C. Mencetak & Membagikan Dokumen PO**
 | Langkah | Aksi |
 |---|---|
-| 1 | Login dengan akun Administrator |
-| 2 | Dashboard menampilkan ringkasan seluruh PO aktif, menunggu konfirmasi, dan siap kirim |
-| 3 | Akses menu **Pesanan** untuk memantau dan mengelola semua PO |
-| 4 | Ubah status PO ke **"Selesai"** setelah pengiriman dikonfirmasi |
-| 5 | PO yang dibatalkan: buka detail PO → klik **"Batalkan"** — stok otomatis di-rollback |
-| 6 | Akses menu **Arsip** untuk melihat seluruh riwayat PO selesai/dibatalkan |
-| 7 | Kelola data pengguna melalui menu **Manajemen User** |
+| 1 | Buka detail PO → klik **"Cetak PDF"** |
+| 2 | PDF dokumen PO resmi di-generate dalam ≤ 5 detik |
+| 3 | Untuk berbagi: klik **"Salin Link"** — link sementara valid **24 jam** |
+| 4 | Kirimkan link ke pelanggan atau tim internal |
+
+</details>
 
 ---
 
-### 📄 Cetak & Bagikan Dokumen PO
+##### 🏭 Operator Gudang
+
+<details>
+<summary><b>Klik untuk expand — Panduan Operator Gudang</b></summary>
+
+**A. Mengelola Stok Bahan Baku**
+| Langkah | Aksi |
+|---|---|
+| 1 | Login sebagai Operator Gudang |
+| 2 | Cek menu **Notifikasi** — jika ada notifikasi **"Stok Kurang"** dari Staf Penjualan, klik untuk melihat detail bahan baku yang kurang beserta jumlah kekurangannya |
+| 3 | Buka menu **Inventori / Gudang** → pilih bahan baku yang perlu ditambah |
+| 4 | Klik **"Tambahkan Stok"** → isi jumlah penambahan → klik **Simpan** |
+| 5 | Stok langsung diperbarui — notifikasi stok kurang akan otomatis hilang jika stok sudah mencukupi |
+| 6 | Untuk **mengurangi stok**: klik **"Kurangi Stok"** → isi jumlah pengurangan → Simpan |
+
+**B. Update Status Produksi**
+| Langkah | Aksi |
+|---|---|
+| 1 | Buka menu **Pesanan** → lihat PO dengan status **"Dikonfirmasi"** |
+| 2 | Buka detail PO → di bagian **"Ubah Status"** (kanan bawah halaman), pilih status baru dari dropdown |
+| 3 | Pilih **"Dalam Produksi"** → isi keterangan singkat → klik **"Simpan Status"** |
+| 4 | Sistem otomatis **mengurangi stok bahan baku** sesuai kebutuhan PO saat status berubah ke "Dalam Produksi" |
+| 5 | Setelah produksi selesai: ulangi langkah yang sama → pilih **"Siap Kirim"** → simpan |
+
+**C. Memantau Dashboard Gudang**
+| Langkah | Aksi |
+|---|---|
+| 1 | Dashboard menampilkan ringkasan stok bahan baku dan PO dalam produksi |
+| 2 | Indikator merah **"Kurang"** muncul pada bahan baku yang stoknya di bawah minimum |
+| 3 | Klik bahan baku untuk melihat detail stok dan riwayat perubahan |
+
+</details>
+
+---
+
+##### 🔐 Administrator
+
+<details>
+<summary><b>Klik untuk expand — Panduan Administrator</b></summary>
+
+**A. Mengelola Seluruh Pesanan (PO)**
+| Langkah | Aksi |
+|---|---|
+| 1 | Login sebagai Administrator |
+| 2 | Dashboard menampilkan ringkasan: PO aktif, menunggu konfirmasi, siap kirim, selesai bulan ini |
+| 3 | Buka menu **Pesanan** untuk melihat semua PO dari seluruh role |
+| 4 | Klik PO untuk melihat detail lengkap termasuk **audit trail** perubahan status |
+| 5 | Untuk **mengkonfirmasi PO**: buka detail PO → pilih status **"Dikonfirmasi"** di form **"Ubah Status"** → klik **"Simpan Status"** |
+| 6 | Untuk **edit PO**: klik tombol **"Edit"** → ubah item/harga → simpan |
+| 7 | Untuk **menyelesaikan PO**: ubah status ke **"Selesai"** setelah pengiriman dikonfirmasi |
+| 8 | Untuk **membatalkan PO**: klik **"Batalkan Pesanan"** → isi alasan pembatalan (wajib, min. 5 karakter) → konfirmasi → stok bahan baku otomatis di-**rollback** jika PO sudah "Dalam Produksi" |
+
+**B. Mengelola Data Pengguna** *(khusus Administrator)*
+| Langkah | Aksi |
+|---|---|
+| 1 | Buka menu **Manajemen User** → akses ke `/admin/users` |
+| 2 | Klik **"Tambah User"** → isi nama, email, password, dan pilih **role** |
+| 3 | Untuk edit user: klik ikon edit pada baris user yang diinginkan |
+| 4 | Untuk hapus user: klik ikon hapus |
+
+**C. Mengakses Arsip**
+| Langkah | Aksi |
+|---|---|
+| 1 | Buka menu **Arsip** |
+| 2 | Lihat seluruh PO dengan status **"Selesai"** atau **"Dibatalkan"** |
+| 3 | Klik PO untuk melihat detail lengkap dan histori status |
+| 4 | Download PDF PO dari halaman arsip |
+
+**D. Memantau Notifikasi Sistem**
+| Langkah | Aksi |
+|---|---|
+| 1 | Buka menu **Notifikasi** — semua notifikasi sistem ditampilkan |
+| 2 | Notifikasi meliputi: PO baru, perubahan status, stok menipis, produk baru |
+| 3 | Klik notifikasi untuk langsung menuju halaman terkait |
+
+</details>
+
+---
+
+### 📱 Mobile App — Panduan Lengkap
+
+#### 1️⃣ Download & Instalasi APK
+
+| Langkah | Aksi |
+|---|---|
+| 1 | Buka browser HP Android dan kunjungi **[https://hutch-prestige.my.id](https://hutch-prestige.my.id)** |
+| 2 | Scroll ke bawah, cari tombol **"Unduh Aplikasi"** atau **"Download APK"** |
+| 3 | Klik tombol unduh — file `Hutch-mobile.apk` akan otomatis terunduh |
+| 4 | Buka notifikasi unduhan atau cari file di **folder Downloads** HP |
+| 5 | Ketuk file `Hutch-mobile.apk` untuk memulai instalasi |
+| 6 | Jika muncul peringatan **"Sumber tidak dikenal"** → buka **Pengaturan HP → Keamanan (atau Privasi) → Aktifkan "Izinkan instalasi dari sumber tidak dikenal"** |
+| 7 | Kembali ke file APK dan ketuk **"Instal"** |
+| 8 | Tunggu hingga proses instalasi selesai → ketuk **"Buka"** |
+
+> **Catatan:** APK hanya kompatibel dengan perangkat **Android 6.0 (Marshmallow) ke atas**.
+
+---
+
+#### 2️⃣ Login ke Aplikasi Mobile
+
+1. Buka aplikasi **Hutch Prestige** dari layar utama HP
+2. Anda akan melihat **Landing Screen** — berisi informasi aplikasi dan tombol "Masuk"
+3. Ketuk **"Masuk"** → masukkan **email** dan **password** sesuai role Anda
+4. Ketuk tombol **"Login"**
+5. Setelah login berhasil, muncul **pop-up selamat datang** (auto-dismiss 1,5 detik)
+6. Anda langsung masuk ke **Dashboard** sesuai role
+
+---
+
+#### 3️⃣ Panduan Per Role — Mobile
+
+##### 📋 Staf Penjualan (Mobile)
+
+<details>
+<summary><b>Klik untuk expand — Panduan Staf Penjualan (Mobile)</b></summary>
+
+**Menu Navigasi Bawah:** Dashboard | Pesanan | Pelanggan | Tambah Produk
+
+**A. Dashboard**
+- Menampilkan ringkasan statistik: total PO aktif, PO menunggu konfirmasi, dan PO siap kirim
+- Tap kartu statistik untuk langsung menuju daftar PO terkait
+
+**B. Membuat PO Baru**
+| Langkah | Aksi |
+|---|---|
+| 1 | Tap menu **"Pesanan"** di navbar bawah |
+| 2 | Tap tombol **"+"** (FAB) di pojok kanan bawah |
+| 3 | Pilih pelanggan dari daftar atau cari dengan **search bar** |
+| 4 | Tap **"Tambah Item"** → pilih produk, isi jumlah dan harga |
+| 5 | Ulangi untuk setiap item produk |
+| 6 | Tap **"Simpan PO"** |
+
+**C. Melihat & Memantau PO**
+| Langkah | Aksi |
+|---|---|
+| 1 | Buka menu **"Pesanan"** |
+| 2 | List PO tampil lengkap dengan status, nomor PO, nama pelanggan, dan total nilai |
+| 3 | Gunakan **filter status** di bagian atas untuk menyaring PO |
+| 4 | Tap PO untuk melihat **detail lengkap** termasuk item dan histori status |
+
+**D. Mengelola Pelanggan**
+| Langkah | Aksi |
+|---|---|
+| 1 | Buka menu **"Pelanggan"** |
+| 2 | Gunakan **search bar** untuk mencari pelanggan |
+| 3 | Tap **"+"** untuk tambah pelanggan baru → isi nama, telepon, alamat |
+| 4 | Tap pelanggan untuk melihat detail dan riwayat pesanan |
+| 5 | Swipe kiri atau tap ikon edit/hapus untuk mengelola data pelanggan |
+
+**E. Tambah Produk**
+| Langkah | Aksi |
+|---|---|
+| 1 | Buka menu **"Tambah Produk"** |
+| 2 | Isi nama produk, kategori, harga, dan stok |
+| 3 | Tap ikon kamera untuk **upload foto produk** |
+| 4 | Tap **"Simpan"** |
+
+</details>
+
+---
+
+##### 🏭 Operator Gudang (Mobile)
+
+<details>
+<summary><b>Klik untuk expand — Panduan Operator Gudang (Mobile)</b></summary>
+
+**Menu Navigasi Bawah:** Dashboard | Manajemen Stok
+
+**A. Dashboard**
+- Ringkasan stok bahan baku dan PO dalam proses produksi
+- Indikator merah pada stok yang hampir habis
+
+**B. Manajemen Stok**
+| Langkah | Aksi |
+|---|---|
+| 1 | Tap menu **"Manajemen Stok"** |
+| 2 | Lihat daftar seluruh bahan baku beserta jumlah stok saat ini |
+| 3 | Tap bahan baku yang ingin dikelola |
+| 4 | Tap **"Tambahkan Stok"** → isi jumlah penambahan → **Simpan** |
+| 5 | Tap **"Kurangi Stok"** → isi jumlah pengurangan → **Simpan** |
+| 6 | Perubahan stok langsung tersinkron dengan website secara real-time |
+
+</details>
+
+---
+
+##### 🔐 Administrator (Mobile)
+
+<details>
+<summary><b>Klik untuk expand — Panduan Administrator (Mobile)</b></summary>
+
+**Menu Navigasi Bawah:** Dashboard | Pesanan | Arsip
+
+**A. Dashboard**
+- Ringkasan seluruh PO aktif, menunggu konfirmasi, dan siap kirim
+- Tap kartu untuk langsung menuju list PO terkait
+
+**B. Memantau & Mengelola PO**
+| Langkah | Aksi |
+|---|---|
+| 1 | Tap menu **"Pesanan"** |
+| 2 | Filter PO berdasarkan status menggunakan tab filter |
+| 3 | Tap PO untuk melihat detail lengkap |
+| 4 | Di halaman detail PO: tap **"Ubah Status"** untuk mengupdate status produksi |
+| 5 | Pilih status baru dari opsi yang tersedia |
+
+**C. Arsip PO**
+| Langkah | Aksi |
+|---|---|
+| 1 | Tap menu **"Arsip"** |
+| 2 | Lihat seluruh PO selesai dan dibatalkan |
+| 3 | Tap PO untuk detail dan download PDF |
+
+</details>
+
+---
+
+#### 4️⃣ Fitur Tambahan Mobile
+
+**🤖 Chatbot AI (N8N)**
+1. Tap ikon **chatbot** (💬) di pojok kanan bawah layar (tersedia di semua halaman)
+2. Ketik pertanyaan tentang pesanan, stok, atau informasi sistem
+3. Asisten AI akan memberikan jawaban berdasarkan data real-time
+
+**🔔 Notifikasi Push**
+- Notifikasi otomatis muncul saat ada PO baru, perubahan status, atau stok menipis
+- Tap notifikasi untuk langsung menuju halaman terkait
+
+**👤 Profil & Logout**
+1. Tap ikon **profil** di pojok kanan atas layar
+2. Lihat informasi akun dan role aktif
+3. Tap **"Logout"** untuk keluar dari aplikasi
+
+> 📶 **Catatan:** Pastikan HP terhubung ke internet. Aplikasi terhubung langsung ke server **hutch-prestige.my.id** secara real-time. Data akan diperbarui otomatis setiap beberapa detik.
+
+---
+
+### 📄 Cetak & Bagikan Dokumen PO (Website)
 
 1. Buka detail PO yang ingin dicetak
 2. Klik tombol **"Cetak PDF"** — dokumen PDF di-generate dalam ≤ 5 detik
-3. Untuk berbagi: klik **"Salin Link"** — link sementara valid selama **24 jam**
-4. Kirimkan link ke pihak yang membutuhkan (pelanggan, tim internal, dll)
+3. Browser akan langsung mengunduh file PDF
+4. Untuk berbagi via link: klik **"Salin Link"** — link sementara valid selama **24 jam**
+5. Kirimkan link ke pelanggan atau tim internal — siapapun dapat membuka link tanpa perlu login
 
 ---
 
-### 📱 Instalasi & Penggunaan Aplikasi Mobile
+## 🏗️ Infrastruktur
 
-#### Download & Install APK
-1. Buka **[https://hutch-prestige.my.id](https://hutch-prestige.my.id)** di browser HP Android
-2. Klik tombol **"Unduh APK"** pada landing page
-3. Setelah download selesai, buka file `Hutch-mobile.apk`
-4. Jika muncul peringatan keamanan → buka **Pengaturan HP → Keamanan → Izinkan Sumber Tidak Dikenal**
-5. Ikuti proses instalasi hingga selesai
-6. Buka aplikasi **Hutch Prestige** dari layar utama HP
+Sistem **Hutch.id OrderFlow** dibangun dengan arsitektur berlapis yang memisahkan antara **client layer**, **server layer**, **data layer**, dan **layanan eksternal**.
 
-#### Login & Penggunaan Mobile
-1. Masukkan email dan password sesuai role Anda
-2. Dashboard mobile menampilkan ringkasan PO aktif dan statistik real-time
-3. Navigasi menggunakan menu bawah untuk akses fitur: Pesanan, Pelanggan, Inventori, Notifikasi, Arsip
-4. Fitur **Chatbot AI** tersedia di menu pojok kanan bawah untuk bantuan otomatis
+---
 
-> **Catatan:** Pastikan HP terhubung ke internet. Aplikasi mobile terhubung langsung ke server hutch-prestige.my.id secara real-time.
+### 🌐 Arsitektur Deployment
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      CLIENT LAYER                       │
+│  🌐 Web Browser          📱 Flutter App (Android)       │
+│  Chrome / Firefox / Edge  Hutch Prestige APK            │
+└──────────────┬───────────────────────┬──────────────────┘
+               │ HTTPS (TLS 1.2+)      │ HTTPS (TLS 1.2+)
+               ▼                       ▼
+┌─────────────────────────────────────────────────────────┐
+│               SERVER LAYER — hutch-prestige.my.id       │
+│                                                         │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │           Nginx 1.24+ (Reverse Proxy)            │   │
+│  │  HTTPS Termination · Static Files · Load Balance │   │
+│  └─────────────────────┬────────────────────────────┘   │
+│                        │                                │
+│  ┌─────────────────────▼────────────────────────────┐   │
+│  │         PHP-FPM 8.1+ · Laravel 10 (MVC)          │   │
+│  │  Route Middleware · Eloquent ORM · Auth Sanctum  │   │
+│  │  Session Auth (Web) · Bearer Token Auth (API)    │   │
+│  └─────────────────────┬────────────────────────────┘   │
+│                        │                                │
+│  ┌─────────────────────▼────────────────────────────┐   │
+│  │               MySQL 8.0+ (InnoDB)                │   │
+│  │     users · pesanan · detail_pesanan             │   │
+│  │     pelanggan · produk · histori_status_po       │   │
+│  │     notifikasi                                   │   │
+│  └──────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────────────┐
+│                   EXTERNAL SERVICES                     │
+│  📨 SMTP Email (Laravel Mail)                           │
+│  🤖 N8N Workflow (Chatbot AI)                           │
+│  📄 DomPDF — Generate PDF PO (Signed URL 24 jam)       │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🖥️ Spesifikasi Server (VPS / Cloud)
+
+| Komponen | Spesifikasi |
+|---|---|
+| **CPU** | Minimum 2 vCore |
+| **RAM** | Minimum 2 GB |
+| **Storage** | Minimum 20 GB SSD |
+| **OS** | Ubuntu 22.04 LTS |
+| **Web Server** | Nginx 1.24+ |
+| **Runtime** | PHP 8.1+ dengan PHP-FPM |
+| **Database** | MySQL 8.0+ |
+| **SSL/TLS** | Let's Encrypt (TLS 1.2+) |
+| **Domain** | hutch-prestige.my.id |
+| **Uptime Target** | ≥ 99% (jam 08.00–22.00 WIB) |
+
+---
+
+### 🐳 Kontainerisasi (Docker)
+
+Project menyediakan konfigurasi **Docker Compose** untuk kemudahan deployment:
+
+```yaml
+# Layanan yang dikontainerisasi:
+services:
+  app:    # PHP 8.1-FPM + Laravel (port 9000)
+  nginx:  # Nginx reverse proxy (port 8082 → 80)
+  db:     # MySQL 8.0 (port 3306)
+```
+
+| Container | Image | Fungsi |
+|---|---|---|
+| `app` | `php:8.1-fpm` | Runtime Laravel + Artisan |
+| `nginx` | `nginx:alpine` | Web server & reverse proxy |
+| `db` | `mysql:8.0` | Database MySQL |
+
+---
+
+### 🔗 Lapisan Teknologi Lengkap
+
+| Layer | Teknologi | Versi |
+|---|---|---|
+| **📱 Mobile** | Flutter, Dart, Material Design 3 | Flutter 3.x · Dart 3.0+ |
+| **🖥 Frontend Web** | HTML5, CSS3, JavaScript ES6+, Bootstrap, Blade | Laravel Blade |
+| **⚙ Backend** | PHP, Laravel, RESTful API, Eloquent ORM | PHP 8.1+ · Laravel 10+ |
+| **🗄 Database** | MySQL, InnoDB, Laravel Migration | MySQL 8.0+ |
+| **📄 PDF Engine** | DomPDF (barryvdh/laravel-dompdf) | Signed URL 24 jam |
+| **🔒 Auth (Web)** | Laravel Session Auth, bcrypt | Timeout 8 jam |
+| **🔒 Auth (API)** | Laravel Sanctum, Bearer Token | Stateless |
+| **☁ Infra** | VPS, Nginx, Docker, Docker Compose | Ubuntu 22.04 |
+| **🤖 AI/Chatbot** | N8N Workflow Automation | Cloud-hosted |
+| **📨 Email** | SMTP via Laravel Mail | Retry 3× |
+
+---
+
+### 📡 Integrasi API Internal
+
+Komunikasi antara **Mobile App** ↔ **Website Backend** menggunakan **REST API** dengan autentikasi **Bearer Token (Laravel Sanctum)**:
+
+| Kode | Method | Endpoint | Fungsi |
+|---|---|---|---|
+| API-01 | `GET` | `/api/inventory/check` | Verifikasi stok bahan baku berdasarkan kebutuhan PO |
+| API-02 | `POST` | `/api/inventory/deduct` | Kurangi stok saat PO → "Dalam Produksi" |
+| API-03 | `POST` | `/api/inventory/rollback` | Kembalikan stok jika PO dibatalkan dari "Dalam Produksi" |
+| API-04 | `GET` | `/api/products/{id}/price` | Ambil harga jual produk dari Modul HPP |
+| API-05 | `POST` | `SMTP (Laravel Mail)` | Notifikasi email PO baru ke Administrator |
+| API-06 | `GET` | `/po/{token}/pdf` | Generate & serve PDF via Signed URL valid 24 jam |
+
+---
+
+### 🔐 Keamanan Infrastruktur
+
+| Aspek | Implementasi |
+|---|---|
+| **Transport Security** | HTTPS dengan TLS 1.2+ pada semua komunikasi |
+| **Auth Web** | Session-based login dengan hash bcrypt, timeout 8 jam |
+| **Auth API** | Bearer Token via Laravel Sanctum (stateless) |
+| **RBAC** | 4 level peran — setiap route dilindungi middleware `role` |
+| **PDF Sharing** | Signed URL acak dengan expiry 24 jam |
+| **APK Distribution** | Hanya tersedia dari website resmi hutch-prestige.my.id |
+| **Database** | Foreign key constraint, InnoDB transaction |
 
 ---
 
