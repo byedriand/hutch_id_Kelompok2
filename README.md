@@ -235,14 +235,6 @@ hutch_id_Kelompok2/
 | 3 | Upload foto produk — preview foto akan tampil sebelum disimpan |
 | 4 | Klik **"Simpan"** — notifikasi otomatis terkirim ke semua role |
 
-**C. Mencetak & Membagikan Dokumen PO**
-| Langkah | Aksi |
-|---|---|
-| 1 | Buka detail PO → klik **"Cetak PDF"** |
-| 2 | PDF dokumen PO resmi di-generate dalam ≤ 5 detik |
-| 3 | Untuk berbagi: klik **"Salin Link"** — link sementara valid **24 jam** |
-| 4 | Kirimkan link ke pelanggan atau tim internal |
-
 </details>
 
 ---
@@ -262,16 +254,7 @@ hutch_id_Kelompok2/
 | 5 | Stok langsung diperbarui — notifikasi stok kurang akan otomatis hilang jika stok sudah mencukupi |
 | 6 | Untuk **mengurangi stok**: klik **"Kurangi Stok"** → isi jumlah pengurangan → Simpan |
 
-**B. Update Status Produksi**
-| Langkah | Aksi |
-|---|---|
-| 1 | Buka menu **Pesanan** → lihat PO dengan status **"Dikonfirmasi"** |
-| 2 | Buka detail PO → di bagian **"Ubah Status"** (kanan bawah halaman), pilih status baru dari dropdown |
-| 3 | Pilih **"Dalam Produksi"** → isi keterangan singkat → klik **"Simpan Status"** |
-| 4 | Sistem otomatis **mengurangi stok bahan baku** sesuai kebutuhan PO saat status berubah ke "Dalam Produksi" |
-| 5 | Setelah produksi selesai: ulangi langkah yang sama → pilih **"Siap Kirim"** → simpan |
-
-**C. Memantau Dashboard Gudang**
+**B. Memantau Dashboard Gudang**
 | Langkah | Aksi |
 |---|---|
 | 1 | Dashboard menampilkan ringkasan stok bahan baku dan PO dalam produksi |
@@ -298,6 +281,8 @@ hutch_id_Kelompok2/
 | 6 | Untuk **edit PO**: klik tombol **"Edit"** → ubah item/harga → simpan |
 | 7 | Untuk **menyelesaikan PO**: ubah status ke **"Selesai"** setelah pengiriman dikonfirmasi |
 | 8 | Untuk **membatalkan PO**: klik **"Batalkan Pesanan"** → isi alasan pembatalan (wajib, min. 5 karakter) → konfirmasi → stok bahan baku otomatis di-**rollback** jika PO sudah "Dalam Produksi" |
+| 9 | Untuk **mengirim notifikasi pesanan ke whatsapp pelanggan**: klik **"ubah ststus pesanan ke"** → "Siap Kirim" |
+
 
 **B. Mengelola Data Pengguna** *(khusus Administrator)*
 | Langkah | Aksi |
@@ -487,10 +472,9 @@ hutch_id_Kelompok2/
 ### 📄 Cetak & Bagikan Dokumen PO (Website)
 
 1. Buka detail PO yang ingin dicetak
-2. Klik tombol **"Cetak PDF"** — dokumen PDF di-generate dalam ≤ 5 detik
-3. Browser akan langsung mengunduh file PDF
-4. Untuk berbagi via link: klik **"Salin Link"** — link sementara valid selama **24 jam**
-5. Kirimkan link ke pelanggan atau tim internal — siapapun dapat membuka link tanpa perlu login
+2. Klik tombol **"Unduh PDF"** — dokumen PDF di-generate dalam ≤ 5 detik
+3. Browser akan langsung menampilkan  file PDF lalu unduh
+4. Kirimkan pdf ke pelanggan atau tim internal 
 
 ---
 
