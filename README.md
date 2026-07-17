@@ -17,6 +17,10 @@
 _Tugas Besar Rekayasa Sistem Informasi — Kelas A1 Kelompok 2_  
 _Program Studi Sistem Informasi — Universitas Kebangsaan Republik Indonesia (UKRI) 2026_
 
+<br/>
+
+[![🌐 Live Demo](https://img.shields.io/badge/🌐_Live_Demo-hutch--prestige.my.id-02569B?style=for-the-badge)](https://hutch-prestige.my.id)
+
 </div>
 
 ---
@@ -373,6 +377,6 @@ Proyek ini dibuat untuk keperluan akademik. Seluruh hak cipta milik Kelompok 2 �
 
 _Hutch.id · Custom Production for Businesses, Ready Bags for Everyone_
 
-🌐 Website · 📱 Mobile App
+🌐 [hutch-prestige.my.id](https://hutch-prestige.my.id) · 📱 Mobile App
 
 </div>
