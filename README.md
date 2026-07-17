@@ -185,6 +185,80 @@ hutch_id_Kelompok2/
 
 ---
 
+## 📖 Cara Penggunaan
+
+### 🌐 Akses Website
+
+1. Buka browser dan kunjungi **[https://hutch-prestige.my.id](https://hutch-prestige.my.id)**
+2. Klik tombol **Login** pada landing page
+3. Masukkan email dan password sesuai role Anda
+4. Sistem akan otomatis mengarahkan ke dashboard sesuai peran
+
+---
+
+### 👤 Panduan Per Role
+
+#### 📋 Staf Penjualan
+| Langkah | Aksi |
+|---|---|
+| 1 | Login dengan akun Staf Penjualan |
+| 2 | Klik **"Buat PO Baru"** di dashboard atau menu Pesanan |
+| 3 | Pilih pelanggan (atau tambah pelanggan baru jika belum ada) |
+| 4 | Tambahkan item produk, jumlah, dan harga — nomor PO di-generate otomatis |
+| 5 | Klik **Simpan** — stok bahan baku langsung diverifikasi otomatis |
+| 6 | Jika stok bahan baku **tidak mencukupi** → sistem menampilkan tabel selisih stok → Staf dapat mengirim **notifikasi stok kurang** ke Operator Gudang langsung dari halaman tersebut |
+| 7 | PO masuk status **"Menunggu Konfirmasi"** dan notifikasi dikirim ke semua role |
+| 8 | Untuk menambah produk baru: buka menu **Produk** → **Tambah Produk** → upload foto & isi detail |
+
+#### 🏭 Operator Gudang
+| Langkah | Aksi |
+|---|---|
+| 1 | Login dengan akun Operator Gudang |
+| 2 | Cek menu **Notifikasi** — jika ada stok kurang, akan muncul notifikasi dari Staf Penjualan beserta detail bahan baku yang kurang dan jumlah kekurangannya |
+| 3 | Buka menu **Inventori** → pilih bahan baku yang kurang → klik **"Tambahkan Stok"** → isi jumlah penambahan → 
+
+#### 🔐 Administrator
+| Langkah | Aksi |
+|---|---|
+| 1 | Login dengan akun Administrator |
+| 2 | Dashboard menampilkan ringkasan seluruh PO aktif, menunggu konfirmasi, dan siap kirim |
+| 3 | Akses menu **Pesanan** untuk memantau dan mengelola semua PO |
+| 4 | Ubah status PO ke **"Selesai"** setelah pengiriman dikonfirmasi |
+| 5 | PO yang dibatalkan: buka detail PO → klik **"Batalkan"** — stok otomatis di-rollback |
+| 6 | Akses menu **Arsip** untuk melihat seluruh riwayat PO selesai/dibatalkan |
+| 7 | Kelola data pengguna melalui menu **Manajemen User** |
+
+---
+
+### 📄 Cetak & Bagikan Dokumen PO
+
+1. Buka detail PO yang ingin dicetak
+2. Klik tombol **"Cetak PDF"** — dokumen PDF di-generate dalam ≤ 5 detik
+3. Untuk berbagi: klik **"Salin Link"** — link sementara valid selama **24 jam**
+4. Kirimkan link ke pihak yang membutuhkan (pelanggan, tim internal, dll)
+
+---
+
+### 📱 Instalasi & Penggunaan Aplikasi Mobile
+
+#### Download & Install APK
+1. Buka **[https://hutch-prestige.my.id](https://hutch-prestige.my.id)** di browser HP Android
+2. Klik tombol **"Unduh APK"** pada landing page
+3. Setelah download selesai, buka file `Hutch-mobile.apk`
+4. Jika muncul peringatan keamanan → buka **Pengaturan HP → Keamanan → Izinkan Sumber Tidak Dikenal**
+5. Ikuti proses instalasi hingga selesai
+6. Buka aplikasi **Hutch Prestige** dari layar utama HP
+
+#### Login & Penggunaan Mobile
+1. Masukkan email dan password sesuai role Anda
+2. Dashboard mobile menampilkan ringkasan PO aktif dan statistik real-time
+3. Navigasi menggunakan menu bawah untuk akses fitur: Pesanan, Pelanggan, Inventori, Notifikasi, Arsip
+4. Fitur **Chatbot AI** tersedia di menu pojok kanan bawah untuk bantuan otomatis
+
+> **Catatan:** Pastikan HP terhubung ke internet. Aplikasi mobile terhubung langsung ke server hutch-prestige.my.id secara real-time.
+
+---
+
 ## 🚀 Cara Menjalankan
 
 ### 🌐 Website (Docker — Direkomendasikan)
